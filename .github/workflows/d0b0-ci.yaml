@@ -1,0 +1,194 @@
+# SPDX-FileCopyrightText: 2026-Present d0b0 chat contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# d0b0 chat CI — builds the app for every platform and publishes the results.
+#
+# WHERE THE WORKING APP LANDS
+#   * Every run (push to main / pull request / manual):
+#       GitHub → Actions → the run → "Artifacts" section
+#         d0b0-chat-android-apk     app-debug.apk (or app-release.apk once keystore secrets exist)
+#         d0b0-chat-web             the static web app (serve the folder as-is)
+#         d0b0-chat-linux-x64       Linux desktop bundle (run ./fluffychat inside it)
+#         d0b0-chat-ios-unsigned    Runner.app compiled for iOS, unsigned (proof of build only)
+#   * Tagged release (git tag v1.2.3 && git push --tags):
+#       GitHub → Releases → the same files attached to the release page.
+#
+# SIGNED ANDROID RELEASE (optional, turns on automatically): add these repo secrets
+#   ANDROID_KEYSTORE_BASE64   base64 of your .keystore/.jks file
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+# Without them the Android job builds a debug APK (installable, but slower + DEBUG banner).
+
+name: d0b0 chat CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Analyze, format, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .tool_versions.yaml
+          cache: true
+      - run: flutter pub get
+      - name: Check formatting
+        run: dart format lib/ test/ --set-exit-if-changed
+      - run: flutter analyze
+      - run: flutter test
+
+  android:
+    name: Android APK
+    needs: [checks]
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/free_up_space
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .tool_versions.yaml
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache Gradle
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - run: flutter pub get
+      - name: Restore release keystore (only when secrets are configured)
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          {
+            echo "storeFile=release.keystore"
+            echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+            echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
+          } > android/key.properties
+      - name: Build signed release APK
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: flutter build apk --release
+      - name: Build debug APK (no keystore secrets configured)
+        if: ${{ env.KEYSTORE_BASE64 == '' }}
+        run: flutter build apk --debug
+      - uses: actions/upload-artifact@v7
+        with:
+          name: d0b0-chat-android-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+
+  web:
+    name: Web
+    needs: [checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .tool_versions.yaml
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+      - run: flutter pub get
+      - name: Prepare web (vodozemac wasm, native_imaging js, livekit e2ee worker)
+        run: ./scripts/prepare-web.sh
+      - run: rm ./assets/vodozemac/.gitignore
+      - run: flutter pub get
+      - run: flutter build web --release
+      - uses: actions/upload-artifact@v7
+        with:
+          name: d0b0-chat-web
+          path: build/web
+          if-no-files-found: error
+
+  linux:
+    name: Linux desktop (x64)
+    needs: [checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y git wget curl clang cmake ninja-build pkg-config libgtk-3-dev libblkid-dev liblzma-dev libjsoncpp-dev cmake-data libsecret-1-dev libsecret-1-0 librhash0 libssl-dev libwebkit2gtk-4.1-dev libpulse-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .tool_versions.yaml
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - run: flutter pub get
+      - run: flutter build linux --release --target-platform linux-x64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: d0b0-chat-linux-x64
+          path: build/linux/x64/release/bundle
+          if-no-files-found: error
+
+  ios:
+    name: iOS (unsigned build check)
+    needs: [checks]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .tool_versions.yaml
+          cache: true
+      - run: brew install sqlcipher
+      - uses: dtolnay/rust-toolchain@stable
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - uses: actions/upload-artifact@v7
+        with:
+          name: d0b0-chat-ios-unsigned
+          path: build/ios/iphoneos/Runner.app
+          if-no-files-found: error
+
+  release:
+    name: Attach builds to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [android, web, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+      - name: Package artifacts
+        run: |
+          cd dist
+          (cd d0b0-chat-web && zip -qr "../d0b0-chat-web-${{ github.ref_name }}.zip" .)
+          tar -C d0b0-chat-linux-x64 -czf "d0b0-chat-linux-x64-${{ github.ref_name }}.tar.gz" .
+          for f in d0b0-chat-android-apk/*.apk; do
+            cp "$f" "d0b0-chat-${{ github.ref_name }}-$(basename "$f")"
+          done
+          ls -la
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.apk
+            dist/*.zip
+            dist/*.tar.gz
