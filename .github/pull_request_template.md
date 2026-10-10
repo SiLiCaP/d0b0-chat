@@ -1,12 +1,16 @@
-- [ ] I have read and understood the [contributing guidelines](https://github.com/krille-chan/fluffychat/blob/main/CONTRIBUTING.md). 
+<!--
+SPDX-FileCopyrightText: 2026-Present d0b0 chat contributors
 
-### Pull Request has been tested on:
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 
-- [ ] Android
-- [ ] iOS
-- [ ] Browser (Chromium based)
-- [ ] Browser (Firefox based)
-- [ ] Browser (WebKit based)
-- [ ] Desktop Linux
-- [ ] Desktop Windows
-- [ ] Desktop macOS
+## What changed
+
+<!-- One or two sentences. Link the task in D0B0_KICKOFF.md if there is one. -->
+
+## Tested on
+
+- [ ] Android
+- [ ] iOS
+- [ ] Web
+- [ ] Desktop (macOS / Windows / Linux)
