@@ -147,8 +147,9 @@ This is a real, standard-track Matrix feature, not something to invent:
 
 ## First tasks (suggested order)
 
-1. **Build it unmodified** (`flutter pub get`, then run on an emulator/device;
-   see FluffyChat's README for toolchain). Get a baseline before changing things.
+1. ✅ **Build it unmodified** — **done 2026-08-31**: the untouched fork ran on
+   the iPhone 17 Pro simulator. What it took is under *Build status & toolchain
+   notes* below.
 2. **Rebrand + theme + homeserver** (config.json, primaryColor, ids, icons).
    Rebuild; confirm it logs into a `d0b0.lv` account and E2EE works.
 3. **Verify the SDK caveats** (sliding sync, QR login availability) so you know
@@ -156,6 +157,97 @@ This is a real, standard-track Matrix feature, not something to invent:
 4. **Feature wishlist** — get specifics from the owner beyond the FluffyChat
    baseline (which already covers the unified inbox/sorting).
 5. **Web build** once mobile is solid; then updates + QR login as v2.
+
+## Build status & toolchain notes (the Mac)
+
+Installed 2026-08-31 on the owner's Mac (Apple Silicon, macOS 26, Xcode 26.6):
+
+- **Flutter 3.47.2** (the version `.tool_versions.yaml` pins) at
+  `~/development/flutter` — **not on PATH**; before building run
+  `export PATH="$HOME/development/flutter/bin:$HOME/.cargo/bin:$PATH"`.
+- **Rust** stable (rustup), **CocoaPods**, **cmake + ninja**, **sqlcipher**
+  (Homebrew). Rust compiles the vodozemac E2EE crate on every native build;
+  cmake builds `webcrypto`'s BoringSSL (CI runners have it preinstalled, so
+  upstream never lists it).
+- **Still missing:** Android SDK/Studio + JDK 17 (for local Android builds and
+  emulators — CI builds the APK meanwhile) and Chrome (for `flutter run -d chrome`).
+
+Gotchas found on the way (none needed a repo change):
+
+1. **The repo path contains a space** (`Creative Projects`). `native_imaging`'s
+   podspec emits unquoted include paths, so Xcode mangles them. Patched in the
+   *pub cache* (`~/.pub-cache/hosted/pub.dev/native_imaging-<ver>/ios/native_imaging.podspec`:
+   quote both `HEADER_SEARCH_PATHS` entries), then `pod install` in `ios/`.
+   `dart pub cache repair` or a version bump reverts it — re-apply. The durable
+   fix is moving the repo to a space-free path.
+2. **Run with `flutter run -d <device>`, not `flutter build ios --simulator`.**
+   The latter builds a universal simulator binary and the x86_64 slice fails in
+   BoringSSL (`fiat_p256_adx` symbols). Device and release builds are arm64-only
+   and unaffected.
+3. **`flutter run -d macos` fails unmodified** — upstream hardcodes its Apple
+   team (`4NXF6Z997G`) in `macos/Runner.xcodeproj`. Fixed as part of the rebrand.
+
+Quick start: `flutter devices`, then `flutter run -d <id>` (iPhone 17 Pro
+simulator: `DA60B980-1996-4D88-B196-532ADD6D2770`).
+
+## Test devices
+
+- **Mac (Apple Silicon)** — builds every target except Windows; iOS simulators
+  (iOS 26.5). This is the one dev machine; don't split development across OSes.
+- **iPhone XS, iOS 18.7.10** (physical). The app's minimum is iOS 15.6 (notification
+  extension 18.5), so it fits. Installing on it needs Apple signing: a free
+  Apple ID "personal team" (app re-signs every 7 days) or a paid Developer
+  account (TestFlight).
+- **Windows PC** — for trying the CI-built Windows desktop app later; not a dev
+  machine (it can't build the Apple targets).
+- **Android phone** — owner reports one is available; note model/Android version
+  here when Android work starts.
+
+## CI & where the working app lands (the produced-content folders)
+
+**Locally** everything lands under `build/` (gitignored):
+
+| Target  | Command                                                     | Output folder                                   |
+|---------|-------------------------------------------------------------|-------------------------------------------------|
+| Android | `flutter build apk --debug` (`--release` needs a keystore)  | `build/app/outputs/flutter-apk/app-*.apk`       |
+| iOS     | `flutter run -d <device>` / `flutter build ios --no-codesign` | `build/ios/iphoneos/Runner.app` (sim: `build/ios/iphonesimulator/`) |
+| Web     | `./scripts/prepare-web.sh && flutter build web --release`   | `build/web/` (serve as static files)            |
+| macOS   | `flutter build macos` (after the signing-team change)       | `build/macos/Build/Products/Release/*.app`      |
+| Linux   | `flutter build linux`                                       | `build/linux/x64/release/bundle/`               |
+| Windows | `scripts/build-windows.ps1` (on Windows or CI)              | `build/windows/x64/runner/Release/`             |
+
+**CI** — `.github/workflows/d0b0-ci.yaml`, runs on every push to `main`, every
+pull request, manually (*Actions → d0b0 chat CI → Run workflow*), and on `v*` tags:
+
+- Jobs: `checks` (format, analyze, test) → `android` (APK), `web`, `linux`,
+  `ios` (unsigned compile check).
+- **Every run:** GitHub → *Actions* → the run → **Artifacts**:
+  `d0b0-chat-android-apk`, `d0b0-chat-web`, `d0b0-chat-linux-x64`,
+  `d0b0-chat-ios-unsigned`.
+- **Releases:** `git tag v0.1.0 && git push --tags` → the APK, web zip and Linux
+  tarball are attached to **GitHub → Releases**. That release page is the
+  canonical place to get the working app.
+- **Signed Android release** (recommended before handing APKs out): generate a
+  keystore once — `keytool -genkey -v -keystore d0b0-release.jks -keyalg RSA
+  -keysize 2048 -validity 10000 -alias d0b0` — keep it *out of the repo*, then add
+  repo secrets `ANDROID_KEYSTORE_BASE64` (`base64 -i d0b0-release.jks | pbcopy`),
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. The
+  Android job then switches from debug to a signed release APK automatically.
+  Pick the keystore *before* anyone installs: changing it later forces a
+  reinstall on every phone.
+- **Not in CI yet:** signed iOS (needs an Apple Developer account → TestFlight via
+  `scripts/release-ios-testflight.sh`), macOS (signing team), Windows (add a
+  `windows-latest` job around `scripts/prepare-windows.ps1` + `build-windows.ps1`
+  when wanted).
+- FCM is deliberately **not** added in CI (`scripts/add-firebase-messaging.sh`);
+  d0b0 uses UnifiedPush unless we decide otherwise.
+- **Upstream FluffyChat workflows** (`integrate`, `main_deploy`, `release`,
+  `matrix_notify`, `stale`) target *their* infrastructure (their GitHub Pages
+  nightly, ghcr images, F-Droid/Play secrets, their Matrix room). Remove them —
+  or disable them in GitHub (*Actions → workflow → ⋯ → Disable workflow*);
+  `main_deploy.yaml` otherwise fires on every push to `main`. When merging
+  `upstream/main` later, resolve the resulting modify/delete conflicts by keeping
+  them deleted.
 
 ## Distribution
 
@@ -165,17 +257,12 @@ This is a real, standard-track Matrix feature, not something to invent:
   the Mac; only distribution needs the account. Unchanged by the framework.
 - **Desktop/web:** optional; both build from this repo.
 
-## GitHub setup (do this once)
+## GitHub setup (✅ done)
 
-`gh` isn't installed on the machine — create the repo via the web (or
-`brew install gh`). See the owner-facing instructions the assistant gave
-alongside this doc for repo name and settings. Wire it up without clobbering
-`upstream`:
-```bash
-git remote add origin https://<PAT>@github.com/SiLiCaP/d0b0-chat.git
-git push -u origin main
-```
-Keep `upstream` → FluffyChat for pulling updates (`git fetch upstream && git merge upstream/main`).
+`origin` → `git@github.com:SiLiCaP/d0b0-chat.git` (SSH) and `main` is pushed.
+`upstream` → FluffyChat stays for pulling updates
+(`git fetch upstream && git merge upstream/main`). `gh` is still not installed
+(`brew install gh` if you want PRs/releases from the terminal).
 
 ## Retiring the old repos
 
