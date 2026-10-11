@@ -135,7 +135,7 @@ flutter_launcher_icons:
     generate: true
     image_path: assets/logo/img/logo_standalone.png
     background_color: "#FFFFFF"
-    theme_color: "#41a2bc"
+    theme_color: "#3fd82f"
 
 # Guidelines for adding a dependency override:
 # 1. Don't do it if you can avoid it or fix it upstream in a manageable time

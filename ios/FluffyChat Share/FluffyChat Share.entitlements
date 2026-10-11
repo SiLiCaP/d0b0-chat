@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.im.fluffychat.app</string>
+		<string>group.lv.d0b0.chat</string>
 	</array>
 </dict>
 </plist>

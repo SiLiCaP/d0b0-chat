@@ -144,7 +144,7 @@ class ErrorReporter {
         scheme: 'https',
         host: 'api.github.com',
         path: '/search/issues',
-        query: 'q=repo:krille-chan/fluffychat+is:issue+$hash',
+        query: 'q=repo:SiLiCaP/d0b0-chat+is:issue+$hash',
       ),
     );
     try {

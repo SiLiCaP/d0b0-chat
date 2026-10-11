@@ -424,7 +424,7 @@ class MatrixState extends State<Matrix> {
     final exportBytes = Uint8List.fromList(const Utf8Codec().encode(export));
 
     final exportFileName =
-        'fluffychat-export-${DateFormat(DateFormat.YEAR_MONTH_DAY).format(DateTime.now())}.fluffybackup';
+        'd0b0-chat-export-${DateFormat(DateFormat.YEAR_MONTH_DAY).format(DateTime.now())}.d0b0backup';
 
     final file = MatrixFile(bytes: exportBytes, name: exportFileName);
     if (!context.mounted) return;

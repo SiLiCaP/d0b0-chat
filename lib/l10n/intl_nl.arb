@@ -814,7 +814,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "inviteText": "{username} heeft je uitgenodigd voor FluffyChat.\n1. Bezoek https://fluffychat.im en installeer de app\n2. Registreer of log in\n3. Open deze uitnodigingslink:\n{link}",
+    "inviteText": "{username} heeft je uitgenodigd voor d0b0 chat.\n1. Bezoek https://chat.d0b0.lv en installeer de app\n2. Registreer of log in\n3. Open deze uitnodigingslink:\n{link}",
     "@inviteText": {
         "type": "String",
         "placeholders": {
@@ -971,7 +971,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newMessageInFluffyChat": "💬 Nieuw bericht in FluffyChat",
+    "newMessageInFluffyChat": "💬 Nieuw bericht in d0b0 chat",
     "@newMessageInFluffyChat": {
         "type": "String",
         "placeholders": {}
@@ -2476,7 +2476,7 @@
     "advancedConfigurations": "Geavanceerde configuraties",
     "signIn": "Log in",
     "createNewAccount": "Registreer nieuw account",
-    "signUpGreeting": "FluffyChat is decentraal! Kies een server waar je wil voor jouw account en laten we gaan!",
+    "signUpGreeting": "d0b0 chat is decentraal! Kies een server waar je wil voor jouw account en laten we gaan!",
     "signInGreeting": "Heb je al een Matrix account? Welkom terug! Kies jouw server en log in.",
     "theProcessWasCanceled": "Het proces is geannuleerd.",
     "join": "Deelnemen",
@@ -2496,7 +2496,7 @@
     },
     "createNewChat": "Creëer nieuw chat",
     "reset": "Resetten",
-    "supportFluffyChat": "FluffyChat steunen",
+    "supportFluffyChat": "d0b0 chat steunen",
     "support": "Steunen",
     "setLowPriority": "Lage prioriteit instellen",
     "unsetLowPriority": "Lage prioriteit uitschakelen",
@@ -2511,7 +2511,7 @@
         "placeholders": {}
     },
     "hideRoomsInSpaces": "Kamers in een space verbergen",
-    "possibleByYou": "Deze versie was alleen mogelijk dankzij jullie steun. FluffyChat blijft gratis, open source en volledig door de community gedreven.",
+    "possibleByYou": "Deze versie was alleen mogelijk dankzij jullie steun. d0b0 chat blijft gratis, open source en volledig door de community gedreven.",
     "showThumbnailsInTimeline": "Miniatuurafbeeldingen van foto’s en video’s weergeven",
     "appSubtitle": "Veilige [matrix]-communicatie",
     "appDescription": "Communiceer op een eenvoudige en voor iedereen toegankelijke manier via het gedecentraliseerde [matrix]-netwerk.",
@@ -2597,7 +2597,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newPassphraseDescription": "FluffyChat gebruikt eind-tot-eind versleuteling. Om je berichten niet te verliezen, kies alsjeblieft een sterke wachtwoordzin. Hiermee beveilig je je crypto-identiteit en je versleutelde berichten back-up.",
+    "newPassphraseDescription": "d0b0 chat gebruikt eind-tot-eind versleuteling. Om je berichten niet te verliezen, kies alsjeblieft een sterke wachtwoordzin. Hiermee beveilig je je crypto-identiteit en je versleutelde berichten back-up.",
     "@newPassphraseDescription": {
         "type": "String",
         "placeholders": {}
