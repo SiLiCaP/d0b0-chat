@@ -1,0 +1,62 @@
+# Front door for test-d0b0.apapss.id.lv. cloudflared sends every request here.
+#
+#   /_matrix/*, /_synapse/client/*  -> test Synapse (public, the apps log in here)
+#   /pr-<N>/                        -> landing page with links and test accounts
+#   /pr-<N>/testers.json            -> test account credentials
+#   /pr-<N>/web/...                 -> web build of PR <N> (static files)
+#   /pr-<N>/...                     -> noVNC of emulator container android-pr-<N>
+#
+# Everything under /pr-* must sit behind a Cloudflare Access application.
+# The Matrix paths must not, or the Android app cannot reach its homeserver.
+
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	@matrix path /_matrix/* /_synapse/client/*
+	handle @matrix {
+		reverse_proxy synapse:8008
+	}
+
+	@bare path_regexp bare ^/pr-(\d+)$
+	redir @bare {path}/ 308
+
+	@landing path_regexp landing ^/pr-(\d+)/$
+	handle @landing {
+		root * /srv/landing
+		rewrite * /index.html
+		header Cache-Control no-store
+		file_server
+	}
+
+	@creds path_regexp creds ^/pr-(\d+)/testers\.json$
+	handle @creds {
+		root * /secrets
+		rewrite * /testers.json
+		header Cache-Control no-store
+		file_server
+	}
+
+	@webbare path_regexp webbare ^/pr-(\d+)/web$
+	redir @webbare {path}/ 308
+
+	@web path_regexp web ^/pr-(\d+)/web/
+	handle @web {
+		root * /srv/sites/pr-{re.web.1}/web
+		uri strip_prefix /pr-{re.web.1}/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	@emu path_regexp emu ^/pr-(\d+)/
+	handle @emu {
+		uri strip_prefix /pr-{re.emu.1}
+		reverse_proxy android-pr-{re.emu.1}:6080
+	}
+
+	handle {
+		respond "d0b0 chat test server" 404
+	}
+}
