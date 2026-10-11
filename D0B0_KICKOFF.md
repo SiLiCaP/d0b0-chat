@@ -150,13 +150,44 @@ This is a real, standard-track Matrix feature, not something to invent:
 1. ✅ **Build it unmodified** — **done 2026-08-31**: the untouched fork ran on
    the iPhone 17 Pro simulator. What it took is under *Build status & toolchain
    notes* below.
-2. **Rebrand + theme + homeserver** (config.json, primaryColor, ids, icons).
-   Rebuild; confirm it logs into a `d0b0.lv` account and E2EE works.
+2. ✅ **Rebrand + theme + homeserver** — **done 2026-10-11** (PR #7): name,
+   `lv.d0b0.chat` ids on every platform, green theme, `d0b0.lv` preset.
+   Leftovers are in the To-do below (icons, push, URLs).
 3. **Verify the SDK caveats** (sliding sync, QR login availability) so you know
    what's on the table.
 4. **Feature wishlist** — get specifics from the owner beyond the FluffyChat
    baseline (which already covers the unified inbox/sorting).
 5. **Web build** once mobile is solid; then updates + QR login as v2.
+
+## To-do (backlog)
+
+- [ ] **Make push notifications work.** After the rebrand the app still points
+  at FluffyChat's push gateway (`pushNotificationsGatewayUrl` →
+  `push.fluffychat.im`) with FluffyChat's Firebase config
+  (`ios/Runner/GoogleService-Info.plist`, bundle id `im.fluffychat.app`), so
+  nothing can be delivered to a `lv.d0b0.chat` app. Needs, per platform:
+  - **Android:** UnifiedPush is the no-Google path and needs no app change —
+    users install a distributor (e.g. ntfy) and the app registers through it.
+    Decide whether a d0b0-hosted ntfy server is wanted or `ntfy.sh` is fine.
+    FCM (optional, Google-dependent): own Firebase project + run
+    `scripts/add-firebase-messaging.sh` + own `google-services.json`.
+  - **iOS:** APNs only, no UnifiedPush. Needs an Apple Developer account
+    (APNs key), **our own push gateway** (Sygnal, deployed on d0b0 infra; the
+    one piece of server-side infra push requires, separate from the homeserver),
+    FCM/APNs wiring in the app (`add-firebase-messaging.sh`, our
+    `GoogleService-Info.plist`), and `pushNotificationsGatewayUrl` pointed at
+    our Sygnal.
+  - Then test: background + terminated delivery on both platforms, and the
+    iOS Notification Service Extension decrypting E2EE previews.
+- [ ] App icons + splash from a d0b0 logo (owner to supply the artwork).
+- [ ] Rebrand leftovers: OIDC logo/ToS URLs and ko-fi tutorial links in
+  `app_config.dart`/`setting_keys.dart`, `PRIVACY.md` (currently a stub
+  pointing at FluffyChat's policy), Windows `Runner.rc` company/copyright,
+  stale `scripts/build-ios.sh` / `build-macos.sh` team-rotation seds,
+  `flutter_launcher_icons` web `background_color` vs `web/manifest.json`.
+- [ ] Theme nits: style-picker fallback should use the configured seed
+  (`theme_builder.dart`), `d0b0_theme.dart` should reference
+  `AppConfig.primaryColor` instead of a hardcoded green.
 
 ## Build status & toolchain notes (the Mac)
 
