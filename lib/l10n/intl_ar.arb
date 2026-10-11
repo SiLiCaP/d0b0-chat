@@ -540,7 +540,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "inviteText": "دعاك {username} إلى FluffyChat.\n1. قم بزيارة موقع fluffychat.im وقم بتثبيت التطبيق\n2. قم بإنشاءحساب أو تسجيل الدخول\n3. افتح رابط الدعوة:\n {link}",
+    "inviteText": "دعاك {username} إلى d0b0 chat.\n1. قم بزيارة موقع chat.d0b0.lv وقم بتثبيت التطبيق\n2. قم بإنشاءحساب أو تسجيل الدخول\n3. افتح رابط الدعوة:\n {link}",
     "@inviteText": {
         "type": "String",
         "placeholders": {
@@ -672,7 +672,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newMessageInFluffyChat": "💬 رسالة جديدة في FluffyChat",
+    "newMessageInFluffyChat": "💬 رسالة جديدة في d0b0 chat",
     "@newMessageInFluffyChat": {
         "type": "String",
         "placeholders": {}
@@ -2455,7 +2455,7 @@
     "advancedConfigurations": "التكويناتالمتقدمة",
     "signIn": "تسجيل الدخول",
     "createNewAccount": "إنشاء حساب جديد",
-    "signUpGreeting": "FluffyChat لا مركزي! اختر الخادم الذي تريد إنشاء حسابك عليه ولنبدأ!",
+    "signUpGreeting": "d0b0 chat لا مركزي! اختر الخادم الذي تريد إنشاء حسابك عليه ولنبدأ!",
     "signInGreeting": "هل لديك حساب بالفعل في ماتريكس؟ أهلاً بك مجدداً! اختر خادمك المنزلي وسجّل الدخول.",
     "theProcessWasCanceled": "تم إلغاء العملية.",
     "join": "انضمام",
@@ -2474,7 +2474,7 @@
     },
     "createNewChat": "إنشاء محادثة جديدة",
     "reset": "إعادة تعيين",
-    "supportFluffyChat": "ادعم FluffyChat",
+    "supportFluffyChat": "ادعم d0b0 chat",
     "support": "دعم",
     "setLowPriority": "حدد أولوية منخفضة",
     "unsetLowPriority": "إلغاء تعيين الأولوية المنخفضة",
@@ -2484,7 +2484,7 @@
     "tagName": "اسم الوسم",
     "createNewTag": "إنشاء وسم جديد",
     "hideRoomsInSpaces": "إخفاء الغرف الموجودة في مساحة",
-    "possibleByYou": "لم يكن هذا الإصدار ليتحقق لولا دعمكم. سيظل FluffyChat مجانيًا ومفتوح المصدر، ويعتمد كليًا على جهود المجتمع.",
+    "possibleByYou": "لم يكن هذا الإصدار ليتحقق لولا دعمكم. سيظل d0b0 chat مجانيًا ومفتوح المصدر، ويعتمد كليًا على جهود المجتمع.",
     "showThumbnailsInTimeline": "عرض الصور المصغرة للصور ومقاطع الفيديو",
     "appSubtitle": "اتصال آمن [مصفوفة]",
     "appDescription": "التواصل بشكل مشفر عبر شبكة [المصفوفة] اللامركزية بطريقة سهلة ومتاحة للجميع.",
@@ -2558,7 +2558,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newPassphraseDescription": "يستخدم تطبيق FluffyChat التشفير التام بين الطرفين. ولضمان عدم فقدان رسائلك، يُرجى اختيار عبارة مرور قوية لحماية هويتك الرقمية ونسخة احتياطية من رسائلك المشفرة.",
+    "newPassphraseDescription": "يستخدم تطبيق d0b0 chat التشفير التام بين الطرفين. ولضمان عدم فقدان رسائلك، يُرجى اختيار عبارة مرور قوية لحماية هويتك الرقمية ونسخة احتياطية من رسائلك المشفرة.",
     "@newPassphraseDescription": {
         "type": "String",
         "placeholders": {}

@@ -1009,7 +1009,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newMessageInFluffyChat": "💬 پیام جدید در فلافی‌چت",
+    "newMessageInFluffyChat": "💬 پیام جدید در d0b0 chat",
     "@newMessageInFluffyChat": {
         "type": "String",
         "placeholders": {}
@@ -1291,7 +1291,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "noGoogleServicesWarning": "به نظر می‌رسد دستگاه شما سرویس‌های گوگل ندارد. این انتخاب خوبی برای حریم خصوصی است! برای دریافت آگاه‌سازها در فلافی‌چت، پیشنهاد می‌کنیم از https://ntfy.sh استفاده کنید. با ntfy یا یک فراهم‌کننده UnifiedPush می‌توانید آگاه‌سازهای امن دریافت کنید. می‌توانید ntfy را از Play Store یا F-Droid بارگیری کنید.",
+    "noGoogleServicesWarning": "به نظر می‌رسد دستگاه شما سرویس‌های گوگل ندارد. این انتخاب خوبی برای حریم خصوصی است! برای دریافت آگاه‌سازها در d0b0 chat، پیشنهاد می‌کنیم از https://ntfy.sh استفاده کنید. با ntfy یا یک فراهم‌کننده UnifiedPush می‌توانید آگاه‌سازهای امن دریافت کنید. می‌توانید ntfy را از Play Store یا F-Droid بارگیری کنید.",
     "@noGoogleServicesWarning": {
         "type": "String",
         "placeholders": {}
@@ -1337,7 +1337,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "inviteText": "{username} شما را به فلافی‌چت دعوت کرد.\n۱. به fluffychat.im بروید و برنامه را نصب کنید\n۲. ثبت‌نام کنید یا وارد شوید\n۳. پیوند دعوت را باز کنید:\n {link}",
+    "inviteText": "{username} شما را به d0b0 chat دعوت کرد.\n۱. به chat.d0b0.lv بروید و برنامه را نصب کنید\n۲. ثبت‌نام کنید یا وارد شوید\n۳. پیوند دعوت را باز کنید:\n {link}",
     "@inviteText": {
         "type": "String",
         "placeholders": {
@@ -2467,7 +2467,7 @@
     "advancedConfigurations": "تنظیمات پیشرفته",
     "signIn": "ورود",
     "createNewAccount": "ساخت حساب جدید",
-    "signUpGreeting": "فلافی چت غیرمتمرکز است! یک سرور که میخواهید در آن حسابتان را بسازید را انتخاب کنید و شروع کنید!",
+    "signUpGreeting": "d0b0 chat غیرمتمرکز است! یک سرور که میخواهید در آن حسابتان را بسازید را انتخاب کنید و شروع کنید!",
     "signInGreeting": "از قبل در ماتریکس حساب کاربری دارید؟ خوش برگشتید! سرور خانه خود را انتخاب و لاگین کنید.",
     "theProcessWasCanceled": "فرآیند لغو شد.",
     "join": "عضویت",
@@ -2487,7 +2487,7 @@
     },
     "createNewChat": "ساخت چت جدید",
     "reset": "ریست کردن",
-    "supportFluffyChat": "حمایت از فلافی چت",
+    "supportFluffyChat": "حمایت از d0b0 chat",
     "support": "پشتیبانی",
     "setLowPriority": "تنظیم اولویت پایین",
     "unsetLowPriority": "لغو تنظیم اولویت پایین",

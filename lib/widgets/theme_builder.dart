@@ -5,6 +5,7 @@
 
 import 'package:collection/collection.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/utils/color_value.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -36,10 +37,17 @@ class ThemeController extends State<ThemeBuilder> {
   SharedPreferences? _sharedPreferences;
   ThemeMode? _themeMode;
   Color? _primaryColor;
+  bool _useSystemColor = false;
+
+  /// Stored when the user explicitly picks the system (wallpaper) colour.
+  /// Without any stored value the d0b0 brand colour is used.
+  static const int _systemColorValue = 0;
 
   ThemeMode get themeMode => _themeMode ?? ThemeMode.system;
 
-  Color? get primaryColor => _primaryColor;
+  /// The picked colour, or null when the system colour is picked.
+  Color? get primaryColor =>
+      _useSystemColor ? null : _primaryColor ?? AppConfig.chatColor;
 
   static ThemeController of(BuildContext context) =>
       Provider.of<ThemeController>(context, listen: false);
@@ -55,7 +63,10 @@ class ThemeController extends State<ThemeBuilder> {
       _themeMode = ThemeMode.values.singleWhereOrNull(
         (value) => value.name == rawThemeMode,
       );
-      _primaryColor = rawColor == null ? null : Color(rawColor);
+      _useSystemColor = rawColor == _systemColorValue;
+      _primaryColor = rawColor == null || _useSystemColor
+          ? null
+          : Color(rawColor);
     });
   }
 
@@ -71,15 +82,12 @@ class ThemeController extends State<ThemeBuilder> {
   Future<void> setPrimaryColor(Color? newPrimaryColor) async {
     final preferences = _sharedPreferences ??=
         await SharedPreferences.getInstance();
-    if (newPrimaryColor == null) {
-      await preferences.remove(widget.primaryColorSettingsKey);
-    } else {
-      await preferences.setInt(
-        widget.primaryColorSettingsKey,
-        newPrimaryColor.hexValue,
-      );
-    }
+    await preferences.setInt(
+      widget.primaryColorSettingsKey,
+      newPrimaryColor?.hexValue ?? _systemColorValue,
+    );
     setState(() {
+      _useSystemColor = newPrimaryColor == null;
       _primaryColor = newPrimaryColor;
     });
   }
@@ -95,8 +103,11 @@ class ThemeController extends State<ThemeBuilder> {
     return Provider(
       create: (_) => this,
       child: DynamicColorBuilder(
-        builder: (light, _) =>
-            widget.builder(context, themeMode, primaryColor ?? light?.primary),
+        builder: (light, _) => widget.builder(
+          context,
+          themeMode,
+          _useSystemColor ? light?.primary : _primaryColor,
+        ),
       ),
     );
   }

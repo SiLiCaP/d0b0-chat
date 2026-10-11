@@ -697,7 +697,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "inviteText": "{username}があなたをFluffyChatに招待しました。\n1. FluffyChatをインストール:　fluffychat.im \n2. アカウントの作成、またはサインインを行う\n3. 招待リンクを開く\n {link}",
+    "inviteText": "{username}があなたをd0b0 chatに招待しました。\n1. d0b0 chatをインストール:　chat.d0b0.lv \n2. アカウントの作成、またはサインインを行う\n3. 招待リンクを開く\n {link}",
     "@inviteText": {
         "type": "String",
         "placeholders": {
@@ -844,7 +844,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newMessageInFluffyChat": "💬 FluffyChatに新しいメッセージがあります",
+    "newMessageInFluffyChat": "💬 d0b0 chatに新しいメッセージがあります",
     "@newMessageInFluffyChat": {
         "type": "String",
         "placeholders": {}

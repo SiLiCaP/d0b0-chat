@@ -1,11 +1,11 @@
 {
-    "name": "FluffyChat",
-    "short_name": "FluffyChat",
+    "name": "d0b0 chat",
+    "short_name": "d0b0 chat",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
-    "theme_color": "#41a2bc",
-    "description": "The cutest messenger in the Matrix network",
+    "background_color": "#060d06",
+    "theme_color": "#3fd82f",
+    "description": "d0b0 chat, a Matrix messenger",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
