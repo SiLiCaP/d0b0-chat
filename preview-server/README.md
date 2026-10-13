@@ -22,6 +22,8 @@ Cloudflare Access (/pr-*) ─> tunnel ─> d0b0-caddy ─┬─ /_matrix, /_syna
   With more than `MAX_PREVIEWS` previews, the oldest is evicted.
 - The test homeserver is the `matrix-server` app on the same box (`test-d0b0.apapss.id.lv`,
   registration closed, federation off). It is not production; `d0b0.lv` is never touched.
+  CI builds pull requests with `--dart-define=D0B0_HOMESERVER=test-d0b0.apapss.id.lv`, so
+  preview apps default to the test server; builds from `main` and tags keep `d0b0.lv`.
 
 ## Server layout
 
