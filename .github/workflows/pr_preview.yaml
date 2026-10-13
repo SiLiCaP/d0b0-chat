@@ -27,8 +27,10 @@ env:
   BASE_URL: ${{ vars.PREVIEW_BASE_URL || 'https://test-d0b0.apapss.id.lv' }}
   MAX_PREVIEWS: ${{ vars.MAX_PREVIEWS || '2' }}
   EMULATOR_IMAGE: budtmo/docker-android:emulator_14.0
-  # The guest always gets 4 GB of RAM; with QEMU and software rendering the container
-  # peaks around 6 GB, and a 4g limit gets it OOM-killed during boot.
+  # Nexus 5 (1080x1920, 2.5 GB guest RAM). Larger profiles such as the Galaxy S10
+  # (1440x3040, 4 GB) grow past 6 GB with software rendering and get OOM-killed.
+  # This one boots at ~3.7 GB and stays around 5 GB in use.
+  EMULATOR_DEVICE: Nexus 5
   EMULATOR_MEMORY: 6500m
 
 jobs:
@@ -99,7 +101,7 @@ jobs:
               --network d0b0-preview \
               --device /dev/kvm \
               --memory "$EMULATOR_MEMORY" \
-              -e EMULATOR_DEVICE="Samsung Galaxy S10" \
+              -e EMULATOR_DEVICE="$EMULATOR_DEVICE" \
               -e WEB_VNC=true \
               "$EMULATOR_IMAGE"
           fi

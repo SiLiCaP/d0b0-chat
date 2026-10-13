@@ -13,6 +13,12 @@ import 'package:managed_configurations/managed_configurations.dart';
 import 'package:matrix/matrix_api_lite/utils/logs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Build-time homeserver override, e.g.
+/// `flutter build apk --dart-define=D0B0_HOMESERVER=test-d0b0.apapss.id.lv`.
+/// CI sets it for pull request builds so previews never point at production.
+const _homeserverOverride = String.fromEnvironment('D0B0_HOMESERVER');
+const _homeserver = _homeserverOverride == '' ? 'd0b0.lv' : _homeserverOverride;
+
 enum AppSettings<T> {
   textMessageMaxLength<int>('textMessageMaxLength', 16384),
 
@@ -53,13 +59,13 @@ enum AppSettings<T> {
   displayChatDetailsColumn('chat.fluffy.display_chat_details_column', false),
   // AppConfig-mirrored settings
   applicationName<String>('chat.fluffy.application_name', 'd0b0 chat'),
-  defaultHomeserver<String>('chat.fluffy.default_homeserver', 'd0b0.lv'),
+  defaultHomeserver<String>('chat.fluffy.default_homeserver', _homeserver),
   // colorSchemeSeed stored as ARGB int
   colorSchemeSeedInt<int>('chat.fluffy.color_scheme_seed', 0xFF3FD82F),
   emojiSuggestionLocale<String>('emoji_suggestion_locale', ''),
   enableSoftLogout<bool>('chat.fluffy.enable_soft_logout', true),
   enableMatrixNativeOIDC<bool>('chat.fluffy.enable_matrix_native_oidc', true),
-  presetHomeserver<String>('chat.fluffy.preset_homeserver', 'd0b0.lv'),
+  presetHomeserver<String>('chat.fluffy.preset_homeserver', _homeserver),
   welcomeText<String>('chat.fluffy.welcome_text', ''),
   website<String>('chat.fluffy.website_url', 'https://d0b0.lv'),
   logoUrl<String>(

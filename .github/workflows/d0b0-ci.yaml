@@ -28,6 +28,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  # Pull request builds (and so the PR previews) use the test homeserver, never production.
+  HOMESERVER_DEFINE: ${{ github.event_name == 'pull_request' && '--dart-define=D0B0_HOMESERVER=test-d0b0.apapss.id.lv' || '' }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -87,10 +91,10 @@ jobs:
           } > android/key.properties
       - name: Build signed release APK
         if: ${{ env.KEYSTORE_BASE64 != '' }}
-        run: flutter build apk --release
+        run: flutter build apk --release ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - name: Build debug APK (no keystore secrets configured)
         if: ${{ env.KEYSTORE_BASE64 == '' }}
-        run: flutter build apk --debug
+        run: flutter build apk --debug ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - uses: actions/upload-artifact@v7
         with:
           name: d0b0-chat-android-apk
@@ -114,7 +118,7 @@ jobs:
         run: ./scripts/prepare-web.sh
       - run: rm ./assets/vodozemac/.gitignore
       - run: flutter pub get
-      - run: flutter build web --release
+      - run: flutter build web --release ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - uses: actions/upload-artifact@v7
         with:
           name: d0b0-chat-web

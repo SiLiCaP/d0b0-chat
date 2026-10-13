@@ -2,7 +2,8 @@
 
 Every same-repo pull request gets a live Android emulator and a web build, both
 served from the TrueNAS box at home under `https://test-d0b0.apapss.id.lv/pr-<N>/`.
-The landing page there links to both and lists the test accounts.
+The landing page there links to both, lists the test accounts, and has buttons that
+log the emulator in as a test account.
 
 ```
 GitHub ──(runner polls, outbound only)──> d0b0-runner ──docker──> android-pr-<N> (emulator, noVNC :6080)
@@ -10,6 +11,7 @@ GitHub ──(runner polls, outbound only)──> d0b0-runner ──docker──
 
 Cloudflare Access (/pr-*) ─> tunnel ─> d0b0-caddy ─┬─ /_matrix, /_synapse/client ─> Synapse (public)
                                                     ├─ /pr-<N>/, /pr-<N>/web/    ─> landing page, web build
+                                                    ├─ /pr-<N>/api/login         ─> d0b0-helper ─adb─> android-pr-<N>:5555
                                                     └─ /pr-<N>/...               ─> android-pr-<N>:6080
 ```
 
@@ -20,6 +22,8 @@ Cloudflare Access (/pr-*) ─> tunnel ─> d0b0-caddy ─┬─ /_matrix, /_syna
   With more than `MAX_PREVIEWS` previews, the oldest is evicted.
 - The test homeserver is the `matrix-server` app on the same box (`test-d0b0.apapss.id.lv`,
   registration closed, federation off). It is not production; `d0b0.lv` is never touched.
+  CI builds pull requests with `--dart-define=D0B0_HOMESERVER=test-d0b0.apapss.id.lv`, so
+  preview apps default to the test server; builds from `main` and tags keep `d0b0.lv`.
 
 ## Server layout
 
@@ -27,7 +31,7 @@ All on the `nas/apps/d0b0-preview` dataset:
 
 | Path | What |
 |---|---|
-| `config/Caddyfile`, `config/landing/` | Copies of the files in this folder |
+| `config/Caddyfile`, `config/landing/`, `config/helper/` | Copies of the files in this folder |
 | `sites/pr-<N>/web/` | Web builds, written by the runner |
 | `secrets/testers.json` | Test accounts shown on the landing page (root-only folder, never in git) |
 | `secrets/runner.env` | `RUNNER_TOKEN=...` for the first registration |
@@ -45,7 +49,7 @@ All on the `nas/apps/d0b0-preview` dataset:
 Already done on the current box: datasets, `testers.json`, test accounts, emulator image pulled.
 
 1. **Copy the config** from this folder to `/mnt/nas/apps/d0b0-preview/config/`
-   (`Caddyfile` and `landing/`), and create `sites/` and `runner/` next to it.
+   (`Caddyfile`, `landing/` and `helper/`), and create `sites/` and `runner/` next to it.
 2. **Runner token.** Repo → Settings → Actions → Runners → New self-hosted runner, copy
    the token from the `config.sh` line, and write `RUNNER_TOKEN=<token>` into
    `secrets/runner.env`. It expires after an hour, so install the app right after.
@@ -63,11 +67,29 @@ Already done on the current box: datasets, `testers.json`, test accounts, emulat
    `MAX_PREVIEWS=2`. Under Actions → General, keep "Require approval for all outside
    collaborators" for fork PR workflows.
 
+## One-click login
+
+`helper/helper.py` (container `d0b0-helper`) logs an emulator in as `tester1` or
+`tester2` when someone presses the button on the landing page. It drives the app's UI
+over adb (`android-pr-<N>:5555`), types the full user ID so the app finds the test
+homeserver, and clicks through the first-run prompts until the chat list shows. It
+has no Docker socket and only reads `testers.json`. It takes about a minute.
+
+It finds buttons by their accessibility labels ("Sign in", "Login", "Skip", ...). If a
+PR changes those screens, the button may stop working; the error on the landing page
+says where it got stuck. It never presses "Reset account".
+
 ## Sizing
 
-Each emulator needs about 6.5 GB of RAM and two CPU cores; it boots in about 90 s. The
-current box (i3-8100, 4 cores, 23 GB, also running Immich and Synapse) fits
-`MAX_PREVIEWS=2`. Web previews are static files and cost nothing.
+Emulators use the Nexus 5 profile (1080x1920, 2.5 GB guest RAM): about 3.7 GB after
+boot and about 5 GB in use, under a 6.5 GB limit, with two CPU cores; boot takes about
+2 minutes. Bigger profiles such as the Galaxy S10 grow past 6 GB with software rendering
+and get OOM-killed. The current box (i3-8100, 4 cores, 23 GB, also running Immich and
+Synapse) fits `MAX_PREVIEWS=2`. Web previews are static files and cost nothing.
+
+Synapse on this box has relaxed login rate limits (`rc_login`) because testers and the
+login button log in often, and Caddy passes the real client IP from Cloudflare
+(`Cf-Connecting-Ip`) so limits apply per tester.
 
 ## Operating it
 
