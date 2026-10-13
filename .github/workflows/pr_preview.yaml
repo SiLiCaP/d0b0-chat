@@ -1,0 +1,236 @@
+# Live previews for pull requests: an Android emulator and the web build, per PR.
+#
+# Runs on the self-hosted runner on the TrueNAS box (labels: self-hosted, linux, x64, kvm).
+# See preview-server/README.md for the server side.
+#
+# Security model, keep it this way:
+#   * Triggers are workflow_run and pull_request_target, so only main's copy of this
+#     file ever runs. Nothing here checks out or executes PR code on the server; the
+#     PR's APK runs inside the emulator and its web build is served as static files.
+#   * Only same-repo PRs get previews. Fork PRs are skipped (their builds would run
+#     on the home network).
+
+name: PR preview
+
+on:
+  workflow_run:
+    workflows: ["d0b0 chat CI"]
+    types: [completed]
+  pull_request_target:
+    types: [closed]
+
+permissions: {}
+
+env:
+  APP_ID: lv.d0b0.chat
+  HOMESERVER: test-d0b0.apapss.id.lv
+  BASE_URL: ${{ vars.PREVIEW_BASE_URL || 'https://test-d0b0.apapss.id.lv' }}
+  MAX_PREVIEWS: ${{ vars.MAX_PREVIEWS || '2' }}
+  EMULATOR_IMAGE: budtmo/docker-android:emulator_14.0
+  # The guest always gets 4 GB of RAM; with QEMU and software rendering the container
+  # peaks around 6 GB, and a 4g limit gets it OOM-killed during boot.
+  EMULATOR_MEMORY: 6500m
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.pull_requests[0].number
+    runs-on: [self-hosted, linux, x64, kvm]
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      pull-requests: write
+    concurrency:
+      group: pr-preview-${{ github.event.workflow_run.pull_requests[0].number }}
+      cancel-in-progress: true
+    env:
+      PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Clean workspace
+        run: rm -rf apk web "$RUNNER_TEMP/evicted"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: d0b0-chat-android-apk
+          path: apk
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: d0b0-chat-web
+          path: web
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Evict old previews and start the emulator
+        run: |
+          set -euo pipefail
+          # One deploy at a time decides what to evict.
+          exec 9>/previews/.lock
+          flock 9
+
+          others=$(docker ps -a --filter label=d0b0.preview.pr \
+                     --format '{{.CreatedAt}}	{{.Label "d0b0.preview.pr"}}' \
+                   | sort | awk -F'\t' -v pr="$PR" '$2 != pr {print $2}')
+          count=$(printf '%s' "$others" | grep -c . || true)
+          excess=$(( count - (MAX_PREVIEWS - 1) ))
+          if [ "$excess" -gt 0 ]; then
+            for old in $(printf '%s\n' "$others" | head -n "$excess"); do
+              echo "Evicting preview of PR #$old"
+              docker rm -f "android-pr-$old" >/dev/null
+              rm -rf "/previews/pr-$old"
+              echo "$old" >> "$RUNNER_TEMP/evicted"
+            done
+          fi
+
+          name="android-pr-$PR"
+          if [ "$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null)" = true ]; then
+            echo "Reusing running emulator $name"
+          else
+            docker rm -f "$name" >/dev/null 2>&1 || true
+            docker run -d --name "$name" \
+              --label "d0b0.preview.pr=$PR" \
+              --network d0b0-preview \
+              --device /dev/kvm \
+              --memory "$EMULATOR_MEMORY" \
+              -e EMULATOR_DEVICE="Samsung Galaxy S10" \
+              -e WEB_VNC=true \
+              "$EMULATOR_IMAGE"
+          fi
+
+      - name: Publish the web build
+        run: |
+          set -euo pipefail
+          dir="/previews/pr-$PR"
+          mkdir -p "$dir"
+          rm -rf "$dir/web.new"
+          cp -r web "$dir/web.new"
+          grep -q '<base href="/">' "$dir/web.new/index.html"
+          sed -i "s|<base href=\"/\">|<base href=\"/pr-$PR/web/\">|" "$dir/web.new/index.html"
+          jq -n --arg hs "$HOMESERVER" \
+            '{applicationName: "d0b0 chat", defaultHomeserver: $hs, presetHomeserver: $hs}' \
+            > "$dir/web.new/config.json"
+          rm -rf "$dir/web"
+          mv "$dir/web.new" "$dir/web"
+
+      - name: Wait for the emulator to boot
+        run: |
+          set -euo pipefail
+          name="android-pr-$PR"
+          for i in $(seq 1 96); do
+            if [ "$(docker inspect -f '{{.State.Running}}' "$name")" != true ]; then
+              echo "::error::Emulator container stopped (OOMKilled=$(docker inspect -f '{{.State.OOMKilled}}' "$name"))"
+              docker logs --tail 50 "$name"
+              exit 1
+            fi
+            # Ask Android itself. docker-android's device_status gives up after ~2 minutes
+            # and then stays at BOOTING forever when the box is busy.
+            booted=$(docker exec "$name" adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+            if [ "$booted" = 1 ]; then echo "Emulator ready after $((i * 5))s"; exit 0; fi
+            sleep 5
+          done
+          echo "::error::Emulator did not boot within 8 minutes"
+          docker logs --tail 50 "$name"
+          exit 1
+
+      - name: Install and launch the APK
+        run: |
+          set -euo pipefail
+          name="android-pr-$PR"
+          apk=$(find apk -name '*.apk' | head -n 1)
+          docker cp "$apk" "$name:/tmp/app.apk"
+          # -r keeps the app's data (and login) between pushes. A signing key change
+          # (debug -> release) makes that fail; start fresh then.
+          if ! docker exec "$name" adb install -r -g /tmp/app.apk; then
+            docker exec "$name" adb uninstall "$APP_ID" || true
+            docker exec "$name" adb install -g /tmp/app.apk
+          fi
+          docker exec "$name" adb shell am force-stop "$APP_ID"
+          docker exec "$name" adb shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1
+
+      - name: Comment on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- d0b0-pr-preview -->';
+            const { PR, HEAD_SHA, BASE_URL, MAX_PREVIEWS, RUNNER_TEMP } = process.env;
+            const base = `${BASE_URL}/pr-${PR}`;
+
+            async function upsert(issue_number, body) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                ...context.repo, issue_number,
+              });
+              const mine = comments.find(c => c.user.type === 'Bot' && c.body.startsWith(marker));
+              if (mine) {
+                await github.rest.issues.updateComment({ ...context.repo, comment_id: mine.id, body });
+              } else {
+                await github.rest.issues.createComment({ ...context.repo, issue_number, body });
+              }
+            }
+
+            await upsert(Number(PR), [
+              marker,
+              `### 📱 Live preview of \`${HEAD_SHA.slice(0, 7)}\``,
+              '',
+              `**[Open the preview](${base}/)**, with links to both builds and the test accounts.`,
+              '',
+              `- Android: [emulator in the browser](${base}/vnc.html?autoconnect=true&resize=scale&path=pr-${PR}/websockify)`,
+              `- Web: [web build](${base}/web/)`,
+              '',
+              `Sign in through Cloudflare Access first. Updated on every push; removed when the PR closes or when more than ${MAX_PREVIEWS} previews are open.`,
+            ].join('\n'));
+
+            const evictedFile = `${RUNNER_TEMP}/evicted`;
+            if (fs.existsSync(evictedFile)) {
+              for (const old of fs.readFileSync(evictedFile, 'utf8').split('\n').filter(Boolean)) {
+                await upsert(Number(old), [
+                  marker,
+                  `### 📱 Preview removed`,
+                  '',
+                  `Removed to make room for #${PR} (at most ${MAX_PREVIEWS} previews run at once). Push a new commit to bring it back.`,
+                ].join('\n'));
+              }
+            }
+
+  cleanup:
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, x64, kvm]
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    concurrency:
+      group: pr-preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    env:
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Remove the preview
+        run: |
+          docker rm -f "android-pr-$PR" || true
+          rm -rf "/previews/pr-$PR"
+
+      - name: Update the PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- d0b0-pr-preview -->';
+            const issue_number = Number(process.env.PR);
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number,
+            });
+            const mine = comments.find(c => c.user.type === 'Bot' && c.body.startsWith(marker));
+            if (mine) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: mine.id,
+                body: `${marker}\n### 📱 Preview removed\n\nThe PR is closed, so its emulator and web build are gone.`,
+              });
+            }

@@ -1,0 +1,55 @@
+# PR preview stack, installed on the TrueNAS box as a Custom App ("Install via YAML").
+# See README.md. Host paths live on the nas/apps/d0b0-preview dataset:
+#
+#   /mnt/nas/apps/d0b0-preview/config/   Caddyfile and landing/ (copied from this folder)
+#   /mnt/nas/apps/d0b0-preview/sites/    web builds, one pr-<N>/web per PR (written by the runner)
+#   /mnt/nas/apps/d0b0-preview/secrets/  testers.json, runner.env (never in git)
+#   /mnt/nas/apps/d0b0-preview/runner/   runner registration, survives restarts
+#
+# The emulators are not in this file: the workflow starts android-pr-<N> containers
+# on the d0b0-preview network through the Docker socket.
+
+services:
+  caddy:
+    image: caddy:2.11.7-alpine
+    container_name: d0b0-caddy
+    restart: unless-stopped
+    volumes:
+      - /mnt/nas/apps/d0b0-preview/config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /mnt/nas/apps/d0b0-preview/config/landing:/srv/landing:ro
+      - /mnt/nas/apps/d0b0-preview/sites:/srv/sites:ro
+      - /mnt/nas/apps/d0b0-preview/secrets/testers.json:/secrets/testers.json:ro
+    networks:
+      - previews # reaches android-pr-<N>:6080
+      - matrix # reaches synapse:8008
+      - tunnel # cloudflared reaches d0b0-caddy:80
+
+  runner:
+    image: myoung34/github-runner:2.337.0-ubuntu-noble
+    container_name: d0b0-runner
+    restart: unless-stopped
+    env_file:
+      - /mnt/nas/apps/d0b0-preview/secrets/runner.env # RUNNER_TOKEN=..., only read on first registration
+    environment:
+      REPO_URL: https://github.com/SiLiCaP/d0b0-chat
+      RUNNER_SCOPE: repo
+      RUNNER_NAME: truenas-preview
+      LABELS: kvm
+      RUN_AS_ROOT: "true"
+      RUNNER_WORKDIR: /tmp/runner/work
+      CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /runner/data
+      DISABLE_AUTOMATIC_DEREGISTRATION: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/nas/apps/d0b0-preview/runner:/runner/data
+      - /mnt/nas/apps/d0b0-preview/sites:/previews
+
+networks:
+  previews:
+    name: d0b0-preview
+  matrix:
+    name: ix-matrix-server_default
+    external: true
+  tunnel:
+    name: ix-cloudflared_default
+    external: true

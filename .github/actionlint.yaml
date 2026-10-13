@@ -1,0 +1,4 @@
+self-hosted-runner:
+  # The PR preview runner on the TrueNAS box (see preview-server/README.md).
+  labels:
+    - kvm
