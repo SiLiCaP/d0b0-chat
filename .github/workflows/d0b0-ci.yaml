@@ -91,10 +91,10 @@ jobs:
           } > android/key.properties
       - name: Build signed release APK
         if: ${{ env.KEYSTORE_BASE64 != '' }}
-        run: flutter build apk --release $HOMESERVER_DEFINE
+        run: flutter build apk --release ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - name: Build debug APK (no keystore secrets configured)
         if: ${{ env.KEYSTORE_BASE64 == '' }}
-        run: flutter build apk --debug $HOMESERVER_DEFINE
+        run: flutter build apk --debug ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - uses: actions/upload-artifact@v7
         with:
           name: d0b0-chat-android-apk
@@ -118,7 +118,7 @@ jobs:
         run: ./scripts/prepare-web.sh
       - run: rm ./assets/vodozemac/.gitignore
       - run: flutter pub get
-      - run: flutter build web --release $HOMESERVER_DEFINE
+      - run: flutter build web --release ${HOMESERVER_DEFINE:+"$HOMESERVER_DEFINE"}
       - uses: actions/upload-artifact@v7
         with:
           name: d0b0-chat-web
