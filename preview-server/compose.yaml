@@ -1,7 +1,7 @@
 # PR preview stack, installed on the TrueNAS box as a Custom App ("Install via YAML").
 # See README.md. Host paths live on the nas/apps/d0b0-preview dataset:
 #
-#   /mnt/nas/apps/d0b0-preview/config/   Caddyfile and landing/ (copied from this folder)
+#   /mnt/nas/apps/d0b0-preview/config/   Caddyfile, landing/ and helper/ (copied from this folder)
 #   /mnt/nas/apps/d0b0-preview/sites/    web builds, one pr-<N>/web per PR (written by the runner)
 #   /mnt/nas/apps/d0b0-preview/secrets/  testers.json, runner.env (never in git)
 #   /mnt/nas/apps/d0b0-preview/runner/   runner registration, survives restarts
@@ -23,6 +23,18 @@ services:
       - previews # reaches android-pr-<N>:6080
       - matrix # reaches synapse:8008
       - tunnel # cloudflared reaches d0b0-caddy:80
+
+  helper:
+    # Reuses the emulator image (already on the box) for its adb and Python.
+    image: budtmo/docker-android:emulator_14.0
+    container_name: d0b0-helper
+    restart: unless-stopped
+    entrypoint: ["python3", "/app/helper.py"]
+    volumes:
+      - /mnt/nas/apps/d0b0-preview/config/helper:/app:ro
+      - /mnt/nas/apps/d0b0-preview/secrets/testers.json:/secrets/testers.json:ro
+    networks:
+      - previews # reaches android-pr-<N>:5555 (adb); no Docker socket
 
   runner:
     image: myoung34/github-runner:2.337.0-ubuntu-noble
