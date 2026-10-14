@@ -2809,5 +2809,154 @@
         "placeholders": {
             "user": {"type": "String"}
         }
+    },
+    "videoMessage": "Video message",
+    "@videoMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoMessages": "Video messages",
+    "@videoMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "voiceMessageSwipeForVideo": "Voice message (swipe for video)",
+    "@voiceMessageSwipeForVideo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoMessageSwipeForVoice": "Video message (swipe for voice)",
+    "@videoMessageSwipeForVoice": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "swipeToSwitchRecordMode": "Swipe the button up or down to switch between voice and video messages",
+    "@swipeToSwitchRecordMode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoMessageQuality": "Video quality",
+    "@videoMessageQuality": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoQuality1080p": "1080p (recommended)",
+    "@videoQuality1080p": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoQualityMax": "Maximum camera resolution",
+    "@videoQualityMax": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoMessageMaxLength": "Maximum length",
+    "@videoMessageMaxLength": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "defaultCamera": "Default camera",
+    "@defaultCamera": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "frontCamera": "Front",
+    "@frontCamera": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "backCamera": "Back",
+    "@backCamera": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveVideoMessagesToGallery": "Save video messages to gallery",
+    "@saveVideoMessagesToGallery": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveVideoMessagesToGalleryDescription": "Keep a copy of every recorded video message in the \"d0b0 chat\" album",
+    "@saveVideoMessagesToGalleryDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveVideoWhenOffline": "Save to gallery when offline",
+    "@saveVideoWhenOffline": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveVideoWhenOfflineDescription": "Keeps a copy if the message can't be sent right away",
+    "@saveVideoWhenOfflineDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "videoSavedToGallery": "Video saved to gallery",
+    "@videoSavedToGallery": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "couldNotSaveVideoToGallery": "Could not save the video to the gallery",
+    "@couldNotSaveVideoToGallery": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "discardVideoMessage": "Discard video message?",
+    "@discardVideoMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "discard": "Discard",
+    "@discard": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "switchCamera": "Switch camera",
+    "@switchCamera": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "stopRecording": "Stop recording",
+    "@stopRecording": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "play": "Play",
+    "@play": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "preparingVideo": "Preparing video…",
+    "@preparingVideo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "cameraAccessRequired": "Camera and microphone access is needed to record video messages. You can allow it in the system settings.",
+    "@cameraAccessRequired": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "cameraNotAvailable": "No camera is available on this device.",
+    "@cameraNotAvailable": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "secondsShort": "{seconds} s",
+    "@secondsShort": {
+        "type": "String",
+        "placeholders": {
+            "seconds": {"type": "int"}
+        }
+    },
+    "minutesShort": "{minutes} min",
+    "@minutesShort": {
+        "type": "String",
+        "placeholders": {
+            "minutes": {"type": "int"}
+        }
+    },
+    "unmute": "Unmute",
+    "@unmute": {
+        "type": "String",
+        "placeholders": {}
     }
 }

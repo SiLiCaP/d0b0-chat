@@ -54,7 +54,7 @@
 	<key>NSCalendarsUsageDescription</key>
 	<string>Share calendar dates with your contacts in d0b0 chat.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Open the camera and take a picture to share them with your contacts on d0b0 chat.</string>
+	<string>Open the camera to take pictures and record video messages to share with your contacts on d0b0 chat.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Share contacts with your contacts in d0b0 chat.</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -66,9 +66,11 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Share your location with your contacts in d0b0 chat.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Record voice message and share them with your contacts on d0b0 chat.</string>
+	<string>Record voice and video messages to share with your contacts on d0b0 chat.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Share motions with your contacts in d0b0 chat.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save your recorded video messages to the d0b0 chat album.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Open photos from your gallery and share them with your contacts on d0b0 chat.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
