@@ -8,10 +8,10 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/recording_input_row.dart';
 import 'package:fluffychat/pages/chat/recording_view_model.dart';
+import 'package:fluffychat/pages/chat/video_message/record_mode_button.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
-import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -338,40 +338,13 @@ class ChatInputRow extends StatelessWidget {
                         PlatformInfos.platformCanRecord &&
                             !controller.sendController.text.isNotEmpty &&
                             controller.editEvent == null
-                        ? HoverBuilder(
-                            builder: (context, hovered) => IconButton(
-                              tooltip: L10n.of(context).voiceMessage,
-                              onPressed: hovered
-                                  ? () => recordingViewModel.startRecording(
-                                      controller.room,
-                                    )
-                                  : () => ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                          SnackBar(
-                                            margin: EdgeInsets.only(
-                                              bottom: height + 16,
-                                              left: 16,
-                                              right: 16,
-                                              top: 16,
-                                            ),
-                                            showCloseIcon: true,
-                                            content: Text(
-                                              L10n.of(
-                                                context,
-                                              ).longPressToRecordVoiceMessage,
-                                            ),
-                                          ),
-                                        ),
-                              onLongPress: () => recordingViewModel
-                                  .startRecording(controller.room),
-                              style: IconButton.styleFrom(
-                                backgroundColor: theme.bubbleColor,
-                                foregroundColor: theme.onBubbleColor,
-                              ),
-                              icon: Icon(
-                                hovered ? Icons.mic : Icons.mic_none_outlined,
-                              ),
-                            ),
+                        ? RecordModeButton(
+                            size: height,
+                            onVoiceMessage: () => recordingViewModel
+                                .startRecording(controller.room),
+                            onVideoMessage: PlatformInfos.isMobile
+                                ? controller.openVideoMessageRecorder
+                                : null,
                           )
                         : IconButton(
                             key: Key('send_button'),

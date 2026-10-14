@@ -153,6 +153,91 @@ class SettingsChatView extends StatelessWidget {
                   child: Icon(Icons.chevron_right_outlined),
                 ),
               ),
+              if (PlatformInfos.isMobile) ...[
+                Divider(color: theme.dividerColor),
+                ListTile(
+                  title: Text(
+                    L10n.of(context).videoMessages,
+                    style: TextStyle(
+                      color: theme.colorScheme.secondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: Text(L10n.of(context).videoMessageQuality),
+                  subtitle: Text(
+                    AppSettings.videoMessageQuality.value == 'max'
+                        ? L10n.of(context).videoQualityMax
+                        : L10n.of(context).videoQuality1080p,
+                  ),
+                  onTap: () => _pickSetting<String>(
+                    context,
+                    title: L10n.of(context).videoMessageQuality,
+                    current: AppSettings.videoMessageQuality.value,
+                    onSelected: AppSettings.videoMessageQuality.setItem,
+                    options: {
+                      '1080p': L10n.of(context).videoQuality1080p,
+                      'max': L10n.of(context).videoQualityMax,
+                    },
+                  ),
+                ),
+                ListTile(
+                  title: Text(L10n.of(context).videoMessageMaxLength),
+                  subtitle: Text(
+                    _formatSeconds(
+                      context,
+                      AppSettings.videoMessageMaxDurationSeconds.value,
+                    ),
+                  ),
+                  onTap: () => _pickSetting<int>(
+                    context,
+                    title: L10n.of(context).videoMessageMaxLength,
+                    current: AppSettings.videoMessageMaxDurationSeconds.value,
+                    onSelected:
+                        AppSettings.videoMessageMaxDurationSeconds.setItem,
+                    options: {
+                      for (final seconds in const [15, 30, 60, 120, 180])
+                        seconds: _formatSeconds(context, seconds),
+                    },
+                  ),
+                ),
+                ListTile(
+                  title: Text(L10n.of(context).defaultCamera),
+                  trailing: SegmentedButton<String>(
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(
+                        value: 'front',
+                        label: Text(L10n.of(context).frontCamera),
+                      ),
+                      ButtonSegment(
+                        value: 'back',
+                        label: Text(L10n.of(context).backCamera),
+                      ),
+                    ],
+                    selected: {AppSettings.videoMessageDefaultCamera.value},
+                    onSelectionChanged: (selected) async {
+                      await AppSettings.videoMessageDefaultCamera.setItem(
+                        selected.single,
+                      );
+                      controller.updateState();
+                    },
+                  ),
+                ),
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).saveVideoMessagesToGallery,
+                  subtitle: L10n.of(
+                    context,
+                  ).saveVideoMessagesToGalleryDescription,
+                  setting: AppSettings.videoMessageSaveToGallery,
+                ),
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).saveVideoWhenOffline,
+                  subtitle: L10n.of(context).saveVideoWhenOfflineDescription,
+                  setting: AppSettings.videoMessageSaveWhenOffline,
+                ),
+              ],
               Divider(color: theme.dividerColor),
               ListTile(
                 title: Text(
@@ -168,5 +253,53 @@ class SettingsChatView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatSeconds(BuildContext context, int seconds) =>
+      seconds < 60 || seconds % 60 != 0
+      ? L10n.of(context).secondsShort(seconds)
+      : L10n.of(context).minutesShort(seconds ~/ 60);
+
+  Future<void> _pickSetting<T>(
+    BuildContext context, {
+    required String title,
+    required T current,
+    required Future<void> Function(T) onSelected,
+    required Map<T, String> options,
+  }) async {
+    final selected = await showAdaptiveBottomSheet<T>(
+      context: context,
+      isScrollControlled: false,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            RadioGroup<T>(
+              groupValue: current,
+              onChanged: (value) => Navigator.of(context).pop(value),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final option in options.entries)
+                    RadioListTile<T>.adaptive(
+                      value: option.key,
+                      title: Text(option.value),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (selected == null) return;
+    await onSelected(selected);
+    controller.updateState();
   }
 }

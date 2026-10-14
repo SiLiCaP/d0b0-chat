@@ -18,6 +18,7 @@ import 'package:fluffychat/pages/chat/event_info_dialog.dart';
 import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/pages/chat/utils/web_file_to_x_file.dart';
+import 'package:fluffychat/pages/chat/video_message/video_message_recorder.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
@@ -28,7 +29,10 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extensi
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
+import 'package:fluffychat/utils/resize_video.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
+import 'package:fluffychat/utils/start_push_foreground_service.dart';
+import 'package:fluffychat/utils/video_message_saver.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -905,6 +909,113 @@ class ChatController extends State<ChatPageWithRoom>
         threadLastEventId: threadLastEventId,
       ),
     );
+  }
+
+  Future<void> openVideoMessageRecorder() async {
+    inputFocus.unfocus();
+    final recording = await showVideoMessageRecorder(
+      context: context,
+      room: room,
+    );
+    if (recording == null || !mounted) return;
+    await onVideoMessageSend(recording);
+  }
+
+  Future<void> onVideoMessageSend(VideoMessageRecording recording) async {
+    final l10n = L10n.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final videoFile = XFile(recording.path, mimeType: 'video/mp4');
+
+    var savedToGallery = false;
+    Future<void> saveToGallery() async {
+      savedToGallery = await VideoMessageSaver.saveToGallery(recording.path);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            savedToGallery
+                ? l10n.videoSavedToGallery
+                : l10n.couldNotSaveVideoToGallery,
+          ),
+        ),
+      );
+    }
+
+    try {
+      final proceed = await showTrustUserInRoomDialog(context, room);
+      if (!mounted || !proceed) return;
+
+      if (VideoMessageSaver.shouldSaveBeforeSend(room.client)) {
+        await saveToGallery();
+      }
+
+      final thumbnail = await videoFile.getVideoThumbnail();
+      final size = recording.size;
+      final file = MatrixVideoFile(
+        bytes: await videoFile.readAsBytes(),
+        name: 'video_message_${DateTime.now().millisecondsSinceEpoch}.mp4',
+        mimeType: 'video/mp4',
+        width: size?.width.round(),
+        height: size?.height.round(),
+        duration: recording.duration.inMilliseconds,
+      );
+
+      final inReplyTo = replyEvent;
+      final threadRootEventId = activeThreadId;
+      final threadLastEventId = this.threadLastEventId;
+
+      if (ForegroundServices.platformSupported) {
+        await ForegroundServices.startService('send_files');
+      }
+      try {
+        try {
+          await room.sendFileEvent(
+            file,
+            thumbnail: thumbnail,
+            inReplyTo: inReplyTo,
+            threadRootEventId: threadRootEventId,
+            threadLastEventId: threadLastEventId,
+          );
+        } on MatrixException catch (e) {
+          final retryAfterMs = e.retryAfterMs;
+          if (e.error != MatrixError.M_LIMIT_EXCEEDED || retryAfterMs == null) {
+            rethrow;
+          }
+          await Future.delayed(Duration(milliseconds: retryAfterMs + 1000));
+          await room.sendFileEvent(
+            file,
+            thumbnail: thumbnail,
+            inReplyTo: inReplyTo,
+            threadRootEventId: threadRootEventId,
+            threadLastEventId: threadLastEventId,
+          );
+        }
+      } catch (e) {
+        // Most likely no network: keep a copy so the video isn't lost.
+        if (!savedToGallery &&
+            e is! MatrixException &&
+            AppSettings.videoMessageSaveWhenOffline.value) {
+          await saveToGallery();
+        }
+        rethrow;
+      } finally {
+        if (ForegroundServices.platformSupported) {
+          await ForegroundServices.stopService('send_files');
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        replyEvent = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text(e.toLocalizedString(context))),
+      );
+    } finally {
+      try {
+        await File(recording.path).delete();
+      } catch (_) {}
+    }
   }
 
   Future<void> onVoiceMessageSend(

@@ -81,7 +81,31 @@ enum AppSettings<T> {
   benchmarksInLogs<bool>('chat.fluffy.benchmarks_in_logs', false),
   autoSendErrorReports<bool?>('chat.fluffy.auto_send_eror_reports', null),
   knownErrorHashes<List<String>>('chat.fluffy.known_crash_hashes', []),
-  customLiveKitInstance<String>('chat.fluffy.custom_live_kit_instance', '');
+  customLiveKitInstance<String>('chat.fluffy.custom_live_kit_instance', ''),
+
+  /// Video messages: '1080p' or 'max'.
+  videoMessageQuality<String>('chat.fluffy.video_message_quality', '1080p'),
+  videoMessageMaxDurationSeconds<int>(
+    'chat.fluffy.video_message_max_duration_seconds',
+    60,
+  ),
+
+  /// Video messages: 'front' or 'back'.
+  videoMessageDefaultCamera<String>(
+    'chat.fluffy.video_message_default_camera',
+    'front',
+  ),
+  videoMessageSaveToGallery<bool>(
+    'chat.fluffy.video_message_save_to_gallery',
+    false,
+  ),
+  videoMessageSaveWhenOffline<bool>(
+    'chat.fluffy.video_message_save_when_offline',
+    true,
+  ),
+
+  /// Last used mode of the record button: 'voice' or 'video'.
+  recordButtonMode<String>('chat.fluffy.record_button_mode', 'voice');
 
   final String key;
   final T _defaultValue;
