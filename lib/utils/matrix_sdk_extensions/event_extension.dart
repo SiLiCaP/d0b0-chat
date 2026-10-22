@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:async/async.dart' as async;
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/size_string.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/foundation.dart';
@@ -17,14 +18,14 @@ extension LocalizedBody on Event {
       showFutureLoadingDialog(
         context: context,
         futureWithProgress: (onProgress) {
-          final fileSize = infoMap['size'] is int
-              ? infoMap['size'] as int
-              : null;
-          return downloadAndDecryptAttachment(
-            onDownloadProgress: fileSize == null
-                ? null
-                : (bytes) => onProgress(bytes / fileSize),
-          );
+          final download = MediaDownload.of(this);
+          void onUpdate() => onProgress(download.progress);
+          download.addListener(onUpdate);
+          // Saving or sharing picks its own place, so no automatic copy to
+          // the gallery or Downloads on top.
+          return download
+              .getFile(export: false)
+              .whenComplete(() => download.removeListener(onUpdate));
         },
       );
 

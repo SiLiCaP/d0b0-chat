@@ -9,6 +9,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/markdown_context_builder.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -422,7 +423,12 @@ class InputBar extends StatelessWidget {
                 bytes: data,
                 name: content.uri.split('/').last,
               );
-              room.sendFileEvent(file, shrinkImageMaxDimension: 1600);
+              room
+                  .sendFileEvent(file, shrinkImageMaxDimension: 1600)
+                  .then(
+                    (eventId) =>
+                        MediaDownload.rememberSent(room, file, eventId),
+                  );
             },
           ),
           minLines: minLines,

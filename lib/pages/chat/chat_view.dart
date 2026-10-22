@@ -193,6 +193,9 @@ class ChatView extends StatelessWidget {
                                   const Icon(Icons.download_outlined),
                                   const SizedBox(width: 12),
                                   Text(L10n.of(context).downloadFile),
+                                  if (controller.selectedEventSizeString
+                                      case final size?)
+                                    Text(' ($size)'),
                                 ],
                               ),
                             ),

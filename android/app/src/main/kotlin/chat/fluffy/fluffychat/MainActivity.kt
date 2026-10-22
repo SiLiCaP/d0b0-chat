@@ -23,7 +23,9 @@ class MainActivity : FlutterFragmentActivity() {
     companion object {
         var engine: FlutterEngine? = null
         fun provideEngine(context: Context): FlutterEngine {
-            val eng = engine ?: FlutterEngine(context, emptyArray(), true, false)
+            val eng = engine ?: FlutterEngine(context, emptyArray(), true, false).also {
+                DownloadsSaver.register(it.dartExecutor.binaryMessenger, context)
+            }
             engine = eng
             return eng
         }

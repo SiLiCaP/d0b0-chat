@@ -27,6 +27,7 @@ import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/resize_video.dart';
@@ -164,6 +165,9 @@ class ChatController extends State<ChatPageWithRoom>
       ),
     );
   }
+
+  String? get selectedEventSizeString =>
+      selectedEvents.length == 1 ? selectedEvents.single.sizeString : null;
 
   bool get canSaveSelectedEvent =>
       selectedEvents.length == 1 &&
@@ -968,26 +972,28 @@ class ChatController extends State<ChatPageWithRoom>
       }
       try {
         try {
-          await room.sendFileEvent(
+          final eventId = await room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             inReplyTo: inReplyTo,
             threadRootEventId: threadRootEventId,
             threadLastEventId: threadLastEventId,
           );
+          unawaited(MediaDownload.rememberSent(room, file, eventId));
         } on MatrixException catch (e) {
           final retryAfterMs = e.retryAfterMs;
           if (e.error != MatrixError.M_LIMIT_EXCEEDED || retryAfterMs == null) {
             rethrow;
           }
           await Future.delayed(Duration(milliseconds: retryAfterMs + 1000));
-          await room.sendFileEvent(
+          final eventId = await room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             inReplyTo: inReplyTo,
             threadRootEventId: threadRootEventId,
             threadLastEventId: threadLastEventId,
           );
+          unawaited(MediaDownload.rememberSent(room, file, eventId));
         }
       } catch (e) {
         // Most likely no network: keep a copy so the video isn't lost.
@@ -1050,7 +1056,7 @@ class ChatController extends State<ChatPageWithRoom>
     );
 
     try {
-      await room.sendFileEvent(
+      final eventId = await room.sendFileEvent(
         file,
         inReplyTo: replyEvent,
         threadRootEventId: activeThreadId,
@@ -1063,6 +1069,7 @@ class ChatController extends State<ChatPageWithRoom>
           },
         },
       );
+      unawaited(MediaDownload.rememberSent(room, file, eventId));
     } catch (e) {
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(

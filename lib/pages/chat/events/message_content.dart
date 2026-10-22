@@ -10,6 +10,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/events/poll.dart';
 import 'package:fluffychat/pages/chat/events/video_player.dart';
 import 'package:fluffychat/pages/image_viewer/image_viewer.dart';
+import 'package:fluffychat/widgets/media_auto_download.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -82,20 +83,23 @@ class MessageContent extends StatelessWidget {
                 width = max(32, maxSize * (w / h));
               }
             }
-            return ImageBubble(
-              event,
-              width: width,
-              height: height,
-              fit: fit,
-              borderRadius: borderRadius,
-              timeline: timeline,
-              textColor: textColor,
-              onTap: () => showDialog(
-                context: context,
-                builder: (_) => ImageViewer(
-                  event,
-                  timeline: timeline,
-                  outerContext: context,
+            return MediaAutoDownload(
+              event: event,
+              child: ImageBubble(
+                event,
+                width: width,
+                height: height,
+                fit: fit,
+                borderRadius: borderRadius,
+                timeline: timeline,
+                textColor: textColor,
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => ImageViewer(
+                    event,
+                    timeline: timeline,
+                    outerContext: context,
+                  ),
                 ),
               ),
             );
@@ -126,10 +130,14 @@ class MessageContent extends StatelessWidget {
               timeline: timeline,
             );
           case MessageTypes.File:
-            return MessageDownloadContent(
-              event,
-              textColor: textColor,
-              linkColor: linkColor,
+            return MediaAutoDownload(
+              event: event,
+              checkLocal: true,
+              child: MessageDownloadContent(
+                event,
+                textColor: textColor,
+                linkColor: linkColor,
+              ),
             );
           case MessageTypes.Location:
             final geoUri = Uri.tryParse(

@@ -53,8 +53,11 @@ class ImageViewerController extends State<ImageViewer> {
       (event) => event.eventId == widget.event.eventId,
     );
     if (index < 0) index = 0;
+    _index = index;
     pageController = PageController(initialPage: index);
   }
+
+  void onPageChanged(int index) => setState(() => _index = index);
 
   late final PageController pageController;
 
@@ -89,7 +92,7 @@ class ImageViewerController extends State<ImageViewer> {
     setState(() {});
   }
 
-  int get _index => pageController.page?.toInt() ?? 0;
+  late int _index;
 
   Event get currentEvent => allEvents[_index];
 

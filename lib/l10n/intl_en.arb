@@ -2958,5 +2958,135 @@
     "@unmute": {
         "type": "String",
         "placeholders": {}
+    },
+    "mediaDownloads": "Media downloads",
+    "@mediaDownloads": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadVideos": "Download videos automatically",
+    "@autoDownloadVideos": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadImages": "Download images automatically",
+    "@autoDownloadImages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadFiles": "Download files automatically",
+    "@autoDownloadFiles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadWifiOnly": "Only on Wi-Fi",
+    "@autoDownloadWifiOnly": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadWifiOnlyDescription": "Automatic downloads wait for Wi-Fi or a cable connection.",
+    "@autoDownloadWifiOnlyDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "autoDownloadMaxSize": "Size limit for automatic downloads",
+    "@autoDownloadMaxSize": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "noLimit": "No limit",
+    "@noLimit": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveDownloadedPhotosTo": "Save downloaded photos to",
+    "@saveDownloadedPhotosTo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveDownloadedVideosTo": "Save downloaded videos to",
+    "@saveDownloadedVideosTo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "saveDownloadedFilesTo": "Save downloaded files to",
+    "@saveDownloadedFilesTo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "mediaLocationCache": "App cache only",
+    "@mediaLocationCache": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "mediaLocationGallery": "Gallery ({folder})",
+    "@mediaLocationGallery": {
+        "type": "String",
+        "placeholders": {
+            "folder": {"type": "String"}
+        }
+    },
+    "mediaLocationDownloads": "Downloads ({folder})",
+    "@mediaLocationDownloads": {
+        "type": "String",
+        "placeholders": {
+            "folder": {"type": "String"}
+        }
+    },
+    "mediaLocationFilesApp": "Files app ({folder})",
+    "@mediaLocationFilesApp": {
+        "type": "String",
+        "placeholders": {
+            "folder": {"type": "String"}
+        }
+    },
+    "deleteCachedMedia": "Delete cached media automatically",
+    "@deleteCachedMedia": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "deleteCachedMediaDescription": "Removes downloads that have not been opened for a while, and the oldest ones when the cache is full. They download again when needed. Copies in the gallery and Downloads are kept.",
+    "@deleteCachedMediaDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "deleteCachedMediaAfter": "Delete after",
+    "@deleteCachedMediaAfter": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "maxCacheSize": "Maximum cache size",
+    "@maxCacheSize": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "mediaCache": "Media cache",
+    "@mediaCache": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "clearMediaCache": "Clear media cache?",
+    "@clearMediaCache": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "clearMediaCacheDescription": "Downloaded media is removed from this device. It downloads again when you open it. Copies in the gallery and Downloads are kept.",
+    "@clearMediaCacheDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "countDays": "{count, plural, =1{1 day} other{{count} days}}",
+    "@countDays": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeLeft": "{time} left",
+    "@timeLeft": {
+        "type": "String",
+        "placeholders": {
+            "time": {"type": "String"}
+        }
     }
 }
