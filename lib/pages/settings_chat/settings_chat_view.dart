@@ -402,16 +402,6 @@ class SettingsChatView extends StatelessWidget {
                   },
                 ),
               ],
-              Divider(color: theme.dividerColor),
-              ListTile(
-                title: Text(
-                  L10n.of(context).calls,
-                  style: TextStyle(
-                    color: theme.colorScheme.secondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ],
           ),
         ),

@@ -10,6 +10,8 @@
 	<array>
 		<string>lv.d0b0.chat</string>
 	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -49,6 +51,11 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>Play audio and voice messages in the app.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -79,6 +86,29 @@
 	<string>Open photos from your gallery and share them with your contacts on d0b0 chat.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Share data with your contacts in d0b0 chat.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>voip</string>
@@ -110,35 +140,5 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-  	<key>NSAllowsArbitraryLoads</key>
-  	<true/>
-</dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-	<key>UIApplicationSupportsMultipleScenes</key>
-	<false/>
-	<key>UISceneConfigurations</key>
-	<dict>
-	<key>UIWindowSceneSessionRoleApplication</key>
-		<array>
-		<dict>
-			<key>UISceneClassName</key>
-			<string>UIWindowScene</string>
-			<key>UISceneDelegateClassName</key>
-			<string>FlutterSceneDelegate</string>
-			<key>UISceneConfigurationName</key>
-			<string>flutter</string>
-			<key>UISceneStoryboardFile</key>
-			<string>Main</string>
-		</dict>
-		</array>
-	</dict>
-	</dict>
 </dict>
 </plist>

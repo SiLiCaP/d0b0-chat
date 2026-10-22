@@ -73,7 +73,7 @@ Future<void> connectToHomeserverFlow(
         pathSegments.removeLast();
       }
       pathSegments.add('login');
-      context.go('/${pathSegments.join('/')}', extra: client);
+      context.push('/${pathSegments.join('/')}', extra: client);
       setState(AsyncSnapshot.withData(ConnectionState.done, true));
       return;
     }

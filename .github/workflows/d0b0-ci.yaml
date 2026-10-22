@@ -44,12 +44,14 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .tool_versions.yaml
+          flutter-version-file: .fvmrc
           cache: true
+      - uses: dtolnay/rust-toolchain@stable
       - run: flutter pub get
       - name: Check formatting
         run: dart format lib/ test/ --set-exit-if-changed
       - run: flutter analyze
+      - run: dart run golden_screenshot:download_apple_fonts
       - run: flutter test
 
   android:
@@ -67,7 +69,7 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .tool_versions.yaml
+          flutter-version-file: .fvmrc
           cache: true
       - uses: dtolnay/rust-toolchain@stable
       - name: Cache Gradle
@@ -109,7 +111,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .tool_versions.yaml
+          flutter-version-file: .fvmrc
           cache: true
       - uses: dtolnay/rust-toolchain@stable
       - run: rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
@@ -135,7 +137,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y git wget curl clang cmake ninja-build pkg-config libgtk-3-dev libblkid-dev liblzma-dev libjsoncpp-dev cmake-data libsecret-1-dev libsecret-1-0 librhash0 libssl-dev libwebkit2gtk-4.1-dev libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .tool_versions.yaml
+          flutter-version-file: .fvmrc
           cache: true
       - uses: dtolnay/rust-toolchain@stable
       - run: flutter pub get
@@ -157,7 +159,7 @@ jobs:
           xcode-version: latest-stable
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .tool_versions.yaml
+          flutter-version-file: .fvmrc
           cache: true
       - run: brew install sqlcipher
       - uses: dtolnay/rust-toolchain@stable
