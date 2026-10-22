@@ -110,6 +110,31 @@ enum AppSettings<T> {
     true,
   ),
 
+  /// Download these kinds of attachments as soon as they show up in a chat.
+  autoDownloadVideos<bool>('chat.fluffy.auto_download_videos', false),
+  autoDownloadImages<bool>('chat.fluffy.auto_download_images', false),
+  autoDownloadFiles<bool>('chat.fluffy.auto_download_files', false),
+  autoDownloadWifiOnly<bool>('chat.fluffy.auto_download_wifi_only', true),
+
+  /// Bigger attachments are not downloaded automatically; 0 = no limit.
+  autoDownloadMaxSizeMb<int>('chat.fluffy.auto_download_max_size_mb', 20),
+
+  /// Where a copy of each downloaded attachment goes, besides the cache:
+  /// 'cache' (nowhere else) or 'gallery' for photos and videos, 'cache' or
+  /// 'downloads' for files.
+  imageDownloadLocation<String>('chat.fluffy.image_download_location', 'cache'),
+  videoDownloadLocation<String>('chat.fluffy.video_download_location', 'cache'),
+  fileDownloadLocation<String>('chat.fluffy.file_download_location', 'cache'),
+  mediaCacheAutoDelete<bool>('chat.fluffy.media_cache_auto_delete', true),
+  mediaCacheMaxAgeDays<int>('chat.fluffy.media_cache_max_age_days', 30),
+
+  /// 0 = no limit.
+  mediaCacheMaxSizeMb<int>('chat.fluffy.media_cache_max_size_mb', 2000),
+
+  /// Attachments already copied to the gallery or Downloads, so a download
+  /// after the cached file was deleted doesn't add a second copy.
+  mediaExported<List<String>>('chat.fluffy.media_exported', []),
+
   /// Last used mode of the record button: 'voice' or 'video'.
   recordButtonMode<String>('chat.fluffy.record_button_mode', 'voice');
 

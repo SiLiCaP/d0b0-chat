@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/image_viewer/video_player.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
@@ -24,6 +25,7 @@ class ImageViewerView extends StatelessWidget {
       backgroundColor: Colors.black.withAlpha(200),
       foregroundColor: Colors.white,
     );
+    final sizeString = controller.currentEvent.sizeString;
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Scaffold(
@@ -48,13 +50,27 @@ class ImageViewerView extends StatelessWidget {
               tooltip: L10n.of(context).share,
             ),
             const SizedBox(width: 8),
-            IconButton(
-              style: iconButtonStyle,
-              icon: const Icon(Icons.download_outlined),
-              onPressed: () => controller.saveFileAction(context),
-              color: Colors.white,
-              tooltip: L10n.of(context).downloadFile,
-            ),
+            if (sizeString != null)
+              Tooltip(
+                message: L10n.of(context).downloadFile,
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black.withAlpha(200),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.download_outlined),
+                  label: Text(sizeString),
+                  onPressed: () => controller.saveFileAction(context),
+                ),
+              )
+            else
+              IconButton(
+                style: iconButtonStyle,
+                icon: const Icon(Icons.download_outlined),
+                onPressed: () => controller.saveFileAction(context),
+                color: Colors.white,
+                tooltip: L10n.of(context).downloadFile,
+              ),
             const SizedBox(width: 8),
             if (PlatformInfos.isMobile)
               // Use builder context to correctly position the share dialog on iPad
@@ -81,6 +97,7 @@ class ImageViewerView extends StatelessWidget {
                 child: PageView.builder(
                   scrollDirection: Axis.vertical,
                   controller: controller.pageController,
+                  onPageChanged: controller.onPageChanged,
                   itemCount: controller.allEvents.length,
                   itemBuilder: (context, i) {
                     final event = controller.allEvents[i];

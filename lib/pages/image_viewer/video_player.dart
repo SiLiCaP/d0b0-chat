@@ -8,12 +8,12 @@ import 'dart:io';
 import 'package:chewie/chewie.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/blur_hash.dart';
-import 'package:flutter/foundation.dart';
+import 'package:fluffychat/widgets/video_download_status.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../utils/error_reporter.dart';
@@ -32,7 +32,7 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
   ChewieController? _chewieController;
   VideoPlayerController? _videoPlayerController;
 
-  double? _downloadProgress;
+  late final MediaDownload _download = MediaDownload.of(widget.event);
 
   // The video_player package only doesn't support Windows and Linux.
   final _supportsVideoPlayer =
@@ -45,46 +45,18 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     }
 
     try {
-      final fileSize = widget.event.content
-          .tryGetMap<String, Object?>('info')
-          ?.tryGet<int>('size');
-      final videoFile = await widget.event.downloadAndDecryptAttachment(
-        onDownloadProgress: fileSize == null
-            ? null
-            : (progress) {
-                final progressPercentage = progress / fileSize;
-                setState(() {
-                  _downloadProgress = progressPercentage < 1
-                      ? progressPercentage
-                      : null;
-                });
-              },
-      );
+      final videoPlayerController = await _download.createController();
+      if (!mounted) {
+        videoPlayerController.dispose();
+        return;
+      }
 
       // Dispose the controllers if we already have them.
       _disposeControllers();
-      late VideoPlayerController videoPlayerController;
-
-      // Create the VideoPlayerController from the contents of videoFile.
-      if (kIsWeb) {
-        videoPlayerController = VideoPlayerController.networkUrl(
-          Uri.dataFromBytes(videoFile.bytes, mimeType: videoFile.mimeType),
-        );
-      } else {
-        final tempDir = await getTemporaryDirectory();
-        final fileNameStr =
-            widget.event.attachmentMxcUrl?.pathSegments.last ??
-            widget.event.body;
-        final fileName = Uri.encodeComponent(fileNameStr);
-        final file = File('${tempDir.path}/${fileName}_${videoFile.name}');
-        if (await file.exists() == false) {
-          await file.writeAsBytes(videoFile.bytes);
-        }
-        videoPlayerController = VideoPlayerController.file(file);
-      }
       _videoPlayerController = videoPlayerController;
 
       await videoPlayerController.initialize();
+      if (!mounted) return;
 
       // Create a ChewieController on top.
       setState(() {
@@ -118,6 +90,7 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
   @override
   void dispose() {
     _disposeControllers();
+    _download.releasePlayback();
     super.dispose();
   }
 
@@ -142,6 +115,10 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     final infoMap = widget.event.content.tryGetMap<String, Object?>('info');
     final videoWidth = infoMap?.tryGet<int>('w') ?? 400;
     final videoHeight = infoMap?.tryGet<int>('h') ?? 300;
+    final durationInt = infoMap?.tryGet<int>('duration');
+    final videoDuration = durationInt == null
+        ? null
+        : Duration(milliseconds: durationInt);
     final height = MediaQuery.sizeOf(context).height - 52;
     final width = videoWidth * (height / videoHeight);
 
@@ -181,8 +158,9 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
                 ),
               ),
               Center(
-                child: CircularProgressIndicator.adaptive(
-                  value: _downloadProgress,
+                child: VideoDownloadStatus(
+                  download: _download,
+                  videoDuration: videoDuration,
                 ),
               ),
             ],

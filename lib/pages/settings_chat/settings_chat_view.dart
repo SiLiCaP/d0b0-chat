@@ -8,9 +8,14 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
+import 'package:fluffychat/utils/downloads_saver.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
+import 'package:fluffychat/utils/size_string.dart';
+import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/settings_switch_list_tile.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -238,6 +243,165 @@ class SettingsChatView extends StatelessWidget {
                   setting: AppSettings.videoMessageSaveWhenOffline,
                 ),
               ],
+              // Downloads are only kept where there is a file system.
+              if (!kIsWeb) ...[
+                Divider(color: theme.dividerColor),
+                ListTile(
+                  title: Text(
+                    L10n.of(context).mediaDownloads,
+                    style: TextStyle(
+                      color: theme.colorScheme.secondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (PlatformInfos.supportsVideoPlayer)
+                  SettingsSwitchListTile.adaptive(
+                    title: L10n.of(context).autoDownloadVideos,
+                    setting: AppSettings.autoDownloadVideos,
+                    onChanged: (_) => controller.updateState(),
+                  ),
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).autoDownloadImages,
+                  setting: AppSettings.autoDownloadImages,
+                  onChanged: (_) => controller.updateState(),
+                ),
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).autoDownloadFiles,
+                  setting: AppSettings.autoDownloadFiles,
+                  onChanged: (_) => controller.updateState(),
+                ),
+                if (autoDownloadEnabled) ...[
+                  SettingsSwitchListTile.adaptive(
+                    title: L10n.of(context).autoDownloadWifiOnly,
+                    subtitle: L10n.of(context).autoDownloadWifiOnlyDescription,
+                    setting: AppSettings.autoDownloadWifiOnly,
+                  ),
+                  ListTile(
+                    title: Text(L10n.of(context).autoDownloadMaxSize),
+                    subtitle: Text(
+                      _formatMegabytes(
+                        context,
+                        AppSettings.autoDownloadMaxSizeMb.value,
+                      ),
+                    ),
+                    onTap: () => _pickSetting<int>(
+                      context,
+                      title: L10n.of(context).autoDownloadMaxSize,
+                      current: AppSettings.autoDownloadMaxSizeMb.value,
+                      onSelected: AppSettings.autoDownloadMaxSizeMb.setItem,
+                      options: {
+                        for (final megabytes in const [5, 20, 50, 100, 0])
+                          megabytes: _formatMegabytes(context, megabytes),
+                      },
+                    ),
+                  ),
+                ],
+                // Gal has no Linux support.
+                if (!PlatformInfos.isLinux) ...[
+                  _locationTile(
+                    context,
+                    title: L10n.of(context).saveDownloadedPhotosTo,
+                    setting: AppSettings.imageDownloadLocation,
+                    options: {
+                      'cache': L10n.of(context).mediaLocationCache,
+                      'gallery': L10n.of(context).mediaLocationGallery(
+                        MediaDownload.galleryAlbum(video: false),
+                      ),
+                    },
+                  ),
+                  _locationTile(
+                    context,
+                    title: L10n.of(context).saveDownloadedVideosTo,
+                    setting: AppSettings.videoDownloadLocation,
+                    options: {
+                      'cache': L10n.of(context).mediaLocationCache,
+                      'gallery': L10n.of(context).mediaLocationGallery(
+                        MediaDownload.galleryAlbum(video: true),
+                      ),
+                    },
+                  ),
+                ],
+                _locationTile(
+                  context,
+                  title: L10n.of(context).saveDownloadedFilesTo,
+                  setting: AppSettings.fileDownloadLocation,
+                  options: {
+                    'cache': L10n.of(context).mediaLocationCache,
+                    'downloads': PlatformInfos.isIOS
+                        ? L10n.of(
+                            context,
+                          ).mediaLocationFilesApp(DownloadsSaver.folder)
+                        : L10n.of(
+                            context,
+                          ).mediaLocationDownloads(DownloadsSaver.folder),
+                  },
+                ),
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).deleteCachedMedia,
+                  subtitle: L10n.of(context).deleteCachedMediaDescription,
+                  setting: AppSettings.mediaCacheAutoDelete,
+                  onChanged: (_) => controller.updateState(),
+                ),
+                ListTile(
+                  enabled: AppSettings.mediaCacheAutoDelete.value,
+                  title: Text(L10n.of(context).deleteCachedMediaAfter),
+                  subtitle: Text(
+                    L10n.of(
+                      context,
+                    ).countDays(AppSettings.mediaCacheMaxAgeDays.value),
+                  ),
+                  onTap: () => _pickSetting<int>(
+                    context,
+                    title: L10n.of(context).deleteCachedMediaAfter,
+                    current: AppSettings.mediaCacheMaxAgeDays.value,
+                    onSelected: AppSettings.mediaCacheMaxAgeDays.setItem,
+                    options: {
+                      for (final days in const [1, 7, 30, 90])
+                        days: L10n.of(context).countDays(days),
+                    },
+                  ),
+                ),
+                ListTile(
+                  enabled: AppSettings.mediaCacheAutoDelete.value,
+                  title: Text(L10n.of(context).maxCacheSize),
+                  subtitle: Text(
+                    _formatMegabytes(
+                      context,
+                      AppSettings.mediaCacheMaxSizeMb.value,
+                    ),
+                  ),
+                  onTap: () => _pickSetting<int>(
+                    context,
+                    title: L10n.of(context).maxCacheSize,
+                    current: AppSettings.mediaCacheMaxSizeMb.value,
+                    onSelected: (megabytes) async {
+                      await AppSettings.mediaCacheMaxSizeMb.setItem(megabytes);
+                      await MediaDownload.cleanUp();
+                    },
+                    options: {
+                      for (final megabytes in const [500, 1000, 2000, 5000, 0])
+                        megabytes: _formatMegabytes(context, megabytes),
+                    },
+                  ),
+                ),
+                FutureBuilder<int>(
+                  future: MediaDownload.cacheSize(),
+                  builder: (context, snapshot) {
+                    final size = snapshot.data;
+                    return ListTile(
+                      title: Text(L10n.of(context).mediaCache),
+                      subtitle: Text(size == null ? '…' : size.sizeString),
+                      trailing: TextButton(
+                        onPressed: size == null || size == 0
+                            ? null
+                            : () => _clearMediaCache(context),
+                        child: Text(L10n.of(context).clear),
+                      ),
+                    );
+                  },
+                ),
+              ],
               Divider(color: theme.dividerColor),
               ListTile(
                 title: Text(
@@ -253,6 +417,48 @@ class SettingsChatView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool get autoDownloadEnabled =>
+      (PlatformInfos.supportsVideoPlayer &&
+          AppSettings.autoDownloadVideos.value) ||
+      AppSettings.autoDownloadImages.value ||
+      AppSettings.autoDownloadFiles.value;
+
+  Widget _locationTile(
+    BuildContext context, {
+    required String title,
+    required AppSettings<String> setting,
+    required Map<String, String> options,
+  }) => ListTile(
+    title: Text(title),
+    subtitle: Text(options[setting.value] ?? options.values.first),
+    onTap: () => _pickSetting<String>(
+      context,
+      title: title,
+      current: setting.value,
+      onSelected: setting.setItem,
+      options: options,
+    ),
+  );
+
+  String _formatMegabytes(BuildContext context, int megabytes) => megabytes <= 0
+      ? L10n.of(context).noLimit
+      : megabytes % 1000 == 0
+      ? '${megabytes ~/ 1000} GB'
+      : '$megabytes MB';
+
+  Future<void> _clearMediaCache(BuildContext context) async {
+    final result = await showOkCancelAlertDialog(
+      context: context,
+      title: L10n.of(context).clearMediaCache,
+      message: L10n.of(context).clearMediaCacheDescription,
+      okLabel: L10n.of(context).clear,
+      isDestructive: true,
+    );
+    if (result != OkCancelResult.ok) return;
+    await MediaDownload.clearCache();
+    controller.updateState();
   }
 
   String _formatSeconds(BuildContext context, int seconds) =>

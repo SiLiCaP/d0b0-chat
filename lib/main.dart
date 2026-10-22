@@ -11,6 +11,7 @@ import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/notification_background_handler.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/start_push_foreground_service.dart';
@@ -134,6 +135,12 @@ Future<void> startGui(List<Client> clients, SharedPreferences store) async {
   if (PlatformInfos.isLinux || PlatformInfos.isWindows) {
     JustAudioMediaKit.ensureInitialized();
   }
+
+  unawaited(
+    MediaDownload.deleteLeftoverDecryptedFiles().then(
+      (_) => MediaDownload.cleanUp(),
+    ),
+  );
 
   // Preload first client
   final firstClient = clients.firstOrNull;

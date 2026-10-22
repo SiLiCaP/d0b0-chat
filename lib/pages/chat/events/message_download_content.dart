@@ -7,6 +7,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/pages/chat/events/file_send_status_indicator.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:material_ui/material_ui.dart';
@@ -37,6 +38,7 @@ class MessageDownloadContent extends StatelessWidget {
     final sizeString = event.sizeString ?? '?MB';
     final fileDescription = event.fileDescription;
     final fileSendingStatus = event.fileSendingStatus;
+    final download = MediaDownload.of(event);
     return Column(
       mainAxisSize: .min,
       crossAxisAlignment: .start,
@@ -59,11 +61,34 @@ class MessageDownloadContent extends StatelessWidget {
                       fileSendingStatus: fileSendingStatus,
                     )
                   else
-                    CircleAvatar(
-                      backgroundColor: textColor.withAlpha(32),
-                      child: Icon(
-                        Icons.file_download_outlined,
-                        color: textColor,
+                    ListenableBuilder(
+                      listenable: download,
+                      builder: (context, _) => SizedBox.square(
+                        dimension: 40,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Positioned.fill(
+                              child: CircleAvatar(
+                                backgroundColor: textColor.withAlpha(32),
+                              ),
+                            ),
+                            if (download.isDownloading)
+                              Positioned.fill(
+                                child: CircularProgressIndicator(
+                                  value: download.progress,
+                                  strokeWidth: 3,
+                                  color: textColor,
+                                ),
+                              ),
+                            Icon(
+                              download.isDownloaded
+                                  ? Icons.download_done_outlined
+                                  : Icons.file_download_outlined,
+                              color: textColor,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   Flexible(

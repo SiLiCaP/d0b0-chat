@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>lv.d0b0.chat</string>
@@ -70,7 +74,7 @@
 	<key>NSMotionUsageDescription</key>
 	<string>Share motions with your contacts in d0b0 chat.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Save your recorded video messages to the d0b0 chat album.</string>
+	<string>Save your recorded video messages and downloaded photos and videos to the d0b0 chat albums.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Open photos from your gallery and share them with your contacts on d0b0 chat.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

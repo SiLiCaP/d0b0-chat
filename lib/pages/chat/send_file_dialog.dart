@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -15,6 +16,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
@@ -152,7 +154,7 @@ class SendFileDialogState extends State<SendFileDialog> {
         final label = _labelTextController.text.trim();
 
         try {
-          await widget.room.sendFileEvent(
+          final eventId = await widget.room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
@@ -160,6 +162,7 @@ class SendFileDialogState extends State<SendFileDialog> {
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
           );
+          unawaited(MediaDownload.rememberSent(widget.room, file, eventId));
         } on MatrixException catch (e) {
           final retryAfterMs = e.retryAfterMs;
           if (e.error != MatrixError.M_LIMIT_EXCEEDED || retryAfterMs == null) {
@@ -171,12 +174,13 @@ class SendFileDialogState extends State<SendFileDialog> {
 
           await Future.delayed(retryAfterDuration);
 
-          await widget.room.sendFileEvent(
+          final eventId = await widget.room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
             extraContent: label.isEmpty ? null : {'body': label},
           );
+          unawaited(MediaDownload.rememberSent(widget.room, file, eventId));
         }
       }
     } finally {

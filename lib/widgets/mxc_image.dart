@@ -12,6 +12,7 @@ import 'package:archive/archive.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
+import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:lottie/lottie.dart';
 import 'package:material_ui/material_ui.dart';
@@ -118,9 +119,11 @@ class _MxcImageState extends State<MxcImage> {
           }.contains(event.messageType)) {
         Logs().e('Event of type ${event.messageType} has no thumbnail!');
       }
-      final data = await event.downloadAndDecryptAttachment(
-        getThumbnail: useThumbnail,
-      );
+      final data = !useThumbnail && event.messageType == MessageTypes.Image
+          ? await MediaDownload.of(event).getFile()
+          : await event.downloadAndDecryptAttachment(
+              getThumbnail: useThumbnail,
+            );
       if (data.detectFileType is MatrixImageFile) {
         if (!mounted) return;
         setState(() {
