@@ -14,7 +14,11 @@ extension ResizeImage on XFile {
     MediaInfo? mediaInfo;
     String? destinationPath;
     try {
-      if (PlatformInfos.isMobile || PlatformInfos.isMacOS) {
+      if (!compress) {
+        if (PlatformInfos.isMobile || PlatformInfos.isMacOS) {
+          mediaInfo = await LightCompressor().getMediaInfo(path);
+        }
+      } else if (PlatformInfos.isMobile || PlatformInfos.isMacOS) {
         final result = await LightCompressor().compressVideo(
           path: path,
           videoQuality: VideoQuality.medium,
