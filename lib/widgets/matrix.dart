@@ -209,6 +209,7 @@ class MatrixState extends State<Matrix> {
   }
 
   AppLifecycleListener? _listener;
+  AppLifecycleState? _lifecycleState;
 
   void _registerSubs(String name) {
     final c = getClientByName(name);
@@ -281,12 +282,16 @@ class MatrixState extends State<Matrix> {
           FluffyChatApp.router.go('/');
         });
     onUiaRequest[name] ??= c.onUiaRequest.stream.listen(uiaRequestHandler);
-    if (PlatformInfos.isWeb || PlatformInfos.isLinux) {
+    if (PlatformInfos.isWeb || PlatformInfos.isDesktop) {
       FlutterLocalNotificationsPlugin().initialize(
         settings: InitializationSettings(
           linux: LinuxInitializationSettings(
             defaultActionName: FluffyChatNotificationActions.open.name,
           ),
+          windows: ClientManager.windowsNotificationSettings,
+          macOS: const DarwinInitializationSettings(),
+          iOS: const DarwinInitializationSettings(),
+          android: const AndroidInitializationSettings('notifications_icon'),
         ),
         onDidReceiveNotificationResponse: (response) => notificationTap(
           response,
@@ -352,9 +357,12 @@ class MatrixState extends State<Matrix> {
   }
 
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final foreground =
-        state != AppLifecycleState.inactive &&
-        state != AppLifecycleState.paused;
+    final wasDetached = _lifecycleState == AppLifecycleState.detached;
+    _lifecycleState = state;
+    if (wasDetached) {
+      backgroundPush?.openRoomFromNotification(newActivity: true);
+    }
+    final foreground = state == AppLifecycleState.resumed;
     for (final client in widget.clients) {
       client.syncPresence = state == AppLifecycleState.resumed
           ? null

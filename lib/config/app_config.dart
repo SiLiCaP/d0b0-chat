@@ -32,12 +32,17 @@ abstract class AppConfig {
   static const String appId = 'lv.d0b0.chat';
   static const String appOpenUrlScheme = 'lv.d0b0.chat';
   static const String appSsoUrlScheme = 'lv.d0b0.chat.auth';
+  // Identifies the notification activation callback on Windows. Never change!
+  static const String windowsNotificationGuid =
+      'eb2a147f-0979-416f-9076-955b480629c5';
 
   static const String sourceCodeUrl = 'https://github.com/SiLiCaP/d0b0-chat';
   static const String supportUrl =
       'https://github.com/SiLiCaP/d0b0-chat/issues';
   static const String changelogUrl =
       'https://github.com/SiLiCaP/d0b0-chat/commits/main/';
+  static const String latestReleaseApiUrl =
+      'https://api.github.com/repos/SiLiCaP/d0b0-chat/releases/latest';
 
   static const Set<String> defaultReactions = {'👍', '❤️', '😂', '😮', '😢'};
 
@@ -61,4 +66,6 @@ abstract class AppConfig {
   static const String mainIsolatePortName = 'main_isolate';
   static const String pushIsolatePortName = 'push_isolate';
   static const String pushHelperCrashReportKey = 'push_helper_crash_report';
+
+  static const String vodozemacVersion = '0.8.1';
 }
