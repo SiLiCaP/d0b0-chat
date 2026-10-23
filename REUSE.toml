@@ -62,5 +62,5 @@ path = [
     "assets/logo/*/banner.**",
 ]
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2026-Present d0b0 chat contributors"
+SPDX-FileCopyrightText = "2026-Present Artjoms Papšs"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
