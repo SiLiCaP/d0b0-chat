@@ -3,22 +3,30 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/config/app_config.dart';
+import 'package:async/async.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/pages/chat_details/participant_list_item.dart';
+import 'package:fluffychat/utils/date_time_extension.dart';
+import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/verified_room_extension.dart';
+import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart';
+import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/chat_settings_popup_menu.dart';
+import 'package:fluffychat/widgets/d0b0/settings_group.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:fluffychat/widgets/presence_builder.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:matrix/matrix.dart';
+import 'package:matrix/matrix.dart' hide Result;
 
 import '../../utils/url_launcher.dart';
 import '../../widgets/mxc_image_viewer.dart';
@@ -51,6 +59,8 @@ class ChatDetailsView extends StatelessWidget {
         (update) => update.roomId == room.id,
       ),
       builder: (context, snapshot) {
+        final l10n = L10n.of(context);
+        final colors = theme.d0b0;
         var members = room.getParticipants().toList()
           ..sort((b, a) => a.powerLevel.level.compareTo(b.powerLevel.level));
         members = members.take(10).toList();
@@ -58,321 +68,476 @@ class ChatDetailsView extends StatelessWidget {
             (room.summary.mInvitedMemberCount ?? 0) +
             (room.summary.mJoinedMemberCount ?? 0);
         final canRequestMoreMembers = members.length < actualMembersCount;
-        final iconColor = theme.textTheme.bodyLarge!.color;
-        final displayname = room.getLocalizedDisplayname(
-          MatrixLocals(L10n.of(context)),
-        );
+        final displayname = room.getLocalizedDisplayname(MatrixLocals(l10n));
+        final isDirect = directChatMatrixID != null;
+        final canRename =
+            !room.isDirectChat && room.canChangeStateEvent(EventTypes.RoomName);
+        final subtitleId = directChatMatrixID ?? room.canonicalAlias;
+        final inCommon = directChatMatrixID == null
+            ? const <Room>[]
+            : room.client.rooms
+                  .where(
+                    (other) =>
+                        other.id != room.id &&
+                        !other.isDirectChat &&
+                        !other.isSpace &&
+                        other.membership == Membership.join &&
+                        other
+                                .getState(
+                                  EventTypes.RoomMember,
+                                  directChatMatrixID,
+                                )
+                                ?.content
+                                .tryGet<String>('membership') ==
+                            'join',
+                  )
+                  .toList();
+
         return Scaffold(
           appBar: AppBar(
             leading:
                 controller.widget.embeddedCloseButton ??
                 const Center(child: BackButton()),
-            elevation: theme.appBarTheme.elevation,
             actions: <Widget>[
-              if (room.canonicalAlias.isNotEmpty)
+              if (subtitleId.isNotEmpty)
                 IconButton(
-                  tooltip: L10n.of(context).share,
+                  tooltip: l10n.share,
                   icon: const Icon(Symbols.qr_code_rounded),
-                  onPressed: () =>
-                      showQrCodeViewer(context, room.canonicalAlias),
-                )
-              else if (directChatMatrixID != null)
-                IconButton(
-                  tooltip: L10n.of(context).share,
-                  icon: const Icon(Symbols.qr_code_rounded),
-                  onPressed: () =>
-                      showQrCodeViewer(context, directChatMatrixID),
+                  onPressed: () => showQrCodeViewer(context, subtitleId),
                 ),
               if (controller.widget.embeddedCloseButton == null)
                 ChatSettingsPopupMenu(room, false),
+              const SizedBox(width: 4),
             ],
-            title: Text(L10n.of(context).chatDetails),
-            backgroundColor: theme.appBarTheme.backgroundColor,
+            title: Text(l10n.chatDetails),
           ),
           body: MaxWidthBody(
-            child: ListView.builder(
+            child: ListView(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: members.length + 1 + (canRequestMoreMembers ? 1 : 0),
-              itemBuilder: (BuildContext context, int i) => i == 0
-                  ? Column(
-                      crossAxisAlignment: .stretch,
-                      children: <Widget>[
-                        Center(
-                          child: Stack(
-                            children: [
-                              Hero(
-                                tag:
-                                    controller.widget.embeddedCloseButton !=
-                                        null
-                                    ? 'embedded_content_banner'
-                                    : 'content_banner',
-                                child: Avatar(
-                                  mxContent: room.avatar,
-                                  name: displayname,
-                                  size: Avatar.defaultSize * 2.5,
-                                  onTap: roomAvatar != null
-                                      ? () => showDialog(
-                                          context: context,
-                                          builder: (_) =>
-                                              MxcImageViewer(roomAvatar),
-                                        )
-                                      : null,
-                                ),
-                              ),
-                              if (!room.isDirectChat &&
-                                  room.canChangeStateEvent(
-                                    EventTypes.RoomAvatar,
-                                  ))
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: FloatingActionButton.small(
-                                    onPressed: controller.setAvatarAction,
-                                    heroTag: null,
-                                    child: const Icon(
-                                      Symbols.camera_alt_rounded,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: TextButton.icon(
-                              onPressed:
-                                  room.isDirectChat ||
-                                      !room.canChangeStateEvent(
-                                        EventTypes.RoomName,
-                                      )
-                                  ? null
-                                  : controller.setDisplaynameAction,
-                              icon:
-                                  room.isDirectChat ||
-                                      !room.canChangeStateEvent(
-                                        EventTypes.RoomName,
-                                      )
-                                  ? null
-                                  : Icon(Symbols.edit_rounded, size: 16),
-
-                              style: TextButton.styleFrom(
-                                foregroundColor: theme.colorScheme.onSurface,
-                                iconColor: theme.colorScheme.onSurface,
-                                disabledForegroundColor:
-                                    theme.colorScheme.onSurface,
-                              ),
-                              label: Row(
-                                mainAxisSize: .min,
-                                spacing: 4,
-                                children: [
-                                  if (room.allUsersVerified)
-                                    Icon(
-                                      Symbols.verified_rounded,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      size: 18,
-                                    ),
-                                  Text(
-                                    displayname,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        StreamBuilder(
-                          stream: room.client.onSync.stream.where(
-                            (s) =>
-                                s.accountData?.any(
-                                  (data) => data.type == 'm.push_rules',
-                                ) ??
-                                false,
-                          ),
-                          builder: (context, _) => Wrap(
-                            alignment: .center,
-                            spacing: 16,
-                            runSpacing: 16,
-                            children: [
-                              _MainChatDetailsButton(
-                                onPressed: () =>
-                                    context.go('/rooms/${room.id}/search'),
-                                label: L10n.of(context).search,
-                                icon: Symbols.search_rounded,
-                              ),
-                              _MainChatDetailsButton(
-                                onPressed: () => context.push(
-                                  '/rooms/${room.id}/details/emotes',
-                                ),
-                                label: L10n.of(context).stickers,
-                                icon: Symbols.emoji_emotions_rounded,
-                              ),
-                              if (room.pushRuleState == PushRuleState.notify)
-                                _MainChatDetailsButton(
-                                  onPressed: () => showFutureLoadingDialog(
-                                    context: context,
-                                    future: () => room.setPushRuleState(
-                                      PushRuleState.mentionsOnly,
-                                    ),
-                                  ),
-                                  label: L10n.of(context).mute,
-                                  icon: Symbols.notifications_active_rounded,
-                                )
-                              else
-                                _MainChatDetailsButton(
-                                  onPressed: () => showFutureLoadingDialog(
-                                    context: context,
-                                    future: () => room.setPushRuleState(
-                                      PushRuleState.notify,
-                                    ),
-                                  ),
-                                  label: L10n.of(context).unmuteChat,
-                                  icon: Symbols.notifications_off_rounded,
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        if (room.canChangeStateEvent(EventTypes.RoomTopic) ||
-                            room.topic.isNotEmpty) ...[
-                          ListTile(
-                            title: Text(
-                              L10n.of(context).chatDescription,
-                              style: TextStyle(
-                                color: theme.colorScheme.secondary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing:
-                                room.canChangeStateEvent(EventTypes.RoomTopic)
-                                ? IconButton(
-                                    onPressed: controller.setTopicAction,
-                                    tooltip: L10n.of(
-                                      context,
-                                    ).setChatDescription,
-                                    icon: const Icon(Symbols.edit_rounded),
-                                  )
-                                : null,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                            ),
-                            child: SelectableLinkify(
-                              text: room.topic.isEmpty
-                                  ? L10n.of(context).noChatDescriptionYet
-                                  : room.topic,
-                              textScaleFactor: MediaQuery.textScalerOf(
-                                context,
-                              ).scale(1),
-                              options: const LinkifyOptions(humanize: false),
-                              linkStyle: const TextStyle(
-                                color: Colors.blueAccent,
-                                decorationColor: Colors.blueAccent,
-                              ),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontStyle: room.topic.isEmpty
-                                    ? FontStyle.italic
-                                    : FontStyle.normal,
-                                color: theme.textTheme.bodyMedium!.color,
-                                decorationColor:
-                                    theme.textTheme.bodyMedium!.color,
-                              ),
-                              onOpen: (url) =>
-                                  UrlLauncher(context, url.url).launchUrl(),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        if (!room.isDirectChat) ...[
-                          Divider(color: theme.dividerColor),
-                          ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.surfaceContainer,
-                              foregroundColor: iconColor,
-                              child: const Icon(
-                                Symbols.admin_panel_settings_rounded,
-                              ),
-                            ),
-                            title: Text(L10n.of(context).accessAndVisibility),
-                            subtitle: Text(
-                              L10n.of(context).accessAndVisibilityDescription,
-                            ),
-                            onTap: () => context.push(
-                              '/rooms/${room.id}/details/access',
-                            ),
-                            trailing: const Icon(Symbols.chevron_right_rounded),
-                          ),
-                          ListTile(
-                            title: Text(L10n.of(context).chatPermissions),
-                            subtitle: Text(
-                              L10n.of(context).whoCanPerformWhichAction,
-                            ),
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.surfaceContainer,
-                              foregroundColor: iconColor,
-                              child: const Icon(Symbols.tune_rounded),
-                            ),
-                            trailing: const Icon(Symbols.chevron_right_rounded),
-                            onTap: () => context.push(
-                              '/rooms/${room.id}/details/permissions',
-                            ),
-                          ),
-                        ],
-                        Divider(color: theme.dividerColor),
-                        ListTile(
-                          title: Text(
-                            L10n.of(
-                              context,
-                            ).countParticipants(actualMembersCount),
-                            style: TextStyle(
-                              color: theme.colorScheme.secondary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          trailing: !room.isDirectChat && room.canInvite
-                              ? TextButton.icon(
-                                  icon: Icon(Symbols.add_rounded),
-                                  label: Text(L10n.of(context).invite),
-                                  onPressed: () =>
-                                      context.go('/rooms/${room.id}/invite'),
+              children: [
+                // Identity first: who this is, their Matrix ID in mono and
+                // presence in words.
+                const SizedBox(height: 8),
+                Center(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Hero(
+                        tag: controller.widget.embeddedCloseButton != null
+                            ? 'embedded_content_banner'
+                            : 'content_banner',
+                        child: Avatar(
+                          mxContent: room.avatar,
+                          name: displayname,
+                          toneSeed: room.id,
+                          isRoom: !isDirect,
+                          presenceUserId: directChatMatrixID,
+                          size: 96,
+                          onTap: roomAvatar != null
+                              ? () => showDialog(
+                                  context: context,
+                                  builder: (_) => MxcImageViewer(roomAvatar),
                                 )
                               : null,
                         ),
-                      ],
-                    )
-                  : i < members.length + 1
-                  ? ParticipantListItem(members[i - 1])
-                  : ListTile(
-                      title: Text(
-                        L10n.of(context).loadCountMoreParticipants(
-                          (actualMembersCount - members.length),
+                      ),
+                      if (!isDirect &&
+                          room.canChangeStateEvent(EventTypes.RoomAvatar))
+                        Positioned(
+                          bottom: -4,
+                          right: -4,
+                          child: IconButton.filledTonal(
+                            tooltip: l10n.changeAvatar,
+                            onPressed: controller.setAvatarAction,
+                            icon: const Icon(Symbols.photo_camera_rounded),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: InkWell(
+                    onTap: canRename ? controller.setDisplaynameAction : null,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        mainAxisSize: .min,
+                        spacing: 6,
+                        children: [
+                          if (room.allUsersVerified)
+                            Icon(
+                              Symbols.verified_rounded,
+                              fill: 1,
+                              color: theme.colorScheme.primary,
+                              size: 22,
+                            ),
+                          Flexible(
+                            child: Text(
+                              displayname,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: D0b0Type.headline.copyWith(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (canRename)
+                            Icon(
+                              Symbols.edit_rounded,
+                              size: 18,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (subtitleId.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      subtitleId,
+                      textAlign: TextAlign.center,
+                      style: D0b0Type.monoStyle.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Center(
+                    child: isDirect
+                        ? PresenceBuilder(
+                            userId: directChatMatrixID,
+                            builder: (context, presence) {
+                              final lastActive = presence?.lastActiveTimestamp;
+                              final online =
+                                  presence?.presence.isOnline == true ||
+                                  presence?.currentlyActive == true;
+                              if (!online && lastActive == null) {
+                                return const SizedBox.shrink();
+                              }
+                              return Text(
+                                online
+                                    ? l10n.presenceOnline
+                                    : l10n.presenceLastSeen(
+                                        lastActive!.localizedTimeShort(context),
+                                      ),
+                                style: D0b0Type.monoS.copyWith(
+                                  color: online
+                                      ? theme.colorScheme.primary
+                                      : colors.text3,
+                                ),
+                              );
+                            },
+                          )
+                        : Text(
+                            l10n.countMembers(actualMembersCount),
+                            style: D0b0Type.monoS.copyWith(color: colors.text3),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Three pill actions.
+                StreamBuilder(
+                  stream: room.client.onSync.stream.where(
+                    (s) =>
+                        s.accountData?.any(
+                          (data) => data.type == 'm.push_rules',
+                        ) ??
+                        false,
+                  ),
+                  builder: (context, _) => Wrap(
+                    alignment: .center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (room.hasPermissionForMatrixRtcCall)
+                        FutureBuilder(
+                          future: Result.capture(
+                            room.client.getLiveKitServiceUrls(),
+                          ),
+                          builder: (context, snapshot) {
+                            final urls = snapshot.data?.asValue?.value;
+                            if (urls == null || urls.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return _MainChatDetailsButton(
+                              onPressed: () =>
+                                  Matrix.of(context).activeCallRoomId.value =
+                                      room.id,
+                              label: l10n.callAction,
+                              icon: Symbols.call_rounded,
+                            );
+                          },
+                        ),
+                      _MainChatDetailsButton(
+                        onPressed: () => context.go('/rooms/${room.id}/search'),
+                        label: l10n.search,
+                        icon: Symbols.search_rounded,
+                      ),
+                      if (room.pushRuleState == PushRuleState.notify)
+                        _MainChatDetailsButton(
+                          onPressed: () => showFutureLoadingDialog(
+                            context: context,
+                            future: () => room.setPushRuleState(
+                              PushRuleState.mentionsOnly,
+                            ),
+                          ),
+                          label: l10n.mute,
+                          icon: Symbols.notifications_rounded,
+                        )
+                      else
+                        _MainChatDetailsButton(
+                          onPressed: () => showFutureLoadingDialog(
+                            context: context,
+                            future: () =>
+                                room.setPushRuleState(PushRuleState.notify),
+                          ),
+                          label: l10n.unmuteChat,
+                          icon: Symbols.notifications_off_rounded,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                D0b0SectionLabel(
+                  l10n.about,
+                  trailing: room.canChangeStateEvent(EventTypes.RoomTopic)
+                      ? IconButton(
+                          onPressed: controller.setTopicAction,
+                          tooltip: l10n.setChatDescription,
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Symbols.edit_rounded, size: 18),
+                        )
+                      : null,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: room.topic.isEmpty
+                      ? Text(
+                          l10n.noDescriptionYet,
+                          style: D0b0Type.bodyS.copyWith(
+                            fontStyle: FontStyle.italic,
+                            color: colors.text3,
+                          ),
+                        )
+                      : SelectableLinkify(
+                          text: room.topic,
+                          textScaleFactor: MediaQuery.textScalerOf(
+                            context,
+                          ).scale(1),
+                          options: const LinkifyOptions(humanize: false),
+                          linkStyle: TextStyle(
+                            color: theme.colorScheme.primary,
+                            decorationColor: theme.colorScheme.primary,
+                          ),
+                          style: D0b0Type.bodyS.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          onOpen: (url) =>
+                              UrlLauncher(context, url.url).launchUrl(),
+                        ),
+                ),
+                D0b0SectionLabel(l10n.chatSection),
+                D0b0SettingsGroup(
+                  children: [
+                    D0b0SettingsTile(
+                      icon: Symbols.notifications_rounded,
+                      title: l10n.notifications,
+                      subtitle: switch (room.pushRuleState) {
+                        PushRuleState.notify => l10n.notificationsAll,
+                        PushRuleState.mentionsOnly =>
+                          l10n.notificationsMentions,
+                        PushRuleState.dontNotify => l10n.notificationsMuted,
+                      },
+                      onTap: () => _pickNotifications(context, room),
+                    ),
+                    D0b0SettingsTile(
+                      icon: Symbols.image_rounded,
+                      title: l10n.sharedMedia,
+                      chevron: true,
+                      onTap: () => context.go('/rooms/${room.id}/search'),
+                    ),
+                    D0b0SettingsTile(
+                      icon: room.encrypted
+                          ? Symbols.lock_rounded
+                          : Symbols.lock_open_rounded,
+                      title: l10n.encryption,
+                      subtitle: !room.encrypted
+                          ? l10n.encryptionOff
+                          : room.allUsersVerified
+                          ? l10n.encryptionOnVerified
+                          : l10n.encryptionOn,
+                      chevron: true,
+                      onTap: () => context.go('/rooms/${room.id}/encryption'),
+                    ),
+                    if (room.pinnedEventIds.isNotEmpty)
+                      D0b0SettingsTile(
+                        icon: Symbols.keep_rounded,
+                        title: l10n.pinnedMessages,
+                        chevron: true,
+                        onTap: () => context.go('/rooms/${room.id}'),
+                      ),
+                    D0b0SettingsTile(
+                      icon: Symbols.add_reaction_rounded,
+                      title: l10n.emojiAndStickerPacks,
+                      chevron: true,
+                      onTap: () =>
+                          context.push('/rooms/${room.id}/details/emotes'),
+                    ),
+                  ],
+                ),
+                if (!isDirect) ...[
+                  D0b0SectionLabel(l10n.roomAdmin),
+                  D0b0SettingsGroup(
+                    children: [
+                      D0b0SettingsTile(
+                        icon: Symbols.admin_panel_settings_rounded,
+                        title: l10n.accessAndVisibility,
+                        subtitle: l10n.accessAndVisibilityDescription,
+                        chevron: true,
+                        onTap: () =>
+                            context.push('/rooms/${room.id}/details/access'),
+                      ),
+                      D0b0SettingsTile(
+                        icon: Symbols.tune_rounded,
+                        title: l10n.chatPermissions,
+                        subtitle: l10n.whoCanPerformWhichAction,
+                        chevron: true,
+                        onTap: () => context.push(
+                          '/rooms/${room.id}/details/permissions',
                         ),
                       ),
-                      onTap: () => context.push(
-                        '/rooms/${controller.roomId!}/details/members',
+                    ],
+                  ),
+                  D0b0SectionLabel(
+                    l10n.countMembers(actualMembersCount),
+                    trailing: room.canInvite
+                        ? TextButton.icon(
+                            icon: const Icon(Symbols.person_add_rounded),
+                            label: Text(l10n.invite),
+                            onPressed: () =>
+                                context.go('/rooms/${room.id}/invite'),
+                          )
+                        : null,
+                  ),
+                  D0b0SettingsGroup(
+                    children: [
+                      for (final member in members) ParticipantListItem(member),
+                      if (canRequestMoreMembers)
+                        D0b0SettingsTile(
+                          icon: Symbols.group_rounded,
+                          title: l10n.loadCountMoreParticipants(
+                            actualMembersCount - members.length,
+                          ),
+                          chevron: true,
+                          onTap: () => context.push(
+                            '/rooms/${controller.roomId!}/details/members',
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+                if (inCommon.isNotEmpty) ...[
+                  D0b0SectionLabel(l10n.inCommon),
+                  D0b0SettingsGroup(
+                    children: [
+                      for (final other in inCommon)
+                        D0b0SettingsTile(
+                          title: other.getLocalizedDisplayname(
+                            MatrixLocals(l10n),
+                          ),
+                          chevron: true,
+                          onTap: () => context.go('/rooms/${other.id}'),
+                        ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
+                // Destructive rows sit alone at the bottom.
+                D0b0SettingsGroup(
+                  children: [
+                    if (directChatMatrixID != null)
+                      D0b0SettingsTile(
+                        icon: Symbols.block_rounded,
+                        title: l10n.blockUserName(displayname),
+                        destructive: true,
+                        onTap: () => context.go(
+                          '/rooms/settings/security/ignorelist',
+                          extra: directChatMatrixID,
+                        ),
                       ),
-                      trailing: const Icon(Symbols.chevron_right_rounded),
+                    D0b0SettingsTile(
+                      icon: Symbols.logout_rounded,
+                      title: l10n.leaveChat,
+                      destructive: true,
+                      onTap: () => _leave(context, room),
                     ),
+                  ],
+                ),
+                SizedBox(height: 16 + MediaQuery.paddingOf(context).bottom),
+              ],
             ),
           ),
         );
       },
     );
   }
+
+  Future<void> _pickNotifications(BuildContext context, Room room) async {
+    final l10n = L10n.of(context);
+    final state = await showModalActionPopup<PushRuleState>(
+      context: context,
+      title: l10n.notifications,
+      cancelLabel: l10n.cancel,
+      actions: [
+        AdaptiveModalAction(
+          value: PushRuleState.notify,
+          label: l10n.notificationsAll,
+        ),
+        AdaptiveModalAction(
+          value: PushRuleState.mentionsOnly,
+          label: l10n.notificationsMentions,
+        ),
+        AdaptiveModalAction(
+          value: PushRuleState.dontNotify,
+          label: l10n.notificationsMuted,
+        ),
+      ],
+    );
+    if (state == null || !context.mounted) return;
+    await showFutureLoadingDialog(
+      context: context,
+      future: () => room.setPushRuleState(state),
+    );
+  }
+
+  Future<void> _leave(BuildContext context, Room room) async {
+    final l10n = L10n.of(context);
+    final router = GoRouter.of(context);
+    final confirmed = await showOkCancelAlertDialog(
+      context: context,
+      title: l10n.areYouSure,
+      message: l10n.archiveRoomDescription,
+      okLabel: l10n.leave,
+      cancelLabel: l10n.cancel,
+      isDestructive: true,
+    );
+    if (confirmed != OkCancelResult.ok || !context.mounted) return;
+    final result = await showFutureLoadingDialog(
+      context: context,
+      future: room.leave,
+    );
+    if (result.error == null) router.go('/rooms');
+  }
 }
 
+/// A tonal pill action under the identity: icon and label, 48 high.
 class _MainChatDetailsButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String label;
@@ -386,34 +551,16 @@ class _MainChatDetailsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(AppConfig.borderRadius),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(AppConfig.borderRadius),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: .center,
-            mainAxisSize: .min,
-            children: [
-              Icon(icon, color: theme.colorScheme.secondary),
-              SizedBox(
-                width: 64,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: .ellipsis,
-                  textAlign: .center,
-                  style: TextStyle(color: theme.colorScheme.secondary),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final scheme = Theme.of(context).colorScheme;
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: scheme.surfaceContainerHigh,
+        foregroundColor: scheme.onSurface,
+        padding: const EdgeInsets.only(left: 16, right: 20),
       ),
+      icon: Icon(icon, size: 20),
+      label: Text(label),
     );
   }
 }

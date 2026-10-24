@@ -99,8 +99,23 @@ class ChatListViewBody extends StatelessWidget {
               ChatListTitle(
                 controller: controller,
                 title: spacesTab ? l10n.navSpaces : l10n.navChats,
+                showMark: !spacesTab,
+                trailing: spacesTab
+                    ? IconButton(
+                        tooltip: l10n.createNewSpace,
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size.square(48),
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outline,
+                            width: 2,
+                          ),
+                        ),
+                        icon: const Icon(Symbols.add_rounded),
+                        onPressed: () => context.go('/rooms/newspace'),
+                      )
+                    : null,
               ),
-            ChatListHeader(controller: controller),
+            if (!spacesTab) ChatListHeader(controller: controller),
             SliverList(
               delegate: SliverChildListDelegate([
                 // Search results are grouped: people first, then rooms.
@@ -187,6 +202,14 @@ class ChatListViewBody extends StatelessWidget {
                   itemBuilder: (BuildContext context, int i) {
                     if (i == rooms.length) return const _ArchiveRow();
                     final room = rooms[i];
+                    if (spacesTab) {
+                      return _SpaceCard(
+                        space: room,
+                        onTap: () => controller.onChatTap(room),
+                        onLongPress: (context) =>
+                            controller.chatContextAction(room, context),
+                      );
+                    }
                     final space = spaceDelegateCandidates[room.id];
                     final item = ChatListItem(
                       room,
@@ -206,6 +229,20 @@ class ChatListViewBody extends StatelessWidget {
                       child: item,
                     );
                   },
+                ),
+              ),
+            if (spacesTab && client.prevBatch != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: controller.startSearch,
+                      icon: const Icon(Symbols.public_rounded, size: 20),
+                      label: Text(l10n.joinASpace),
+                    ),
+                  ),
                 ),
               ),
             if (controller.isSearchMode)
@@ -689,6 +726,102 @@ class _EmptyChats extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// A space is a card (radius 28) with its avatar, how many rooms it holds
+/// and how many are unread; a Signal dot when anything inside is unread.
+class _SpaceCard extends StatelessWidget {
+  final Room space;
+  final VoidCallback onTap;
+  final void Function(BuildContext context) onLongPress;
+
+  const _SpaceCard({
+    required this.space,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = L10n.of(context);
+    final client = space.client;
+    final children = space.spaceChildren
+        .map((child) => client.getRoomById(child.roomId ?? ''))
+        .whereType<Room>()
+        .toList();
+    final unread = children.where((room) => room.isUnreadOrInvited).length;
+    final name = space.getLocalizedDisplayname(MatrixLocals(l10n));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      child: Material(
+        color: scheme.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(D0b0Radius.card),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: () => onLongPress(context),
+          hoverColor: scheme.surfaceContainerHigh,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Avatar(
+                  mxContent: space.avatar,
+                  name: name,
+                  toneSeed: space.id,
+                  isRoom: true,
+                  size: 56,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: .min,
+                    crossAxisAlignment: .start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: D0b0Type.subtitle.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          l10n.countRooms(space.spaceChildren.length),
+                          if (unread > 0) l10n.countUnreadShort(unread),
+                        ].join(' · '),
+                        style: D0b0Type.monoS.copyWith(
+                          color: unread > 0 ? scheme.primary : theme.d0b0.text3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (unread > 0)
+                  Container(
+                    width: 10,
+                    height: 10,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: theme.d0b0.signal,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  Icon(Symbols.chevron_right_rounded, color: theme.d0b0.text3),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

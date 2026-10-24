@@ -3387,5 +3387,215 @@
     "@editingMessage": {
         "type": "String",
         "placeholders": {}
+    },
+    "preferences": "Preferences",
+    "@preferences": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "aboutTheServer": "About the server",
+    "@aboutTheServer": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "privacyAndAbout": "Privacy & about",
+    "@privacyAndAbout": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "keysBackedUp": "Keys backed up",
+    "@keysBackedUp": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "backupNotSetUp": "Not set up yet",
+    "@backupNotSetUp": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "editProfile": "Edit profile",
+    "@editProfile": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "changeDisplayname": "Change your name",
+    "@changeDisplayname": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "changeAvatar": "Change your picture",
+    "@changeAvatar": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "countSessions": "{count, plural, =1{1 session} other{{count} sessions}}",
+    "@countSessions": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "countUnverified": "{count} unverified",
+    "@countUnverified": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "noDescriptionYet": "No description yet.",
+    "@noDescriptionYet": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "notificationsAll": "All messages",
+    "@notificationsAll": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "notificationsMentions": "Mentions only",
+    "@notificationsMentions": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "notificationsMuted": "Muted",
+    "@notificationsMuted": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "sharedMedia": "Shared media",
+    "@sharedMedia": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "encryptionOnVerified": "On · all devices verified",
+    "@encryptionOnVerified": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "encryptionOn": "On",
+    "@encryptionOn": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "encryptionOff": "Off",
+    "@encryptionOff": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "pinnedMessages": "Pinned messages",
+    "@pinnedMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "inCommon": "In common",
+    "@inCommon": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "leaveChat": "Leave chat",
+    "@leaveChat": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emojiAndStickerPacks": "Emoji & sticker packs",
+    "@emojiAndStickerPacks": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "chatSection": "Chat",
+    "@chatSection": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "roomAdmin": "Admin",
+    "@roomAdmin": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "blockUserName": "Block {name}",
+    "@blockUserName": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "callAction": "Call",
+    "@callAction": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "formattedMessagesShortDescription": "Markdown: bold, italics, links",
+    "@formattedMessagesShortDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "showDeletedMessages": "Show deleted messages",
+    "@showDeletedMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "showDeletedMessagesDescription": "Shown as 'Message deleted'",
+    "@showDeletedMessagesDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "showUnsupportedEvents": "Show unsupported events",
+    "@showUnsupportedEvents": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "showUnsupportedEventsDescription": "Developer option: raw event types",
+    "@showUnsupportedEventsDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "typingSection": "Typing",
+    "@typingSection": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "enterSends": "Enter sends",
+    "@enterSends": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "enterSendsMobileDescription": "On phones Enter adds a line",
+    "@enterSendsMobileDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "enterSendsDesktopDescription": "Shift+Enter adds a line",
+    "@enterSendsDesktopDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "reactionsAndMedia": "Reactions & media",
+    "@reactionsAndMedia": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "customSection": "Custom",
+    "@customSection": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "countRooms": "{count, plural, =1{1 room} other{{count} rooms}}",
+    "@countRooms": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "countUnreadShort": "{count} unread",
+    "@countUnreadShort": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "appearance": "Appearance",
+    "@appearance": {
+        "type": "String",
+        "placeholders": {}
     }
 }

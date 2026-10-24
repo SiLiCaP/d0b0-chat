@@ -70,6 +70,11 @@ abstract class PlatformInfos {
           icon: const Icon(Symbols.source_rounded),
           label: Text(l10n.sourceCode),
         ),
+        TextButton.icon(
+          onPressed: () => launchUrlString(AppSettings.privacyPolicy.value),
+          icon: const Icon(Symbols.privacy_tip_rounded),
+          label: Text(l10n.privacy),
+        ),
         Builder(
           builder: (innerContext) {
             return TextButton.icon(
