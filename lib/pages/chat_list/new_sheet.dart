@@ -5,6 +5,7 @@
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -17,14 +18,8 @@ import 'package:material_ui/material_ui.dart';
 /// pasted.
 Future<void> showNewSheet(BuildContext context, {VoidCallback? onJoinSpace}) {
   final router = GoRouter.of(context);
-  return showModalBottomSheet<void>(
+  return showD0b0Sheet<void>(
     context: context,
-    sheetAnimationStyle: const AnimationStyle(
-      duration: D0b0Motion.move,
-      curve: D0b0Motion.overshoot,
-      reverseDuration: D0b0Motion.state,
-      reverseCurve: D0b0Motion.exit,
-    ),
     builder: (sheetContext) {
       final l10n = L10n.of(sheetContext);
       final scheme = Theme.of(sheetContext).colorScheme;

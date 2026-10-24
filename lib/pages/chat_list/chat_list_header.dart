@@ -8,6 +8,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/sync_status_localization.dart';
 import 'package:fluffychat/widgets/d0b0/d0b0_mark.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -48,7 +49,7 @@ class ChatListTitle extends StatelessWidget {
             height: 64,
             child: Row(
               children: [
-                if (showMark) ...[
+                if (showMark && !FluffyThemes.hasNavRail(context)) ...[
                   D0b0Mark(height: 26, color: theme.colorScheme.primary),
                   const SizedBox(width: 9),
                 ],
@@ -58,12 +59,15 @@ class ChatListTitle extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: D0b0Type.display.copyWith(
-                      fontSize: 30,
+                      fontSize: FluffyThemes.hasNavRail(context) ? 28 : 30,
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
-                trailing ?? ClientChooserButton(controller),
+                trailing ??
+                    (FluffyThemes.hasNavRail(context)
+                        ? const SizedBox.shrink()
+                        : ClientChooserButton(controller)),
               ],
             ),
           ),
@@ -137,9 +141,11 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
               decoration: InputDecoration(
                 fillColor: theme.colorScheme.surfaceContainerHigh,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                hintText: synced
+                hintText: !synced
+                    ? status.calcLocalizedString(context)
+                    : PlatformInfos.isMobile
                     ? l10n.searchRoomsAndPeople
-                    : status.calcLocalizedString(context),
+                    : l10n.searchShortcutHint,
                 hintStyle: D0b0Type.body.copyWith(color: iconColor),
                 prefixIcon: !synced
                     ? Padding(

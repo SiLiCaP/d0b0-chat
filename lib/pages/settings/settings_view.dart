@@ -10,7 +10,9 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
+import 'package:fluffychat/widgets/d0b0/nav_rail.dart';
 import 'package:fluffychat/widgets/d0b0/settings_group.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -38,7 +40,8 @@ class SettingsView extends StatelessWidget {
 
     // On phones settings is the 'You' tab: a screen title instead of an app
     // bar, the nav pill instead of a back button.
-    final isTab = !FluffyThemes.isColumnMode(context);
+    final hasRail = FluffyThemes.hasNavRail(context);
+    final isTab = !hasRail;
     final l10n = L10n.of(context);
     final client = Matrix.of(context).client;
     final userId = client.userID;
@@ -50,197 +53,204 @@ class SettingsView extends StatelessWidget {
     final themeMode = ThemeController.of(context).themeMode;
     bool isActive(String path) => activeRoute.startsWith(path);
 
+    void onSelectTab(HomeTab tab) => switch (tab) {
+      HomeTab.chats => context.go('/rooms'),
+      HomeTab.spaces => context.go('/rooms?tab=spaces'),
+      HomeTab.you => null,
+    };
+
     return Scaffold(
       extendBody: isTab,
-      appBar: isTab
-          ? null
-          : AppBar(
-              title: Text(l10n.settings),
-              automaticallyImplyLeading: false,
-              leading: Center(
-                child: BackButton(onPressed: () => context.go('/rooms')),
+      bottomNavigationBar: isTab
+          ? D0b0NavPill(current: HomeTab.you, onSelect: onSelectTab)
+          : null,
+      body: Row(
+        children: [
+          if (hasRail)
+            D0b0NavRail(
+              current: HomeTab.you,
+              onSelect: onSelectTab,
+              account: Avatar(
+                name: userId?.localpart,
+                toneSeed: userId,
+                presenceUserId: userId,
+                size: 40,
               ),
             ),
-      bottomNavigationBar: isTab
-          ? D0b0NavPill(
-              current: HomeTab.you,
-              onSelect: (tab) => switch (tab) {
-                HomeTab.chats => context.go('/rooms'),
-                HomeTab.spaces => context.go('/rooms?tab=spaces'),
-                HomeTab.you => null,
-              },
-            )
-          : null,
-      body: Stack(
-        children: [
-          ListView(
-            key: const Key('SettingsListViewContent'),
-            padding: EdgeInsets.only(
-              bottom: 16 + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: <Widget>[
-              if (isTab)
-                SafeArea(
-                  bottom: false,
-                  child: SizedBox(
-                    height: 64,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          l10n.navYou,
-                          style: D0b0Type.display.copyWith(
-                            fontSize: 30,
-                            color: theme.colorScheme.onSurface,
+          Expanded(
+            child: Stack(
+              children: [
+                ListView(
+                  key: const Key('SettingsListViewContent'),
+                  padding: EdgeInsets.only(
+                    bottom: 16 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  children: <Widget>[
+                    SafeArea(
+                      bottom: false,
+                      child: SizedBox(
+                        height: 64,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              l10n.navYou,
+                              style: D0b0Type.display.copyWith(
+                                fontSize: 30,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    FutureBuilder<Profile>(
+                      future: controller.profileFuture,
+                      builder: (context, snapshot) {
+                        final profile = snapshot.data;
+                        final avatar = profile?.avatarUrl;
+                        final mxid = userId ?? l10n.user;
+                        final displayname =
+                            profile?.displayName ?? mxid.localpart ?? mxid;
+                        return _MeCard(
+                          avatar: avatar,
+                          name: displayname,
+                          userId: mxid,
+                          onAvatarTap: controller.setAvatarAction,
+                          onEdit: () => _editProfile(context),
+                        );
+                      },
+                    ),
+                    D0b0SectionLabel(l10n.account),
+                    D0b0SettingsGroup(
+                      children: [
+                        D0b0SwitchTile(
+                          icon: Symbols.cloud_sync_rounded,
+                          title: l10n.chatBackup,
+                          subtitle: controller.cryptoIdentityConnected == true
+                              ? l10n.keysBackedUp
+                              : l10n.backupNotSetUp,
+                          value: controller.cryptoIdentityConnected == true,
+                          onChanged: controller.firstRunBootstrapAction,
+                        ),
+                        D0b0SettingsTile(
+                          icon: Symbols.devices_rounded,
+                          title: l10n.devices,
+                          subtitle: ownDevices == null
+                              ? null
+                              : [
+                                  l10n.countSessions(ownDevices.length),
+                                  if (unverified > 0)
+                                    l10n.countUnverified(unverified),
+                                ].join(' · '),
+                          chevron: true,
+                          selected: isActive('/rooms/settings/devices'),
+                          onTap: () => context.go('/rooms/settings/devices'),
+                        ),
+                        D0b0SettingsTile(
+                          icon: Symbols.shield_rounded,
+                          title: l10n.security,
+                          chevron: true,
+                          selected: isActive('/rooms/settings/security'),
+                          onTap: () => context.go('/rooms/settings/security'),
+                        ),
+                        FutureBuilder(
+                          future: Result.capture(
+                            client.getAuthMetadata(),
+                          ).then((result) => result.asValue?.value),
+                          builder: (context, snapshot) {
+                            final accountManageUrl =
+                                snapshot.data?.accountManagementUri;
+                            if (accountManageUrl == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return D0b0SettingsTile(
+                              icon: Symbols.account_circle_rounded,
+                              title: l10n.manageAccount,
+                              trailing: Icon(
+                                Symbols.open_in_new_rounded,
+                                size: 20,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              onTap: () => launchUrl(
+                                accountManageUrl,
+                                mode: LaunchMode.inAppBrowserView,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    D0b0SectionLabel(l10n.preferences),
+                    D0b0SettingsGroup(
+                      children: [
+                        D0b0SettingsTile(
+                          icon: Symbols.palette_rounded,
+                          title: l10n.appearance,
+                          subtitle: switch (themeMode) {
+                            ThemeMode.light => l10n.lightTheme,
+                            ThemeMode.dark => l10n.darkTheme,
+                            ThemeMode.system => l10n.systemTheme,
+                          },
+                          chevron: true,
+                          selected: isActive('/rooms/settings/style'),
+                          onTap: () => context.go('/rooms/settings/style'),
+                        ),
+                        D0b0SettingsTile(
+                          icon: Symbols.notifications_rounded,
+                          title: l10n.notifications,
+                          chevron: true,
+                          selected: isActive('/rooms/settings/notifications'),
+                          onTap: () =>
+                              context.go('/rooms/settings/notifications'),
+                        ),
+                        D0b0SettingsTile(
+                          icon: Symbols.chat_bubble_rounded,
+                          title: l10n.chat,
+                          chevron: true,
+                          selected: isActive('/rooms/settings/chat'),
+                          onTap: () => context.go('/rooms/settings/chat'),
+                        ),
+                      ],
+                    ),
+                    D0b0SectionLabel(userId?.domain ?? l10n.aboutTheServer),
+                    D0b0SettingsGroup(
+                      children: [
+                        D0b0SettingsTile(
+                          icon: Symbols.dns_rounded,
+                          title: l10n.aboutTheServer,
+                          chevron: true,
+                          selected: isActive('/rooms/settings/homeserver'),
+                          onTap: () => context.go('/rooms/settings/homeserver'),
+                        ),
+                        D0b0SettingsTile(
+                          icon: Symbols.info_rounded,
+                          title: l10n.privacyAndAbout,
+                          chevron: true,
+                          onTap: () => PlatformInfos.showDialog(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Destructive rows sit alone at the bottom.
+                    D0b0SettingsGroup(
+                      children: [
+                        D0b0SettingsTile(
+                          icon: Symbols.logout_rounded,
+                          title: l10n.logout,
+                          destructive: true,
+                          onTap: controller.logoutAction,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 8),
-              FutureBuilder<Profile>(
-                future: controller.profileFuture,
-                builder: (context, snapshot) {
-                  final profile = snapshot.data;
-                  final avatar = profile?.avatarUrl;
-                  final mxid = userId ?? l10n.user;
-                  final displayname =
-                      profile?.displayName ?? mxid.localpart ?? mxid;
-                  return _MeCard(
-                    avatar: avatar,
-                    name: displayname,
-                    userId: mxid,
-                    onAvatarTap: controller.setAvatarAction,
-                    onEdit: () => _editProfile(context),
-                  );
-                },
-              ),
-              D0b0SectionLabel(l10n.account),
-              D0b0SettingsGroup(
-                children: [
-                  D0b0SwitchTile(
-                    icon: Symbols.cloud_sync_rounded,
-                    title: l10n.chatBackup,
-                    subtitle: controller.cryptoIdentityConnected == true
-                        ? l10n.keysBackedUp
-                        : l10n.backupNotSetUp,
-                    value: controller.cryptoIdentityConnected == true,
-                    onChanged: controller.firstRunBootstrapAction,
-                  ),
-                  D0b0SettingsTile(
-                    icon: Symbols.devices_rounded,
-                    title: l10n.devices,
-                    subtitle: ownDevices == null
-                        ? null
-                        : [
-                            l10n.countSessions(ownDevices.length),
-                            if (unverified > 0)
-                              l10n.countUnverified(unverified),
-                          ].join(' · '),
-                    chevron: true,
-                    selected: isActive('/rooms/settings/devices'),
-                    onTap: () => context.go('/rooms/settings/devices'),
-                  ),
-                  D0b0SettingsTile(
-                    icon: Symbols.shield_rounded,
-                    title: l10n.security,
-                    chevron: true,
-                    selected: isActive('/rooms/settings/security'),
-                    onTap: () => context.go('/rooms/settings/security'),
-                  ),
-                  FutureBuilder(
-                    future: Result.capture(
-                      client.getAuthMetadata(),
-                    ).then((result) => result.asValue?.value),
-                    builder: (context, snapshot) {
-                      final accountManageUrl =
-                          snapshot.data?.accountManagementUri;
-                      if (accountManageUrl == null) {
-                        return const SizedBox.shrink();
-                      }
-                      return D0b0SettingsTile(
-                        icon: Symbols.account_circle_rounded,
-                        title: l10n.manageAccount,
-                        trailing: Icon(
-                          Symbols.open_in_new_rounded,
-                          size: 20,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        onTap: () => launchUrl(
-                          accountManageUrl,
-                          mode: LaunchMode.inAppBrowserView,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              D0b0SectionLabel(l10n.preferences),
-              D0b0SettingsGroup(
-                children: [
-                  D0b0SettingsTile(
-                    icon: Symbols.palette_rounded,
-                    title: l10n.appearance,
-                    subtitle: switch (themeMode) {
-                      ThemeMode.light => l10n.lightTheme,
-                      ThemeMode.dark => l10n.darkTheme,
-                      ThemeMode.system => l10n.systemTheme,
-                    },
-                    chevron: true,
-                    selected: isActive('/rooms/settings/style'),
-                    onTap: () => context.go('/rooms/settings/style'),
-                  ),
-                  D0b0SettingsTile(
-                    icon: Symbols.notifications_rounded,
-                    title: l10n.notifications,
-                    chevron: true,
-                    selected: isActive('/rooms/settings/notifications'),
-                    onTap: () => context.go('/rooms/settings/notifications'),
-                  ),
-                  D0b0SettingsTile(
-                    icon: Symbols.chat_bubble_rounded,
-                    title: l10n.chat,
-                    chevron: true,
-                    selected: isActive('/rooms/settings/chat'),
-                    onTap: () => context.go('/rooms/settings/chat'),
-                  ),
-                ],
-              ),
-              D0b0SectionLabel(userId?.domain ?? l10n.aboutTheServer),
-              D0b0SettingsGroup(
-                children: [
-                  D0b0SettingsTile(
-                    icon: Symbols.dns_rounded,
-                    title: l10n.aboutTheServer,
-                    chevron: true,
-                    selected: isActive('/rooms/settings/homeserver'),
-                    onTap: () => context.go('/rooms/settings/homeserver'),
-                  ),
-                  D0b0SettingsTile(
-                    icon: Symbols.info_rounded,
-                    title: l10n.privacyAndAbout,
-                    chevron: true,
-                    onTap: () => PlatformInfos.showDialog(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Destructive rows sit alone at the bottom.
-              D0b0SettingsGroup(
-                children: [
-                  D0b0SettingsTile(
-                    icon: Symbols.logout_rounded,
-                    title: l10n.logout,
-                    destructive: true,
-                    onTap: controller.logoutAction,
-                  ),
-                ],
-              ),
-            ],
+                if (isTab) const D0b0NavFade(),
+              ],
+            ),
           ),
-          if (isTab) const D0b0NavFade(),
         ],
       ),
     );
@@ -248,7 +258,7 @@ class SettingsView extends StatelessWidget {
 
   Future<void> _editProfile(BuildContext context) async {
     final l10n = L10n.of(context);
-    final action = await showModalBottomSheet<int>(
+    final action = await showD0b0Sheet<int>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

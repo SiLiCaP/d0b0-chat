@@ -87,102 +87,130 @@ class ChatListItem extends StatelessWidget {
           onLongPress: () => onLongPress?.call(context),
           onSecondaryTap: () => onLongPress?.call(context),
           hoverColor: theme.colorScheme.surfaceContainer,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: minHeight),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Avatar(
-                    mxContent: room.avatar,
-                    name: displayname,
-                    toneSeed: room.id,
-                    isRoom: directChatMatrixId == null,
-                    presenceUserId: directChatMatrixId,
-                    presenceBackgroundColor: activeChat
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : null,
+          child: Stack(
+            children: [
+              // The open room on wide windows: a Mint marker on the edge.
+              if (activeChat)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Container(
+                      width: 4,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: const BorderRadius.horizontal(
+                          right: Radius.circular(2),
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: .min,
-                      crossAxisAlignment: .start,
-                      children: [
-                        Row(
+                ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: minHeight),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Avatar(
+                        mxContent: room.avatar,
+                        name: displayname,
+                        toneSeed: room.id,
+                        isRoom: directChatMatrixId == null,
+                        presenceUserId: directChatMatrixId,
+                        presenceBackgroundColor: activeChat
+                            ? theme.colorScheme.surfaceContainerHigh
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: .min,
+                          crossAxisAlignment: .start,
                           children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Flexible(
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          displayname,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          softWrap: false,
+                                          style: nameStyle,
+                                        ),
+                                      ),
+                                      if (isMuted)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 6,
+                                          ),
+                                          child: Icon(
+                                            Symbols.notifications_off_rounded,
+                                            size: 16,
+                                            color: colors.text3,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                if (!room.isSpace &&
+                                    room.membership != Membership.invite)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
                                     child: Text(
-                                      displayname,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: false,
-                                      style: nameStyle,
+                                      room.latestEventReceivedTime
+                                          .localizedTimeShort(context),
+                                      style: timeStyle,
                                     ),
                                   ),
-                                  if (isMuted)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 6),
-                                      child: Icon(
-                                        Symbols.notifications_off_rounded,
-                                        size: 16,
-                                        color: colors.text3,
-                                      ),
-                                    ),
-                                ],
-                              ),
+                              ],
                             ),
-                            if (!room.isSpace &&
-                                room.membership != Membership.invite)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Text(
-                                  room.latestEventReceivedTime
-                                      .localizedTimeShort(context),
-                                  style: timeStyle,
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                if (room.hasActiveMatrixRtcCall)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: ActiveCallIndicator(room: room),
+                                  ),
+                                Expanded(
+                                  child: _PreviewLine(
+                                    room: room,
+                                    style: previewStyle,
+                                  ),
                                 ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            if (room.hasActiveMatrixRtcCall)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 6),
-                                child: ActiveCallIndicator(room: room),
-                              ),
-                            Expanded(
-                              child: _PreviewLine(
-                                room: room,
-                                style: previewStyle,
-                              ),
+                                const SizedBox(width: 8),
+                                if (hasBadge)
+                                  UnreadBubble(room: room)
+                                else if (room.isFavourite)
+                                  Icon(
+                                    Symbols.push_pin_rounded,
+                                    size: 16,
+                                    color: colors.text3,
+                                  ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            if (hasBadge)
-                              UnreadBubble(room: room)
-                            else if (room.isFavourite)
-                              Icon(
-                                Symbols.push_pin_rounded,
-                                size: 16,
-                                color: colors.text3,
-                              ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      if (onForget != null)
+                        IconButton(
+                          icon: const Icon(Symbols.delete_rounded),
+                          onPressed: onForget,
+                        ),
+                    ],
                   ),
-                  if (onForget != null)
-                    IconButton(
-                      icon: const Icon(Symbols.delete_rounded),
-                      onPressed: onForget,
-                    ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

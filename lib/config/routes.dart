@@ -129,6 +129,7 @@ abstract class AppRoutes {
                 mainView: ChatList(
                   activeChat: state.pathParameters['roomid'],
                   activeSpace: state.uri.queryParameters['spaceId'],
+                  initialTab: state.uri.queryParameters['tab'],
                   displayNavigationRail:
                       state.path?.startsWith('/rooms/settings') != true,
                 ),
@@ -216,7 +217,6 @@ abstract class AppRoutes {
                     ? TwoColumnLayout(
                         mainView: Settings(key: state.pageKey),
                         sideView: child,
-                        hasNavigationRail: false,
                       )
                     : child,
               ),

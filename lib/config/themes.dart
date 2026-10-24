@@ -9,21 +9,55 @@ import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
-abstract class FluffyThemes {
-  static const double columnWidth = 380.0;
+/// Material window size classes. Wider windows add panes instead of
+/// stretching; the phone layout is always one of the panes.
+enum WindowSize {
+  /// < 600: bottom nav pill, one pane, sheets from the bottom.
+  compact,
 
-  static const double maxTimelineWidth = columnWidth * 2;
+  /// 600–839: navigation rail, one pane.
+  medium,
+
+  /// 840–1199: rail, room list 360, room pane.
+  expanded,
+
+  /// ≥ 1200: rail, list 360, room, details pane when open.
+  large;
+
+  static WindowSize of(BuildContext context) =>
+      byWidth(MediaQuery.sizeOf(context).width);
+
+  static WindowSize byWidth(double width) => width < 600
+      ? compact
+      : width < 840
+      ? medium
+      : width < 1200
+      ? expanded
+      : large;
+}
+
+abstract class FluffyThemes {
+  /// The list pane: the phone list at 360.
+  static const double columnWidth = 360.0;
+
+  /// The details pane on large windows.
+  static const double detailsPaneWidth = 400.0;
+
+  static const double maxTimelineWidth = 960.0;
 
   static const double navRailWidth = 80.0;
 
-  static bool isColumnModeByWidth(double width) =>
-      width > columnWidth * 2 + navRailWidth;
+  static bool isColumnModeByWidth(double width) => width >= 840;
 
   static bool isColumnMode(BuildContext context) =>
       isColumnModeByWidth(MediaQuery.sizeOf(context).width);
 
   static bool isThreeColumnMode(BuildContext context) =>
-      MediaQuery.sizeOf(context).width > FluffyThemes.columnWidth * 3.5;
+      MediaQuery.sizeOf(context).width >= 1200;
+
+  /// The rail replaces the bottom nav pill from medium windows up.
+  static bool hasNavRail(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= 600;
 
   static LinearGradient backgroundGradient(BuildContext context, int alpha) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -65,6 +99,13 @@ abstract class FluffyThemes {
       borderRadius: BorderRadius.circular(D0b0Radius.card),
     );
     final scrim = colorScheme.surface.withAlpha(184);
+    // Every focusable control gets a 2 px Mint ring so pills keep their
+    // pill; keyboard users always see where they are.
+    final focusRing = WidgetStateBorderSide.resolveWith(
+      (states) => states.contains(WidgetState.focused)
+          ? BorderSide(color: colorScheme.primary, width: 2)
+          : null,
+    );
     return ThemeData(
       visualDensity: VisualDensity.standard,
       useMaterial3: true,
@@ -245,6 +286,7 @@ abstract class FluffyThemes {
         ),
       ),
       dialogTheme: DialogThemeData(
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
         backgroundColor: colorScheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
         shape: cardShape,
@@ -304,14 +346,23 @@ abstract class FluffyThemes {
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(64, 48),
-          shape: stadium,
-          side: BorderSide(width: 2, color: colorScheme.outline),
-          foregroundColor: colorScheme.onSurface,
-          textStyle: textTheme.labelLarge,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              minimumSize: const Size(64, 48),
+              shape: stadium,
+              foregroundColor: colorScheme.onSurface,
+              textStyle: textTheme.labelLarge,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+            ).copyWith(
+              side: WidgetStateBorderSide.resolveWith(
+                (states) => BorderSide(
+                  color: states.contains(WidgetState.focused)
+                      ? colorScheme.primary
+                      : colorScheme.outline,
+                  width: 2,
+                ),
+              ),
+            ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -319,7 +370,7 @@ abstract class FluffyThemes {
           shape: stadium,
           textStyle: textTheme.labelLarge,
           padding: const EdgeInsets.symmetric(horizontal: 20),
-        ),
+        ).copyWith(side: focusRing),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -327,7 +378,7 @@ abstract class FluffyThemes {
           shape: stadium,
           textStyle: textTheme.labelLarge,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
+        ).copyWith(side: focusRing),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -341,7 +392,9 @@ abstract class FluffyThemes {
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+        style: IconButton.styleFrom(
+          minimumSize: const Size(48, 48),
+        ).copyWith(side: focusRing),
       ),
       badgeTheme: BadgeThemeData(
         backgroundColor: d0b0Colors.signal,

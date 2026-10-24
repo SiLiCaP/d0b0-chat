@@ -13,7 +13,9 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/member_actions_popup_menu_button.dart';
 import 'package:flutter/services.dart';
@@ -176,6 +178,13 @@ class Message extends StatelessWidget {
 
     final enterThread = this.enterThread;
     final sender = event.senderFromMemoryOrFallback;
+    // Hovering a bubble shows a small action pill beside its top edge,
+    // toward the centre of the pane.
+    final showHoverPill =
+        !PlatformInfos.isMobile &&
+        !longPressSelect &&
+        event.status.isSent &&
+        !event.redacted;
     final showAvatar = isGroup && !ownMessage;
     const avatarSize = 32.0;
     const avatarGap = 8.0;
@@ -320,9 +329,26 @@ class Message extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   // Bubbles keep the width of a phone layout and cap at 520.
+                  // Pointer devices keep room for the hover pill beside it.
                   final maxBubbleWidth = min(
                     D0b0Room.maxBubbleWidth,
-                    constraints.maxWidth - 58,
+                    constraints.maxWidth -
+                        58 -
+                        (showHoverPill ? _HoverPill.width + 8 : 0),
+                  );
+                  final hoverPill = Padding(
+                    padding: EdgeInsets.only(
+                      top: firstInGroup && bubbleState == BubbleState.sent
+                          ? D0b0Bubble.stemSpace
+                          : 0,
+                      left: ownMessage ? 0 : 8,
+                      right: ownMessage ? 8 : 0,
+                    ),
+                    child: _HoverPill(
+                      onReact: () => onLongPress(event),
+                      onReply: onSwipe,
+                      onMore: () => onLongPress(event),
+                    ),
                   );
                   final selectOffset = longPressSelect ? 40.0 : 0.0;
                   final leadingOffset =
@@ -348,77 +374,82 @@ class Message extends StatelessWidget {
                             ),
                           ),
                         ),
-                      Row(
-                        crossAxisAlignment: .start,
-                        mainAxisAlignment: ownMessage ? .end : .start,
-                        children: [
-                          if (longPressSelect)
-                            SizedBox(
-                              width: 40,
-                              height: 45,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Icon(
-                                  selected
-                                      ? Symbols.check_circle_rounded
-                                      : Symbols.radio_button_unchecked_rounded,
-                                  fill: selected ? 1 : 0,
-                                  color: selected
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  semanticLabel: l10n.select,
+                      HoverBuilder(
+                        builder: (context, hovered) => Row(
+                          crossAxisAlignment: .start,
+                          mainAxisAlignment: ownMessage ? .end : .start,
+                          children: [
+                            if (longPressSelect)
+                              SizedBox(
+                                width: 40,
+                                height: 45,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Icon(
+                                    selected
+                                        ? Symbols.check_circle_rounded
+                                        : Symbols
+                                              .radio_button_unchecked_rounded,
+                                    fill: selected ? 1 : 0,
+                                    color: selected
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    semanticLabel: l10n.select,
+                                  ),
+                                ),
+                              ),
+                            if (ownMessage && longPressSelect) const Spacer(),
+                            if (showAvatar)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  top: firstInGroup ? D0b0Bubble.stemSpace : 0,
+                                  right: avatarGap,
+                                ),
+                                child: firstInGroup
+                                    ? FutureBuilder<User?>(
+                                        future: event.fetchSenderUser(),
+                                        builder: (context, snapshot) {
+                                          final user = snapshot.data ?? sender;
+                                          return Avatar(
+                                            mxContent: user.avatarUrl,
+                                            name: user.calcDisplayname(),
+                                            toneSeed: user.id,
+                                            size: avatarSize,
+                                            onTap: () =>
+                                                showMemberActionsPopupMenu(
+                                                  context: context,
+                                                  user: user,
+                                                  onMention: onMention,
+                                                ),
+                                          );
+                                        },
+                                      )
+                                    : const SizedBox(width: avatarSize),
+                              ),
+                            if (ownMessage && hovered) hoverPill,
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: maxBubbleWidth,
+                              ),
+                              child: GestureDetector(
+                                onDoubleTap:
+                                    !longPressSelect &&
+                                        AppSettings.doubleTapToReact.value &&
+                                        event.room.canSendDefaultMessages
+                                    ? doubleTapReact
+                                    : null,
+                                child: _AnimateIn(
+                                  key: ValueKey(
+                                    event.transactionId ?? event.eventId,
+                                  ),
+                                  animateIn: animateIn,
+                                  child: bubble,
                                 ),
                               ),
                             ),
-                          if (ownMessage && longPressSelect) const Spacer(),
-                          if (showAvatar)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top: firstInGroup ? D0b0Bubble.stemSpace : 0,
-                                right: avatarGap,
-                              ),
-                              child: firstInGroup
-                                  ? FutureBuilder<User?>(
-                                      future: event.fetchSenderUser(),
-                                      builder: (context, snapshot) {
-                                        final user = snapshot.data ?? sender;
-                                        return Avatar(
-                                          mxContent: user.avatarUrl,
-                                          name: user.calcDisplayname(),
-                                          toneSeed: user.id,
-                                          size: avatarSize,
-                                          onTap: () =>
-                                              showMemberActionsPopupMenu(
-                                                context: context,
-                                                user: user,
-                                                onMention: onMention,
-                                              ),
-                                        );
-                                      },
-                                    )
-                                  : const SizedBox(width: avatarSize),
-                            ),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: maxBubbleWidth,
-                            ),
-                            child: GestureDetector(
-                              onDoubleTap:
-                                  !longPressSelect &&
-                                      AppSettings.doubleTapToReact.value &&
-                                      event.room.canSendDefaultMessages
-                                  ? doubleTapReact
-                                  : null,
-                              child: _AnimateIn(
-                                key: ValueKey(
-                                  event.transactionId ?? event.eventId,
-                                ),
-                                animateIn: animateIn,
-                                child: bubble,
-                              ),
-                            ),
-                          ),
-                        ],
+                            if (!ownMessage && hovered) hoverPill,
+                          ],
+                        ),
                       ),
                       if (hasReactions)
                         Padding(
@@ -476,6 +507,58 @@ class Message extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// react · reply · more, shown while a pointer hovers a bubble.
+class _HoverPill extends StatelessWidget {
+  final VoidCallback onReact;
+  final VoidCallback onReply;
+  final VoidCallback onMore;
+
+  const _HoverPill({
+    required this.onReact,
+    required this.onReply,
+    required this.onMore,
+  });
+
+  static const double width = 3 * 36 + 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = L10n.of(context);
+    Widget button(IconData icon, String tooltip, VoidCallback onPressed) =>
+        IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          iconSize: 20,
+          style: IconButton.styleFrom(
+            minimumSize: const Size.square(36),
+            fixedSize: const Size.square(36),
+            padding: EdgeInsets.zero,
+            foregroundColor: scheme.onSurfaceVariant,
+          ),
+          icon: Icon(icon),
+        );
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: ShapeDecoration(
+        color: scheme.surfaceContainer,
+        shape: StadiumBorder(
+          side: BorderSide(color: scheme.outline, width: 1.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: .min,
+        children: [
+          button(Symbols.add_reaction_rounded, l10n.customReaction, onReact),
+          button(Symbols.reply_rounded, l10n.reply, onReply),
+          button(Symbols.more_vert_rounded, l10n.more, onMore),
+        ],
       ),
     );
   }

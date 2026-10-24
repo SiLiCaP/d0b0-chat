@@ -15,6 +15,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -88,11 +89,23 @@ class ChatInputRow extends StatelessWidget {
                 child: _ChatAccountPicker(controller),
               ),
             Expanded(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: height),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(24),
+              // The focused composer shows the Mint focus ring.
+              child: ListenableBuilder(
+                listenable: controller.inputFocus,
+                builder: (context, child) => AnimatedContainer(
+                  duration: D0b0Motion.state,
+                  constraints: const BoxConstraints(minHeight: height),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: controller.inputFocus.hasFocus
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: child,
                 ),
                 child: Row(
                   crossAxisAlignment: .end,
@@ -122,11 +135,14 @@ class ChatInputRow extends StatelessWidget {
                           ),
                           isDense: true,
                           counter: const SizedBox.shrink(),
-                          hintText: l10n.messageRoom(
-                            controller.room.getLocalizedDisplayname(
-                              MatrixLocals(l10n),
-                            ),
-                          ),
+                          hintText:
+                              (PlatformInfos.isMobile
+                              ? l10n.messageRoom
+                              : l10n.composerDesktopHint)(
+                                controller.room.getLocalizedDisplayname(
+                                  MatrixLocals(l10n),
+                                ),
+                              ),
                           hintMaxLines: 1,
                           hintStyle: D0b0Type.body.copyWith(
                             color: theme.d0b0.text3,
@@ -204,14 +220,8 @@ class ChatInputRow extends StatelessWidget {
 
   Future<void> _showAttachSheet(BuildContext context) async {
     final l10n = L10n.of(context);
-    final choice = await showModalBottomSheet<AddPopupMenuActions>(
+    final choice = await showD0b0Sheet<AddPopupMenuActions>(
       context: context,
-      sheetAnimationStyle: const AnimationStyle(
-        duration: D0b0Motion.move,
-        curve: D0b0Motion.overshoot,
-        reverseDuration: D0b0Motion.state,
-        reverseCurve: D0b0Motion.exit,
-      ),
       builder: (context) {
         Widget row(AddPopupMenuActions value, IconData icon, String title) =>
             D0b0SheetRow(
