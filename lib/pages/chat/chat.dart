@@ -14,7 +14,9 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
+import 'package:fluffychat/pages/chat/delete_message_dialog.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
+import 'package:fluffychat/pages/chat/message_actions_sheet.dart';
 import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/pages/chat/utils/web_file_to_x_file.dart';
@@ -1251,18 +1253,7 @@ class ChatController extends State<ChatPageWithRoom>
 
   Future<void> redactEventsAction() async {
     final reasonInput = selectedEvents.any((event) => event.status.isSent)
-        ? await showTextInputDialog(
-            context: context,
-            title: L10n.of(context).redactMessage,
-            message: L10n.of(context).redactMessageDescription,
-            isDestructive: true,
-            hintText: L10n.of(context).optionalRedactReason,
-            maxLength: 255,
-            maxLines: 3,
-            minLines: 1,
-            okLabel: L10n.of(context).remove,
-            cancelLabel: L10n.of(context).cancel,
-          )
+        ? await showDeleteMessagesDialog(context, count: selectedEvents.length)
         : null;
     if (reasonInput == null) return;
     final reason = reasonInput.isEmpty ? null : reasonInput;
@@ -1587,6 +1578,98 @@ class ChatController extends State<ChatPageWithRoom>
     context.go('/rooms/${result.result!}');
 
     await showFutureLoadingDialog(context: context, future: room.leave);
+  }
+
+  /// Long-press on a message: the actions sheet for just that message.
+  Future<void> showMessageActions(Event event) async {
+    final timeline = this.timeline;
+    if (timeline == null || event.redacted) return;
+    final previous = List.of(selectedEvents);
+    selectedEvents
+      ..clear()
+      ..add(event);
+    final displayEvent = event.getDisplayEvent(timeline);
+    final canSend = room.canSendDefaultMessages && !isArchived;
+    final options = MessageActionOptions(
+      canReact: canSend && event.status.isSent,
+      canReply: canSend && event.status.isSent,
+      canReplyInThread:
+          canSend && event.status.isSent && activeThreadId == null,
+      canCopy: displayEvent.body.isNotEmpty,
+      canEdit: canEditSelectedEvents,
+      canPin: canPinSelectedEvents,
+      isPinned: room.pinnedEventIds.contains(event.eventId),
+      canSave: canSaveSelectedEvent,
+      canReport: event.status.isSent && event.senderId != room.client.userID,
+      canRetry: event.status.isError,
+      canDelete: canRedactSelectedEvents || event.status.isError,
+    );
+    selectedEvents
+      ..clear()
+      ..addAll(previous);
+    final sentReactions = event
+        .aggregatedEvents(timeline, RelationshipTypes.reaction)
+        .where((e) => e.senderId == room.client.userID)
+        .map(
+          (e) => e.content
+              .tryGetMap<String, Object?>('m.relates_to')
+              ?.tryGet<String>('key'),
+        )
+        .whereType<String>()
+        .toSet();
+
+    final result = await showMessageActionsSheet(
+      context: context,
+      event: event,
+      options: options,
+      sentReactions: sentReactions,
+    );
+    if (result == null || !mounted) return;
+    if (result is String) {
+      if (!sentReactions.contains(result)) {
+        await room.sendReaction(event.eventId, result);
+      }
+      return;
+    }
+    setState(() {
+      selectedEvents
+        ..clear()
+        ..add(event);
+    });
+    switch (result as MessageAction) {
+      case MessageAction.reply:
+        replyAction(replyTo: event);
+      case MessageAction.replyInThread:
+        clearSelectedEvents();
+        enterThread(event.eventId);
+      case MessageAction.copy:
+        copyEventsAction();
+      case MessageAction.forward:
+        await forwardEventsAction();
+      case MessageAction.edit:
+        editSelectedEventAction();
+      case MessageAction.pin:
+        pinEvent();
+        clearSelectedEvents();
+      case MessageAction.save:
+        saveSelectedEvent(context);
+        clearSelectedEvents();
+      case MessageAction.select:
+        // Selection mode: the bar turns Deep and the composer goes away.
+        break;
+      case MessageAction.report:
+        await reportEventAction();
+        clearSelectedEvents();
+      case MessageAction.retry:
+        sendAgainAction();
+      case MessageAction.delete:
+        if (event.status.isError) {
+          await deleteErrorEventsAction();
+        } else {
+          await redactEventsAction();
+          if (mounted) clearSelectedEvents();
+        }
+    }
   }
 
   void onSelectMessage(Event event) {

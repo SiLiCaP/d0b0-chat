@@ -77,9 +77,11 @@ class _RecordModeButtonState extends State<RecordModeButton> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = L10n.of(context);
+    // Tonal: the trailing button is a quiet surface until there is text.
     final style = IconButton.styleFrom(
-      backgroundColor: theme.bubbleColor,
-      foregroundColor: theme.onBubbleColor,
+      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+      foregroundColor: theme.colorScheme.onSurface,
+      minimumSize: const Size.square(48),
     );
 
     final button = _mode == RecordMode.video
@@ -100,9 +102,7 @@ class _RecordModeButtonState extends State<RecordModeButton> {
               onPressed: hovered ? widget.onVoiceMessage : _showHint,
               onLongPress: widget.onVoiceMessage,
               style: style,
-              icon: Icon(
-                hovered ? Symbols.mic_rounded : Symbols.mic_none_rounded,
-              ),
+              icon: const Icon(Symbols.mic_rounded),
             ),
           );
 

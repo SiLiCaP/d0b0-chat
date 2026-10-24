@@ -3290,5 +3290,102 @@
     "@searchSectionMessages": {
         "type": "String",
         "placeholders": {}
+    },
+    "sendingEllipsis": "sending…",
+    "@sendingEllipsis": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "readLabel": "read",
+    "@readLabel": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "countNew": "{count} new",
+    "@countNew": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "copyText": "Copy text",
+    "@copyText": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "editedLabel": "edited",
+    "@editedLabel": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "deleteMessageTitle": "Delete this message?",
+    "@deleteMessageTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "deleteMessageBody": "It will be removed for everyone in this chat. People who already read it will see 'Message deleted'.",
+    "@deleteMessageBody": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "reasonOptional": "Reason (optional)",
+    "@reasonOptional": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "messageDeleted": "Message deleted",
+    "@messageDeleted": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "deleteMessagesTitle": "Delete {count} messages?",
+    "@deleteMessagesTitle": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "presenceOnline": "online",
+    "@presenceOnline": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "presenceLastSeen": "last seen {time}",
+    "@presenceLastSeen": {
+        "type": "String",
+        "placeholders": {
+            "time": {"type": "String"}
+        }
+    },
+    "countMembers": "{count, plural, =1{1 member} other{{count} members}}",
+    "@countMembers": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "messageRoom": "Message {name}",
+    "@messageRoom": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "attach": "Attach",
+    "@attach": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "replyingTo": "Replying to {name}",
+    "@replyingTo": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "editingMessage": "Editing message",
+    "@editingMessage": {
+        "type": "String",
+        "placeholders": {}
     }
 }
