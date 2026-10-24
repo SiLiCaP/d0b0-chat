@@ -63,7 +63,7 @@ Future<void> showNewSheet(BuildContext context, {VoidCallback? onJoinSpace}) {
             if (onJoinSpace != null)
               D0b0SheetRow(
                 icon: Symbols.workspaces_rounded,
-                title: l10n.joinSpace,
+                title: l10n.joinASpace,
                 description: l10n.joinSpaceDescription,
                 onTap: () {
                   close();
