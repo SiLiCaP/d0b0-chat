@@ -27,6 +27,15 @@ class D0b0SplashMarquee extends StatefulWidget {
   /// One d + b period passes in this time.
   static const Duration periodDuration = Duration(milliseconds: 2700);
 
+  /// The column is a fixed size, centred on the screen, so the native splash
+  /// can show this exact first frame as a static image
+  /// (`tool/generate_splash_frame.dart`): 41 % of a 390 wide phone.
+  static const double columnWidth = 160;
+
+  /// The band the chain is drawn and faded in; room for the blur either
+  /// side of the column.
+  static const Size bandSize = Size(240, 760);
+
   @override
   State<D0b0SplashMarquee> createState() => _D0b0SplashMarqueeState();
 }
@@ -56,15 +65,36 @@ class _D0b0SplashMarqueeState extends State<D0b0SplashMarquee>
   }
 
   @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: widget.background,
+    child: Center(
+      child: SplashBand(phase: _phase, color: widget.color),
+    ),
+  );
+}
+
+/// The chain at its fixed size with its faded, blurred ends, on a
+/// transparent background. [phase] 0 is the first frame.
+class SplashBand extends StatelessWidget {
+  final Animation<double> phase;
+  final Color color;
+
+  const SplashBand({
+    required this.phase,
+    this.color = D0b0Palette.mint,
+    super.key,
+  });
+
+  @override
   Widget build(BuildContext context) {
     final chain = RepaintBoundary(
       child: CustomPaint(
-        painter: _ChainPainter(phase: _phase, color: widget.color),
-        size: Size.infinite,
+        painter: _ChainPainter(phase: phase, color: color),
+        size: D0b0SplashMarquee.bandSize,
       ),
     );
-    return ColoredBox(
-      color: widget.background,
+    return SizedBox.fromSize(
+      size: D0b0SplashMarquee.bandSize,
       child: Stack(
         fit: StackFit.expand,
         textDirection: TextDirection.ltr,
@@ -76,13 +106,17 @@ class _D0b0SplashMarqueeState extends State<D0b0SplashMarquee>
             shaderCallback: (rect) => const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
+              // Everything reaches nothing at the band's edges, so the
+              // band never shows a cut on taller screens.
               colors: [
+                Color(0x00FFFFFF),
                 Color(0x66FFFFFF),
                 Color(0x00FFFFFF),
                 Color(0x00FFFFFF),
                 Color(0x66FFFFFF),
+                Color(0x00FFFFFF),
               ],
-              stops: [0.05, 0.3, 0.7, 0.95],
+              stops: [0.0, 0.12, 0.32, 0.68, 0.88, 1.0],
             ).createShader(rect),
             child: ImageFiltered(
               imageFilter: ui.ImageFilter.blur(
@@ -124,14 +158,14 @@ class _ChainPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // About two fifths of the screen wide.
-    final width = (size.shortestSide * 0.41).clamp(120.0, 240.0);
-    final scale = width / D0b0MarkPath.width;
-    final period = D0b0MarkPath.period * scale;
+    const width = D0b0SplashMarquee.columnWidth;
+    const scale = width / D0b0MarkPath.width;
+    const period = D0b0MarkPath.period * scale;
     final left = (size.width - width) / 2;
     // Rises steadily, one d + b period per cycle.
     final offset = -phase.value * period;
     final paint = Paint()..color = color;
+    canvas.clipRect(Offset.zero & size);
     final first = -((size.height / 2) / period).ceil() - 2;
     final last = ((size.height / 2) / period).ceil() + 2;
     final centre = size.height / 2 - D0b0MarkPath.height * scale / 2;
