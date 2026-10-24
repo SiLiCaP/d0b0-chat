@@ -3,7 +3,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/pages/call/call_page.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -39,18 +38,21 @@ class CallOverlay extends StatelessWidget {
                   left: callFullScreen ? 0 : null,
                   right: callFullScreen ? 0 : 8,
                   bottom: callFullScreen ? 0 : null,
-                  height: callFullScreen ? null : 256,
-                  width: callFullScreen ? null : 256,
+                  // Minimized: a small tile with a Mint edge that keeps
+                  // the speaker's video.
+                  height: callFullScreen ? null : 160,
+                  width: callFullScreen ? null : 120,
                   child: Material(
-                    elevation: callFullScreen ? 0 : 4,
-                    clipBehavior: .hardEdge,
+                    elevation: 0,
+                    clipBehavior: .antiAlias,
                     shape: callFullScreen
                         ? null
                         : RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(
-                              AppConfig.borderRadius,
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
                             ),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                     child: Navigator(
                       onDidRemovePage: (_) {

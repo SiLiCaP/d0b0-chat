@@ -3619,5 +3619,106 @@
     "@addCaption": {
         "type": "String",
         "placeholders": {}
+    },
+    "betaTag": "Beta",
+    "@betaTag": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "youPreview": "You · preview",
+    "@youPreview": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "joinCall": "Join call",
+    "@joinCall": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "joinCallHint": "Joins with camera and mic as set above",
+    "@joinCallHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "callFailedTitle": "Couldn't connect to the call",
+    "@callFailedTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "details": "Details",
+    "@details": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "replyWithMessage": "Reply with a message",
+    "@replyWithMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "incomingVoiceCall": "Incoming call",
+    "@incomingVoiceCall": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "incomingVideoCall": "Incoming video call",
+    "@incomingVideoCall": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "expandCall": "Back to the call",
+    "@expandCall": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "minimizeCall": "Minimize",
+    "@minimizeCall": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "speaker": "Speaker",
+    "@speaker": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "nobodyInCallYet": "Nobody is in the call yet",
+    "@nobodyInCallYet": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "countPeopleInCall": "{count, plural, =1{1 person in the call} other{{count} people in the call}}",
+    "@countPeopleInCall": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "countInCall": "{count} in call · {time}",
+    "@countInCall": {
+        "type": "String",
+        "placeholders": {
+            "count": {"type": "int"},
+            "time": {"type": "String"}
+        }
+    },
+    "namesInCall": "{names} are in the call",
+    "@namesInCall": {
+        "type": "String",
+        "placeholders": {
+            "names": {"type": "String"}
+        }
+    },
+    "nameInCall": "{name} is in the call",
+    "@nameInCall": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "callFailedBody": "{server}'s call server didn't accept the connection. Your chat still works; try again in a moment.",
+    "@callFailedBody": {
+        "type": "String",
+        "placeholders": {
+            "server": {"type": "String"}
+        }
     }
 }

@@ -288,8 +288,8 @@ class ChatView extends StatelessWidget {
                         child: TextButton.icon(
                           icon: Icon(
                             switch (controller.room.activeMatrixRtcCallIntent) {
-                              .voice => Symbols.video_call_rounded,
-                              _ => Symbols.mic_rounded,
+                              .video => Symbols.videocam_rounded,
+                              _ => Symbols.call_rounded,
                             },
                           ),
                           label: Text(
