@@ -29,17 +29,20 @@ class D0b0Mark extends StatelessWidget {
   }
 }
 
-class _MarkPainter extends CustomPainter {
+/// The mark's geometry, shared by the static mark, the splash marquee and
+/// the syncing bowls.
+abstract class D0b0MarkPath {
   static const double width = 93.0;
   static const double height = 104.046;
 
-  final Color dColor;
-  final Color bColor;
-
-  const _MarkPainter(this.dColor, this.bColor);
+  /// The b sits this far below the d. Repeating d + b every twice this
+  /// distance makes each stem meet the next bowl, so the mark tiles into an
+  /// endless chain.
+  static const double bOffset = 50.8435;
+  static const double period = bOffset * 2;
 
   /// The drawn d: the bowl with its hole and the stem.
-  static final Path _d = Path()
+  static final Path d = Path()
     ..moveTo(84.320, 6.242)
     ..cubicTo(87.664, 4.875, 90.639, 2.734, 93.000, 0.000)
     ..lineTo(93.000, 35.843)
@@ -58,7 +61,7 @@ class _MarkPainter extends CustomPainter {
     ..close()
     ..fillType = PathFillType.evenOdd;
 
-  static final Path _b = Path()
+  static final Path b = Path()
     ..moveTo(0.000, 50.843)
     ..cubicTo(2.361, 53.578, 5.336, 55.711, 8.680, 57.078)
     ..lineTo(8.680, 69.328)
@@ -68,12 +71,22 @@ class _MarkPainter extends CustomPainter {
     ..lineTo(17.360, 104.046)
     ..cubicTo(7.772, 104.046, 0.000, 96.273, 0.000, 86.687)
     ..close();
+}
+
+class _MarkPainter extends CustomPainter {
+  static const double width = D0b0MarkPath.width;
+  static const double height = D0b0MarkPath.height;
+
+  final Color dColor;
+  final Color bColor;
+
+  const _MarkPainter(this.dColor, this.bColor);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / width, size.height / height);
-    canvas.drawPath(_d, Paint()..color = dColor);
-    canvas.drawPath(_b, Paint()..color = bColor);
+    canvas.drawPath(D0b0MarkPath.d, Paint()..color = dColor);
+    canvas.drawPath(D0b0MarkPath.b, Paint()..color = bColor);
   }
 
   @override

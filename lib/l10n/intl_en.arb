@@ -3720,5 +3720,10 @@
         "placeholders": {
             "server": {"type": "String"}
         }
+    },
+    "syncingEllipsis": "Syncing…",
+    "@syncingEllipsis": {
+        "type": "String",
+        "placeholders": {}
     }
 }

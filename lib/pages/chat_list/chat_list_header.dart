@@ -11,6 +11,7 @@ import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/sync_status_localization.dart';
 import 'package:fluffychat/widgets/d0b0/d0b0_mark.dart';
+import 'package:fluffychat/widgets/d0b0/syncing_bowls.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -148,15 +149,9 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                     : l10n.searchShortcutHint,
                 hintStyle: D0b0Type.body.copyWith(color: iconColor),
                 prefixIcon: !synced
-                    ? Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            value: status.progress,
-                          ),
-                        ),
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SyncingBowls(size: 20),
                       )
                     : controller.isSearchMode
                     ? null
@@ -164,13 +159,8 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                 suffixIcon: controller.isSearchMode
                     ? controller.isSearching
                           ? const Padding(
-                              padding: EdgeInsets.all(14),
-                              child: SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
+                              padding: EdgeInsets.all(12),
+                              child: SyncingBowls(size: 20),
                             )
                           : IconButton(
                               tooltip: l10n.clear,

@@ -29,7 +29,7 @@ enum BubbleState {
 /// One bubble shape for every message: a pill on one line, radius 22 when
 /// wrapped. The first bubble of a group squares its outer top corner and
 /// carries the stem, the curved cut from the mark.
-class D0b0Bubble extends StatelessWidget {
+class D0b0Bubble extends StatefulWidget {
   final bool mine;
   final bool firstInGroup;
   final BubbleState state;
@@ -50,6 +50,9 @@ class D0b0Bubble extends StatelessWidget {
   /// Space above a group's first bubble that the stem rises into.
   static const double stemSpace = 12;
 
+  @override
+  State<D0b0Bubble> createState() => _D0b0BubbleState();
+
   static BorderRadius borderRadius({
     required bool mine,
     required bool firstInGroup,
@@ -62,15 +65,48 @@ class D0b0Bubble extends StatelessWidget {
       bottomRight: round,
     );
   }
+}
+
+class _D0b0BubbleState extends State<D0b0Bubble>
+    with SingleTickerProviderStateMixin {
+  /// Grows the stem in once the server echoes a sent message.
+  late final AnimationController _stem = AnimationController(
+    vsync: this,
+    duration: D0b0Motion.state,
+    value: 1,
+  );
+
+  @override
+  void didUpdateWidget(D0b0Bubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final justSent =
+        oldWidget.state == BubbleState.sending &&
+        widget.state == BubbleState.sent;
+    if (justSent && !MediaQuery.disableAnimationsOf(context)) {
+      _stem.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _stem.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final mine = widget.mine;
+    final firstInGroup = widget.firstInGroup;
+    final state = widget.state;
+    final child = widget.child;
+    const radius = D0b0Bubble.radius;
+    const stemSpace = D0b0Bubble.stemSpace;
     final theme = Theme.of(context);
     final colors = theme.d0b0;
     // Only a filled bubble has a stem; while sending the stem grows in once
     // the server echoes the message.
     final stem = firstInGroup && state == BubbleState.sent;
-    final radii = borderRadius(mine: mine, firstInGroup: stem);
+    final radii = D0b0Bubble.borderRadius(mine: mine, firstInGroup: stem);
     final fill = mine ? colors.bubbleMine : colors.bubbleTheirs;
 
     final Widget bubble;
@@ -108,20 +144,32 @@ class D0b0Bubble extends StatelessWidget {
           child: child,
         );
     }
-    if (!stem) return bubble;
+    // On server echo the dashes give way to the fill in 150.
+    final switched = AnimatedSwitcher(
+      duration: D0b0Motion.state,
+      layoutBuilder: (current, previous) =>
+          Stack(alignment: Alignment.center, children: [...previous, ?current]),
+      child: KeyedSubtree(key: ValueKey(state), child: bubble),
+    );
+    if (!stem) return switched;
     return Padding(
       padding: const EdgeInsets.only(top: stemSpace),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          bubble,
+          switched,
           Positioned(
             top: -stemSpace,
             left: mine ? null : 0,
             right: mine ? 0 : null,
-            child: CustomPaint(
-              size: const Size(stemWidth, stemHeight),
-              painter: _StemPainter(color: fill, mine: mine),
+            // The stem grows up out of the corner.
+            child: ScaleTransition(
+              scale: _stem,
+              alignment: mine ? Alignment.bottomRight : Alignment.bottomLeft,
+              child: CustomPaint(
+                size: const Size(D0b0Bubble.stemWidth, D0b0Bubble.stemHeight),
+                painter: _StemPainter(color: fill, mine: mine),
+              ),
             ),
           ),
         ],

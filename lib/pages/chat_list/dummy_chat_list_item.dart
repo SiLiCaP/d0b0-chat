@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/widgets/d0b0/syncing_bowls.dart';
 import 'package:material_ui/material_ui.dart';
 
 class DummyChatListItem extends StatelessWidget {
@@ -26,10 +27,7 @@ class DummyChatListItem extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: titleColor,
           child: animate
-              ? CircularProgressIndicator(
-                  strokeWidth: 1,
-                  color: theme.textTheme.bodyLarge!.color,
-                )
+              ? SyncingBowls(size: 18, color: theme.colorScheme.surface)
               : const SizedBox.shrink(),
         ),
         title: Row(

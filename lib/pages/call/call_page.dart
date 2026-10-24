@@ -19,6 +19,7 @@ import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/glass.dart';
+import 'package:fluffychat/widgets/d0b0/syncing_bowls.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/view_model_builder.dart';
@@ -26,8 +27,8 @@ import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:matrix/matrix.dart' hide Room;
 import 'package:matrix/matrix.dart' as sdk show Room;
+import 'package:matrix/matrix.dart' hide Room;
 
 /// Calls sit over footage, so controls are glass or tonal pills. Joining is
 /// Mint, leaving is Coral, and nothing else is red. A muted mic or camera
@@ -224,7 +225,7 @@ class CallPage extends StatelessWidget {
             body: SafeArea(
               top: false,
               child: liveKitRoom == null && error == null
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: SyncingBowls(size: 48))
                   : !inCall
                   ? _Lobby(
                       room: room,

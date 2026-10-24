@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:collection/collection.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
@@ -17,6 +16,7 @@ import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/syncing_bowls.dart';
 import 'package:fluffychat/widgets/mxc_image_viewer.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
@@ -93,7 +93,7 @@ class ChatEventList extends StatelessWidget {
     }
 
     if (timeline == null) {
-      return const Center(child: CupertinoActivityIndicator());
+      return const Center(child: SyncingBowls(size: 48));
     }
 
     final horizontalPadding = FluffyThemes.isColumnMode(context) ? 8.0 : 0.0;
@@ -149,7 +149,7 @@ class ChatEventList extends StatelessWidget {
                           ? null
                           : controller.requestFuture,
                       icon: timeline.isRequestingFuture
-                          ? CircularProgressIndicator.adaptive(strokeWidth: 2)
+                          ? const SyncingBowls(size: 18)
                           : const Icon(Symbols.arrow_downward_rounded),
                       label: Text(L10n.of(context).loadMore),
                     ),
@@ -187,7 +187,7 @@ class ChatEventList extends StatelessWidget {
                             ? null
                             : controller.requestHistory,
                         icon: timeline.isRequestingHistory
-                            ? CircularProgressIndicator.adaptive(strokeWidth: 2)
+                            ? const SyncingBowls(size: 18)
                             : const Icon(Symbols.arrow_upward_rounded),
                         label: Text(L10n.of(context).loadMore),
                       ),
