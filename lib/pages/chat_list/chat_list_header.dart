@@ -22,9 +22,17 @@ class ChatListTitle extends StatelessWidget {
   final ChatListController controller;
   final String title;
 
+  /// The mark only leads the Chats title.
+  final bool showMark;
+
+  /// Replaces the account avatar on the right.
+  final Widget? trailing;
+
   const ChatListTitle({
     required this.controller,
     required this.title,
+    this.showMark = true,
+    this.trailing,
     super.key,
   });
 
@@ -40,8 +48,10 @@ class ChatListTitle extends StatelessWidget {
             height: 64,
             child: Row(
               children: [
-                D0b0Mark(height: 26, color: theme.colorScheme.primary),
-                const SizedBox(width: 9),
+                if (showMark) ...[
+                  D0b0Mark(height: 26, color: theme.colorScheme.primary),
+                  const SizedBox(width: 9),
+                ],
                 Expanded(
                   child: Text(
                     title,
@@ -53,7 +63,7 @@ class ChatListTitle extends StatelessWidget {
                     ),
                   ),
                 ),
-                ClientChooserButton(controller),
+                trailing ?? ClientChooserButton(controller),
               ],
             ),
           ),
