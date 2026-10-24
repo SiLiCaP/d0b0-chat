@@ -38,6 +38,7 @@ import 'package:fluffychat/utils/start_push_foreground_service.dart';
 import 'package:fluffychat/utils/video_message_saver.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
+import 'package:fluffychat/widgets/d0b0/lift.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
@@ -1587,9 +1588,12 @@ class ChatController extends State<ChatPageWithRoom>
   }
 
   /// Long-press on a message: the actions sheet for just that message.
-  Future<void> showMessageActions(Event event) async {
+  Future<void> showMessageActions(Event event, [LiftedBubble? lifted]) async {
     final timeline = this.timeline;
-    if (timeline == null || event.redacted) return;
+    if (timeline == null || event.redacted) {
+      lifted?.dispose();
+      return;
+    }
     final previous = List.of(selectedEvents);
     selectedEvents
       ..clear()
@@ -1629,6 +1633,7 @@ class ChatController extends State<ChatPageWithRoom>
       event: event,
       options: options,
       sentReactions: sentReactions,
+      lifted: lifted,
     );
     if (result == null || !mounted) return;
     if (result is String) {

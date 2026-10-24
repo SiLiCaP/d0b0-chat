@@ -4,10 +4,12 @@
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/d0b0_theme.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/sticker_picker_dialog.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
+import 'package:fluffychat/widgets/d0b0/lift.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
@@ -66,7 +68,13 @@ Future<Object?> showMessageActionsSheet({
   required Event event,
   required MessageActionOptions options,
   required Set<String> sentReactions,
+  LiftedBubble? lifted,
 }) {
+  // The lift is for the sheet rising from the bottom on touch screens.
+  if (lifted != null && FluffyThemes.isColumnMode(context)) {
+    lifted.dispose();
+    lifted = null;
+  }
   return showD0b0Sheet<Object>(
     context: context,
     isScrollControlled: true,
@@ -86,7 +94,7 @@ Future<Object?> showMessageActionsSheet({
         destructive: destructive,
         onTap: () => pick(action),
       );
-      return SafeArea(
+      final sheet = SafeArea(
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: .min,
@@ -196,6 +204,8 @@ Future<Object?> showMessageActionsSheet({
           ),
         ),
       );
+      if (lifted == null) return sheet;
+      return LiftedBubbleHost(lifted: lifted, child: sheet);
     },
   );
 }

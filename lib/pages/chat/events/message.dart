@@ -15,6 +15,7 @@ import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/lift.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/member_actions_popup_menu_button.dart';
@@ -54,7 +55,8 @@ class Message extends StatelessWidget {
   final bool read;
 
   /// Long-press (or right-click) opens the message actions.
-  final void Function(Event) onLongPress;
+  /// Long-press or right-click; with a copy of the bubble to lift on touch.
+  final void Function(Event event, [LiftedBubble? lifted]) onLongPress;
   final void Function()? onExpand;
   final bool isCollapsed;
   final Set<String> bigEmojis;
@@ -313,7 +315,7 @@ class Message extends StatelessWidget {
                 ? () => onSelect(event)
                 : () {
                     HapticFeedback.lightImpact();
-                    onLongPress(event);
+                    onLongPress(event, LiftedBubble.capture(context));
                   },
             onSecondaryTap: longPressSelect ? null : () => onLongPress(event),
             child: Container(
@@ -443,7 +445,7 @@ class Message extends StatelessWidget {
                                     event.transactionId ?? event.eventId,
                                   ),
                                   animateIn: animateIn,
-                                  child: bubble,
+                                  child: LiftSource(child: bubble),
                                 ),
                               ),
                             ),
