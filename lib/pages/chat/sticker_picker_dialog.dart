@@ -7,6 +7,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -67,7 +68,7 @@ class StickerPickerDialogState extends State<StickerPickerDialog> {
                     fontWeight: FontWeight.normal,
                   ),
                   floatingLabelBehavior: FloatingLabelBehavior.never,
-                  prefixIcon: const Icon(Icons.search_outlined),
+                  prefixIcon: const Icon(Symbols.search_rounded),
                 ),
                 onChanged: (s) => setState(() => searchFilter = s),
               ),
@@ -85,7 +86,7 @@ class StickerPickerDialogState extends State<StickerPickerDialog> {
                           context,
                           AppConfig.howDoIGetStickersTutorial,
                         ).launchUrl(),
-                        icon: const Icon(Icons.explore_outlined),
+                        icon: const Icon(Symbols.explore_rounded),
                         label: Text(L10n.of(context).discover),
                       ),
                     ],

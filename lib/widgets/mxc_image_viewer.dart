@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'mxc_image.dart';
@@ -28,7 +29,7 @@ class MxcImageViewer extends StatelessWidget {
           elevation: 0,
           leading: IconButton(
             style: iconButtonStyle,
-            icon: const Icon(Icons.close),
+            icon: const Icon(Symbols.close_rounded),
             onPressed: Navigator.of(context).pop,
             color: Colors.white,
             tooltip: L10n.of(context).close,

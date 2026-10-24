@@ -15,6 +15,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dar
 import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:lottie/lottie.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -175,7 +176,7 @@ class _MxcImageState extends State<MxcImage> {
         child: Material(
           color: Theme.of(context).colorScheme.surfaceContainer,
           child: Icon(
-            Icons.broken_image_outlined,
+            Symbols.broken_image_rounded,
             size: min(widget.height ?? 64, 64),
             color: Theme.of(context).colorScheme.onSurface,
           ),

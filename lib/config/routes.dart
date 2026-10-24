@@ -5,7 +5,9 @@
 
 import 'dart:async';
 
+import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/archive/archive.dart';
 import 'package:fluffychat/pages/bootstrap/bootstrap_page.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -40,6 +42,7 @@ import 'package:fluffychat/widgets/log_view.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/share_scaffold_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -129,6 +132,7 @@ abstract class AppRoutes {
                 mainView: ChatList(
                   activeChat: state.pathParameters['roomid'],
                   activeSpace: state.uri.queryParameters['spaceId'],
+                  initialTab: state.uri.queryParameters['tab'],
                   displayNavigationRail:
                       state.path?.startsWith('/rooms/settings') != true,
                 ),
@@ -148,6 +152,7 @@ abstract class AppRoutes {
                 : ChatList(
                     activeChat: state.pathParameters['roomid'],
                     activeSpace: state.uri.queryParameters['spaceId'],
+                    initialTab: state.uri.queryParameters['tab'],
                   ),
           ),
           routes: [
@@ -215,7 +220,6 @@ abstract class AppRoutes {
                     ? TwoColumnLayout(
                         mainView: Settings(key: state.pageKey),
                         sideView: child,
-                        hasNavigationRail: false,
                       )
                     : child,
               ),
@@ -376,96 +380,54 @@ abstract class AppRoutes {
                 ),
               ],
             ),
-            GoRoute(
-              path: ':roomid',
-              pageBuilder: (context, state) {
-                final body = state.uri.queryParameters['body'];
-                var shareItems = state.extra is List<ShareItem>
-                    ? state.extra as List<ShareItem>
-                    : null;
-                if (body != null && body.isNotEmpty) {
-                  shareItems ??= [];
-                  shareItems.add(TextShareItem(body));
-                }
-                return defaultPageBuilder(
-                  context,
-                  state,
-                  ChatPage(
-                    key: ValueKey(state.uri),
-                    roomId: state.pathParameters['roomid']!,
-                    shareItems: shareItems,
-                    eventId: state.uri.queryParameters['event'],
-                    action: state.uri.queryParameters['action'],
-                  ),
-                );
-              },
-              redirect: loggedOutRedirect,
+            // On large windows the room keeps its page and everything below
+            // it (details, members, search, …) opens in the pane on its right,
+            // each with its own URL. Elsewhere they stack as pages.
+            ShellRoute(
+              pageBuilder: (context, state, child) => defaultPageBuilder(
+                context,
+                state,
+                _roomHasPane(context, state)
+                    ? _chatPage(
+                        state,
+                        key: ValueKey(
+                          '${state.pathParameters['roomid']}'
+                          '?${state.uri.query}',
+                        ),
+                        pane: child,
+                        paneOpen:
+                            state.uri.path !=
+                            '/rooms/${state.pathParameters['roomid']}',
+                      )
+                    : child,
+              ),
               routes: [
                 GoRoute(
-                  path: 'search',
+                  path: ':roomid',
                   pageBuilder: (context, state) => defaultPageBuilder(
                     context,
                     state,
-                    ChatSearchPage(roomId: state.pathParameters['roomid']!),
+                    _roomHasPane(context, state)
+                        ? const SizedBox.shrink()
+                        : _chatPage(state, key: ValueKey(state.uri)),
                   ),
                   redirect: loggedOutRedirect,
-                ),
-                GoRoute(
-                  path: 'encryption',
-                  pageBuilder: (context, state) => defaultPageBuilder(
-                    context,
-                    state,
-                    const ChatEncryptionSettings(),
-                  ),
-                  redirect: loggedOutRedirect,
-                ),
-                GoRoute(
-                  path: 'invite',
-                  pageBuilder: (context, state) => defaultPageBuilder(
-                    context,
-                    state,
-                    InvitationSelection(
-                      roomId: state.pathParameters['roomid']!,
-                    ),
-                  ),
-                  redirect: loggedOutRedirect,
-                ),
-                GoRoute(
-                  path: 'details',
-                  pageBuilder: (context, state) => defaultPageBuilder(
-                    context,
-                    state,
-                    ChatDetails(roomId: state.pathParameters['roomid']!),
-                  ),
                   routes: [
                     GoRoute(
-                      path: 'access',
+                      path: 'search',
                       pageBuilder: (context, state) => defaultPageBuilder(
                         context,
                         state,
-                        ChatAccessSettings(
-                          roomId: state.pathParameters['roomid']!,
-                        ),
+                        ChatSearchPage(roomId: state.pathParameters['roomid']!),
                       ),
                       redirect: loggedOutRedirect,
                     ),
                     GoRoute(
-                      path: 'members',
+                      path: 'encryption',
                       pageBuilder: (context, state) => defaultPageBuilder(
                         context,
                         state,
-                        ChatMembersPage(
-                          roomId: state.pathParameters['roomid']!,
-                        ),
-                      ),
-                      redirect: loggedOutRedirect,
-                    ),
-                    GoRoute(
-                      path: 'permissions',
-                      pageBuilder: (context, state) => defaultPageBuilder(
-                        context,
-                        state,
-                        const ChatPermissionsSettings(),
+                        const ChatEncryptionSettings(),
                       ),
                       redirect: loggedOutRedirect,
                     ),
@@ -481,16 +443,86 @@ abstract class AppRoutes {
                       redirect: loggedOutRedirect,
                     ),
                     GoRoute(
-                      path: 'emotes',
-                      pageBuilder: (context, state) => defaultPageBuilder(
-                        context,
-                        state,
-                        EmotesSettings(roomId: state.pathParameters['roomid']),
-                      ),
+                      path: 'details',
+                      pageBuilder: (context, state) {
+                        final roomId = state.pathParameters['roomid']!;
+                        return defaultPageBuilder(
+                          context,
+                          state,
+                          ChatDetails(
+                            roomId: roomId,
+                            embeddedCloseButton: _roomHasPane(context, state)
+                                ? IconButton(
+                                    tooltip: L10n.of(context).close,
+                                    icon: const Icon(Symbols.close_rounded),
+                                    onPressed: () {
+                                      AppSettings.displayChatDetailsColumn
+                                          .setItem(false);
+                                      context.go('/rooms/$roomId');
+                                    },
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                      routes: [
+                        GoRoute(
+                          path: 'access',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            ChatAccessSettings(
+                              roomId: state.pathParameters['roomid']!,
+                            ),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                        GoRoute(
+                          path: 'members',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            ChatMembersPage(
+                              roomId: state.pathParameters['roomid']!,
+                            ),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                        GoRoute(
+                          path: 'permissions',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            const ChatPermissionsSettings(),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                        GoRoute(
+                          path: 'invite',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            InvitationSelection(
+                              roomId: state.pathParameters['roomid']!,
+                            ),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                        GoRoute(
+                          path: 'emotes',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            EmotesSettings(
+                              roomId: state.pathParameters['roomid'],
+                            ),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                      ],
                       redirect: loggedOutRedirect,
                     ),
                   ],
-                  redirect: loggedOutRedirect,
                 ),
               ],
             ),
@@ -499,6 +531,42 @@ abstract class AppRoutes {
       ],
     ),
   ];
+
+  /// Whether the room at [state] shows what is below it in a pane beside it:
+  /// large windows, a chat you're in, not a space.
+  static bool _roomHasPane(BuildContext context, GoRouterState state) {
+    if (!FluffyThemes.isThreeColumnMode(context)) return false;
+    final roomId = state.pathParameters['roomid'];
+    final room = roomId == null
+        ? null
+        : Matrix.of(context).client.getRoomById(roomId);
+    return room != null && room.membership == Membership.join && !room.isSpace;
+  }
+
+  static Widget _chatPage(
+    GoRouterState state, {
+    required Key key,
+    Widget? pane,
+    bool paneOpen = false,
+  }) {
+    final body = state.uri.queryParameters['body'];
+    var shareItems = state.extra is List<ShareItem>
+        ? state.extra as List<ShareItem>
+        : null;
+    if (body != null && body.isNotEmpty) {
+      shareItems ??= [];
+      shareItems.add(TextShareItem(body));
+    }
+    return ChatPage(
+      key: key,
+      roomId: state.pathParameters['roomid']!,
+      shareItems: shareItems,
+      eventId: state.uri.queryParameters['event'],
+      action: state.uri.queryParameters['action'],
+      pane: pane,
+      paneOpen: paneOpen,
+    );
+  }
 
   static Page noTransitionPageBuilder(
     BuildContext context,

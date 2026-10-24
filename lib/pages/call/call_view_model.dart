@@ -23,6 +23,7 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:just_audio/just_audio.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -537,8 +538,8 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
                       children: [
                         Icon(
                           device.deviceId == activeDeviceId
-                              ? Icons.check_circle_outlined
-                              : Icons.circle_outlined,
+                              ? Symbols.check_circle_rounded
+                              : Symbols.circle_rounded,
                         ),
                         Expanded(
                           child: Text(
@@ -596,8 +597,8 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
               children: [
                 Icon(
                   preferSpeaker
-                      ? Icons.check_circle_outlined
-                      : Icons.circle_outlined,
+                      ? Symbols.check_circle_rounded
+                      : Symbols.circle_rounded,
                 ),
                 Expanded(
                   child: Text(

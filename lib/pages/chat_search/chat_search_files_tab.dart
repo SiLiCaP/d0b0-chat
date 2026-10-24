@@ -8,6 +8,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_search/search_footer.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -92,7 +93,7 @@ class ChatSearchFilesTab extends StatelessWidget {
                   color: theme.colorScheme.onInverseSurface,
                   clipBehavior: Clip.hardEdge,
                   child: ListTile(
-                    leading: const Icon(Icons.file_present_outlined),
+                    leading: const Icon(Symbols.file_present_rounded),
                     title: Text(
                       filename,
                       maxLines: 1,

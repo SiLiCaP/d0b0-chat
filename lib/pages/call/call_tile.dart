@@ -3,10 +3,12 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/config/app_config.dart';
-import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/glass.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -19,6 +21,12 @@ class CallTile extends StatelessWidget {
   final lk.VideoViewFit fit;
   final double width, height;
   final bool handRaised, connected, isSpeaking;
+
+  /// Your own tile is labelled 'You'.
+  final bool isSelf;
+
+  /// The minimized call: no name pill, a smaller avatar.
+  final bool compact;
 
   const CallTile({
     super.key,
@@ -33,42 +41,54 @@ class CallTile extends StatelessWidget {
     this.margin,
     required this.connected,
     required this.isSpeaking,
+    this.isSelf = false,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final video = this.video?.track;
     final theme = Theme.of(context);
-    final borderWidth = isSpeaking ? 5.0 : 1.0;
+    final l10n = L10n.of(context);
+    final radius = BorderRadius.circular(compact ? 0 : D0b0Radius.card);
+    final muted = audio != null && audio?.muted != false;
+    final pillStyle = D0b0Type.label.copyWith(
+      fontSize: 13,
+      letterSpacing: 0,
+      color: D0b0Palette.green100,
+    );
 
     return SizedBox(
       width: width,
       height: height,
       child: AnimatedContainer(
         margin: margin,
-        duration: FluffyThemes.animationDuration,
+        duration: D0b0Motion.state,
+        // The Mint ring shows who is speaking.
+        foregroundDecoration: BoxDecoration(
+          border: isSpeaking
+              ? Border.all(color: theme.colorScheme.primary, width: 3)
+              : null,
+          borderRadius: radius,
+        ),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainer,
-          border: BoxBorder.all(
-            color: isSpeaking
-                ? theme.colorScheme.primaryFixedDim
-                : theme.colorScheme.surfaceContainerHighest,
-            width: borderWidth,
-            strokeAlign: BorderSide.strokeAlignOutside,
-          ),
-          borderRadius: BorderRadius.circular(AppConfig.borderRadius),
+          borderRadius: radius,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppConfig.borderRadius),
+          borderRadius: radius,
           child: Stack(
             children: [
               video != null && !video.muted
-                  ? lk.VideoTrackRenderer(video, fit: fit)
+                  ? Positioned.fill(
+                      child: lk.VideoTrackRenderer(video, fit: fit),
+                    )
                   : Center(
                       child: Avatar(
-                        size: 64,
+                        size: compact ? 48 : 72,
                         mxContent: user.avatarUrl,
                         name: user.calcDisplayname(),
+                        toneSeed: user.id,
                       ),
                     ),
               Positioned.fill(
@@ -78,59 +98,50 @@ class CallTile extends StatelessWidget {
                 ),
               ),
               if (handRaised)
+                const Positioned(
+                  top: 10,
+                  right: 10,
+                  child: GlassPill(
+                    height: 32,
+                    child: Icon(Symbols.front_hand_rounded, size: 18),
+                  ),
+                ),
+              if (!compact)
                 Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Material(
-                    borderRadius: BorderRadius.circular(32),
-                    color: Theme.of(context).colorScheme.surface,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.front_hand_outlined,
-                        color: Theme.of(context).colorScheme.onSurface,
+                  bottom: 10,
+                  left: 10,
+                  right: 10,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: GlassPill(
+                      height: 28,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        mainAxisSize: .min,
+                        spacing: 6,
+                        children: [
+                          if (muted)
+                            const Icon(Symbols.mic_off_rounded, size: 14),
+                          if (this.video?.isScreenShare == true)
+                            const Icon(Symbols.screen_share_rounded, size: 14),
+                          Flexible(
+                            child: Text(
+                              isSelf ? l10n.you : user.calcDisplayname(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: pillStyle,
+                            ),
+                          ),
+                          if (!connected)
+                            const Icon(
+                              Symbols.portable_wifi_off_rounded,
+                              size: 14,
+                            ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              Positioned(
-                bottom: 8,
-                left: 8,
-                child: Material(
-                  elevation: theme.appBarTheme.elevation ?? 4,
-                  shadowColor: theme.appBarTheme.shadowColor,
-                  borderRadius: BorderRadius.circular(7),
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceBright.withAlpha(230),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4.0,
-                      vertical: 2.0,
-                    ),
-                    child: Row(
-                      mainAxisSize: .min,
-                      spacing: 4,
-                      children: [
-                        if (audio != null)
-                          Icon(
-                            audio?.muted == false ? Icons.mic : Icons.mic_off,
-                            size: 12,
-                          ),
-                        if (this.video?.isScreenShare == true)
-                          Icon(Icons.screen_share_outlined, size: 12),
-                        Text(
-                          user.calcDisplayname(),
-                          maxLines: 1,
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        if (!connected)
-                          Icon(Icons.portable_wifi_off_outlined, size: 12),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

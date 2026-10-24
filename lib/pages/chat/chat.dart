@@ -14,12 +14,13 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
+import 'package:fluffychat/pages/chat/delete_message_dialog.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
+import 'package:fluffychat/pages/chat/message_actions_sheet.dart';
 import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/pages/chat/utils/web_file_to_x_file.dart';
 import 'package:fluffychat/pages/chat/video_message/video_message_recorder.dart';
-import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/file_selector.dart';
@@ -36,6 +37,7 @@ import 'package:fluffychat/utils/start_push_foreground_service.dart';
 import 'package:fluffychat/utils/video_message_saver.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
+import 'package:fluffychat/widgets/d0b0/lift.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
@@ -63,6 +65,11 @@ class ChatPage extends StatelessWidget {
   final Timeline? timeline;
   final String? action;
 
+  /// On large windows: what is open below the room (details, members, …),
+  /// shown beside it while [paneOpen].
+  final Widget? pane;
+  final bool paneOpen;
+
   const ChatPage({
     super.key,
     required this.roomId,
@@ -70,6 +77,8 @@ class ChatPage extends StatelessWidget {
     this.shareItems,
     this.timeline,
     this.action,
+    this.pane,
+    this.paneOpen = false,
   });
 
   @override
@@ -95,6 +104,8 @@ class ChatPage extends StatelessWidget {
       eventId: eventId,
       timeline: timeline,
       action: action,
+      pane: pane,
+      paneOpen: paneOpen,
     );
   }
 }
@@ -105,6 +116,8 @@ class ChatPageWithRoom extends StatefulWidget {
   final String? eventId;
   final Timeline? timeline;
   final String? action;
+  final Widget? pane;
+  final bool paneOpen;
 
   const ChatPageWithRoom({
     super.key,
@@ -113,6 +126,8 @@ class ChatPageWithRoom extends StatefulWidget {
     this.eventId,
     this.timeline,
     this.action,
+    this.pane,
+    this.paneOpen = false,
   });
 
   @override
@@ -455,9 +470,6 @@ class ChatController extends State<ChatPageWithRoom>
     web.window.addEventListener('paste', _handleClipboardFilePasteWeb);
 
     super.initState();
-    _displayChatDetailsColumn = ValueNotifier(
-      AppSettings.displayChatDetailsColumn.value,
-    );
 
     bigEmojis = defaultEmojiSet.fold(
       <String>{},
@@ -724,7 +736,6 @@ class ChatController extends State<ChatPageWithRoom>
     scrollController.dispose();
     inputFocus.removeListener(_inputFocusListener);
     inputFocus.dispose();
-    _displayChatDetailsColumn.dispose();
     web.window.removeEventListener('paste', _handleClipboardFilePasteWeb);
     if (currentlyTyping) room.setTyping(false);
     MxcImage.clearCache(widget.room.id);
@@ -1041,9 +1052,15 @@ class ChatController extends State<ChatPageWithRoom>
       }
       try {
         try {
+          final caption = recording.caption;
           final eventId = await room.sendFileEvent(
             file,
             thumbnail: thumbnail,
+            // With a caption the body carries it and the filename the name,
+            // so other clients show an ordinary video with text.
+            extraContent: caption == null
+                ? null
+                : {'body': caption, 'filename': file.name},
             inReplyTo: inReplyTo,
             threadRootEventId: threadRootEventId,
             threadLastEventId: threadLastEventId,
@@ -1250,18 +1267,7 @@ class ChatController extends State<ChatPageWithRoom>
 
   Future<void> redactEventsAction() async {
     final reasonInput = selectedEvents.any((event) => event.status.isSent)
-        ? await showTextInputDialog(
-            context: context,
-            title: L10n.of(context).redactMessage,
-            message: L10n.of(context).redactMessageDescription,
-            isDestructive: true,
-            hintText: L10n.of(context).optionalRedactReason,
-            maxLength: 255,
-            maxLines: 3,
-            minLines: 1,
-            okLabel: L10n.of(context).remove,
-            cancelLabel: L10n.of(context).cancel,
-          )
+        ? await showDeleteMessagesDialog(context, count: selectedEvents.length)
         : null;
     if (reasonInput == null) return;
     final reason = reasonInput.isEmpty ? null : reasonInput;
@@ -1588,6 +1594,107 @@ class ChatController extends State<ChatPageWithRoom>
     await showFutureLoadingDialog(context: context, future: room.leave);
   }
 
+  /// Long-press on a message: the actions sheet for just that message.
+  Future<void> showMessageActions(
+    Event event, {
+    LiftedBubble? lifted,
+    Rect? anchor,
+  }) async {
+    final timeline = this.timeline;
+    if (timeline == null || event.redacted) {
+      lifted?.dispose();
+      return;
+    }
+    final previous = List.of(selectedEvents);
+    selectedEvents
+      ..clear()
+      ..add(event);
+    final displayEvent = event.getDisplayEvent(timeline);
+    final canSend = room.canSendDefaultMessages && !isArchived;
+    final options = MessageActionOptions(
+      canReact: canSend && event.status.isSent,
+      canReply: canSend && event.status.isSent,
+      canReplyInThread:
+          canSend && event.status.isSent && activeThreadId == null,
+      canCopy: displayEvent.body.isNotEmpty,
+      canEdit: canEditSelectedEvents,
+      canPin: canPinSelectedEvents,
+      isPinned: room.pinnedEventIds.contains(event.eventId),
+      canSave: canSaveSelectedEvent,
+      canReport: event.status.isSent && event.senderId != room.client.userID,
+      canRetry: event.status.isError,
+      canDelete: canRedactSelectedEvents || event.status.isError,
+    );
+    selectedEvents
+      ..clear()
+      ..addAll(previous);
+    final sentReactions = event
+        .aggregatedEvents(timeline, RelationshipTypes.reaction)
+        .where((e) => e.senderId == room.client.userID)
+        .map(
+          (e) => e.content
+              .tryGetMap<String, Object?>('m.relates_to')
+              ?.tryGet<String>('key'),
+        )
+        .whereType<String>()
+        .toSet();
+
+    final result = await showMessageActionsSheet(
+      context: context,
+      event: event,
+      options: options,
+      sentReactions: sentReactions,
+      lifted: lifted,
+      anchor: anchor,
+    );
+    if (result == null || !mounted) return;
+    if (result is String) {
+      if (!sentReactions.contains(result)) {
+        await room.sendReaction(event.eventId, result);
+      }
+      return;
+    }
+    setState(() {
+      selectedEvents
+        ..clear()
+        ..add(event);
+    });
+    switch (result as MessageAction) {
+      case MessageAction.reply:
+        replyAction(replyTo: event);
+      case MessageAction.replyInThread:
+        clearSelectedEvents();
+        enterThread(event.eventId);
+      case MessageAction.copy:
+        copyEventsAction();
+      case MessageAction.forward:
+        await forwardEventsAction();
+      case MessageAction.edit:
+        editSelectedEventAction();
+      case MessageAction.pin:
+        pinEvent();
+        clearSelectedEvents();
+      case MessageAction.save:
+        saveSelectedEvent(context);
+        clearSelectedEvents();
+      case MessageAction.select:
+        // Selection mode: the bar turns Deep and the composer goes away.
+        break;
+      case MessageAction.report:
+        await reportEventAction();
+        clearSelectedEvents();
+      case MessageAction.retry:
+        sendAgainAction();
+      case MessageAction.delete:
+        if (event.status.isError) {
+          await deleteErrorEventsAction();
+        } else {
+          await redactEventsAction();
+          if (mounted) clearSelectedEvents();
+        }
+    }
+  }
+
   void onSelectMessage(Event event) {
     if (!event.redacted) {
       if (selectedEvents.contains(event)) {
@@ -1804,13 +1911,12 @@ class ChatController extends State<ChatPageWithRoom>
     cancelReplyEventAction();
   }
 
-  late final ValueNotifier<bool> _displayChatDetailsColumn;
-
-  Future<void> toggleDisplayChatDetailsColumn() async {
-    await AppSettings.displayChatDetailsColumn.setItem(
-      !_displayChatDetailsColumn.value,
-    );
-    _displayChatDetailsColumn.value = !_displayChatDetailsColumn.value;
+  /// Opens or closes the details pane on large windows. The URL says
+  /// whether it is open; the setting remembers it for the next room.
+  void toggleDisplayChatDetailsColumn() {
+    final open = !widget.paneOpen;
+    AppSettings.displayChatDetailsColumn.setItem(open);
+    context.go(open ? '/rooms/$roomId/details' : '/rooms/$roomId');
   }
 
   @override
@@ -1828,30 +1934,22 @@ class ChatController extends State<ChatPageWithRoom>
       child: Row(
         children: [
           Expanded(child: ChatView(this)),
-          ValueListenableBuilder(
-            valueListenable: _displayChatDetailsColumn,
-            builder: (context, displayChatDetailsColumn, _) =>
-                !FluffyThemes.isThreeColumnMode(context) ||
-                    room.membership != Membership.join ||
-                    !displayChatDetailsColumn
-                ? const SizedBox(height: double.infinity, width: 0)
-                : Container(
-                    width: FluffyThemes.columnWidth,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(width: 1, color: theme.dividerColor),
-                      ),
-                    ),
-                    child: ChatDetails(
-                      roomId: roomId,
-                      embeddedCloseButton: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: toggleDisplayChatDetailsColumn,
-                      ),
-                    ),
+          // The pane's navigator stays mounted while closed, so Back keeps
+          // working on it.
+          if (widget.pane case final pane?)
+            Offstage(
+              offstage: !widget.paneOpen,
+              child: Container(
+                width: FluffyThemes.detailsPaneWidth,
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(width: 1, color: theme.dividerColor),
                   ),
-          ),
+                ),
+                child: pane,
+              ),
+            ),
         ],
       ),
     );

@@ -26,6 +26,7 @@ import 'package:universal_html/universal_html.dart' as web;
 
 import 'config/setting_keys.dart';
 import 'utils/background_push.dart';
+import 'widgets/d0b0/splash_gate.dart';
 import 'widgets/fluffy_chat_app.dart';
 
 ReceivePort? mainIsolateReceivePort;
@@ -65,6 +66,16 @@ void main(List<String> args) => runZonedGuarded(() async {
   // widget bindings are initialized already.
   WidgetsFlutterBinding.ensureInitialized();
 
+  // If the app starts in detached mode, we assume that it is in
+  // background fetch mode for processing push notifications. This is
+  // currently only supported on Android.
+  final backgroundFetch =
+      PlatformInfos.isAndroid &&
+      AppLifecycleState.detached == WidgetsBinding.instance.lifecycleState;
+
+  // The splash marquee runs while settings, encryption and clients load.
+  if (!backgroundFetch) SplashGate.start();
+
   final store = await AppSettings.init();
   Logs().i('Welcome to ${AppSettings.applicationName.value} <3');
 
@@ -79,11 +90,7 @@ void main(List<String> args) => runZonedGuarded(() async {
 
   Logs().nativeColors = !PlatformInfos.isIOS;
 
-  // If the app starts in detached mode, we assume that it is in
-  // background fetch mode for processing push notifications. This is
-  // currently only supported on Android.
-  if (PlatformInfos.isAndroid &&
-      AppLifecycleState.detached == WidgetsBinding.instance.lifecycleState) {
+  if (backgroundFetch) {
     await ForegroundServices.startService('background_push');
 
     final clients = await ClientManager.getClients(store: store);
@@ -149,7 +156,7 @@ Future<void> startGui(List<Client> clients, SharedPreferences store) async {
   await firstClient?.roomsLoading;
   await firstClient?.accountDataLoading;
 
-  runApp(
+  SplashGate.show(
     FluffyChatApp(
       clients: clients,
       appLockSettings: (pincode: pin, useBiometrics: useBiometrics),

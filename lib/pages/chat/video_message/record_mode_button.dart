@@ -1,8 +1,11 @@
+import 'dart:async';
+
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
-import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 enum RecordMode { voice, video }
@@ -25,9 +28,173 @@ class RecordModeButton extends StatefulWidget {
   State<RecordModeButton> createState() => _RecordModeButtonState();
 }
 
-class _RecordModeButtonState extends State<RecordModeButton> {
-  static const double _swipeDistance = 16;
-  static const double _swipeVelocity = 300;
+class _RecordModeButtonState extends State<RecordModeButton>
+    with SingleTickerProviderStateMixin {
+  /// Past this the mode switches with a haptic tick.
+  static const double _switchDistance = 56;
+  static const double _maxDrag = 84;
+  static const double _trackHeight = 132;
+
+  final LayerLink _link = LayerLink();
+  final OverlayPortalController _portal = OverlayPortalController();
+
+  /// How far the knob is lifted, while dragging and snapping back.
+  late final AnimationController _knob = AnimationController(
+    vsync: this,
+    upperBound: _maxDrag,
+    duration: const Duration(milliseconds: 250),
+  );
+  bool _switchedThisDrag = false;
+  bool _dragging = false;
+  Timer? _labelTimer;
+  bool _showLabel = false;
+
+  @override
+  void dispose() {
+    _labelTimer?.cancel();
+    _knob.dispose();
+    super.dispose();
+  }
+
+  void _onDragStart(DragStartDetails _) {
+    _switchedThisDrag = false;
+    _labelTimer?.cancel();
+    setState(() {
+      _dragging = true;
+      _showLabel = false;
+    });
+    _knob.value = 0;
+    _portal.show();
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    _knob.value = (_knob.value - details.delta.dy).clamp(0, _maxDrag);
+    if (!_switchedThisDrag && _knob.value >= _switchDistance) {
+      _switchedThisDrag = true;
+      _toggle(1);
+      setState(() => _showLabel = true);
+    }
+  }
+
+  void _onDragEnd(DragEndDetails _) {
+    setState(() => _dragging = false);
+    // The knob snaps back with the overshoot curve; the label stays a
+    // moment to confirm the mode.
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final snap = disableAnimations
+        ? Future<void>.sync(() => _knob.value = 0)
+        : _knob.animateTo(0, curve: D0b0Motion.overshoot);
+    snap.whenComplete(() {
+      if (!mounted) return;
+      _labelTimer = Timer(Duration(milliseconds: _showLabel ? 1200 : 0), () {
+        if (!mounted) return;
+        setState(() => _showLabel = false);
+        _portal.hide();
+      });
+    });
+  }
+
+  Widget _buildTrack(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = L10n.of(context);
+    final otherIcon = _mode == RecordMode.voice
+        ? Symbols.videocam_rounded
+        : Symbols.mic_rounded;
+    final currentIcon = _mode == RecordMode.voice
+        ? Symbols.mic_rounded
+        : Symbols.videocam_rounded;
+    return CompositedTransformFollower(
+      link: _link,
+      targetAnchor: Alignment.bottomRight,
+      followerAnchor: Alignment.bottomRight,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            AnimatedOpacity(
+              duration: D0b0Motion.state,
+              opacity: _showLabel ? 1 : 0,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8, bottom: 82),
+                child: Container(
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: ShapeDecoration(
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    shape: const StadiumBorder(),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 8,
+                    children: [
+                      Icon(currentIcon, size: 18),
+                      Text(
+                        _mode == RecordMode.video
+                            ? l10n.videoMessage
+                            : l10n.voiceMessage,
+                        style: D0b0Type.label.copyWith(
+                          fontSize: 13,
+                          letterSpacing: 0,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            AnimatedContainer(
+              duration: D0b0Motion.state,
+              curve: D0b0Motion.standard,
+              width: widget.size,
+              height: _dragging ? _trackHeight : widget.size,
+              decoration: ShapeDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                shape: const StadiumBorder(),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Positioned(
+                    top: 12,
+                    child: Icon(
+                      otherIcon,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  AnimatedBuilder(
+                    animation: _knob,
+                    builder: (context, _) => Positioned(
+                      bottom: _knob.value,
+                      child: Container(
+                        width: widget.size,
+                        height: widget.size,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: D0b0Motion.state,
+                          child: Icon(
+                            currentIcon,
+                            key: ValueKey(currentIcon),
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   late RecordMode _mode =
       widget.onVideoMessage != null &&
@@ -35,18 +202,12 @@ class _RecordModeButtonState extends State<RecordModeButton> {
       ? RecordMode.video
       : RecordMode.voice;
 
-  double _dragDistance = 0;
-
-  /// Direction of the last swipe, used for the slide animation.
-  double _slideDirection = 1;
-
   bool get _canSwitch => widget.onVideoMessage != null;
 
   void _toggle(double direction) {
     if (!_canSwitch) return;
     HapticFeedback.selectionClick();
     setState(() {
-      _slideDirection = direction;
       _mode = _mode == RecordMode.voice ? RecordMode.video : RecordMode.voice;
     });
     AppSettings.recordButtonMode.setItem(_mode.name);
@@ -76,9 +237,11 @@ class _RecordModeButtonState extends State<RecordModeButton> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = L10n.of(context);
+    // Tonal: the trailing button is a quiet surface until there is text.
     final style = IconButton.styleFrom(
-      backgroundColor: theme.bubbleColor,
-      foregroundColor: theme.onBubbleColor,
+      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+      foregroundColor: theme.colorScheme.onSurface,
+      minimumSize: const Size.square(48),
     );
 
     final button = _mode == RecordMode.video
@@ -88,7 +251,7 @@ class _RecordModeButtonState extends State<RecordModeButton> {
             onPressed: widget.onVideoMessage,
             onLongPress: widget.onVideoMessage,
             style: style,
-            icon: const Icon(Icons.videocam_outlined),
+            icon: const Icon(Symbols.videocam_rounded),
           )
         : HoverBuilder(
             key: const ValueKey(RecordMode.voice),
@@ -99,76 +262,36 @@ class _RecordModeButtonState extends State<RecordModeButton> {
               onPressed: hovered ? widget.onVoiceMessage : _showHint,
               onLongPress: widget.onVoiceMessage,
               style: style,
-              icon: Icon(hovered ? Icons.mic : Icons.mic_none_outlined),
+              icon: const Icon(Symbols.mic_rounded),
             ),
           );
 
     if (!_canSwitch) return button;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onVerticalDragStart: (_) => _dragDistance = 0,
-      onVerticalDragUpdate: (details) => _dragDistance += details.delta.dy,
-      onVerticalDragEnd: (details) {
-        final velocity = details.primaryVelocity ?? 0;
-        if (_dragDistance.abs() >= _swipeDistance ||
-            velocity.abs() >= _swipeVelocity) {
-          final direction = _dragDistance != 0
-              ? _dragDistance.sign
-              : velocity.sign;
-          _toggle(direction);
-        }
-      },
-      child: SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            ClipRect(
+    // Swipe up: a track grows out of the button with the other mode on
+    // top; the knob follows the finger and switches past 56 px.
+    return CompositedTransformTarget(
+      link: _link,
+      child: OverlayPortal(
+        controller: _portal,
+        overlayChildBuilder: _buildTrack,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragStart: _onDragStart,
+          onVerticalDragUpdate: _onDragUpdate,
+          onVerticalDragEnd: _onDragEnd,
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: AnimatedOpacity(
+              duration: D0b0Motion.state,
+              opacity: _dragging ? 0 : 1,
               child: AnimatedSwitcher(
-                duration: FluffyThemes.animationDuration,
-                transitionBuilder: (child, animation) {
-                  final incoming = child.key == ValueKey(_mode);
-                  final offset = Tween<Offset>(
-                    begin: Offset(
-                      0,
-                      (incoming ? -1 : 1) * _slideDirection * 0.8,
-                    ),
-                    end: Offset.zero,
-                  ).animate(animation);
-                  return SlideTransition(
-                    position: offset,
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
+                duration: D0b0Motion.state,
                 child: button,
               ),
             ),
-            // Between the button and the rounded (clipped) end of the input
-            // bar.
-            Positioned(
-              right: 3,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final mode in RecordMode.values)
-                    AnimatedContainer(
-                      duration: FluffyThemes.animationDuration,
-                      margin: const EdgeInsets.symmetric(vertical: 1.5),
-                      width: 4,
-                      height: mode == _mode ? 8 : 4,
-                      decoration: BoxDecoration(
-                        color: mode == _mode
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

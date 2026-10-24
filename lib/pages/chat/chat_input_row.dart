@@ -4,53 +4,55 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:emoji_picker_flutter/locales/default_emoji_set_locale.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/recording_input_row.dart';
 import 'package:fluffychat/pages/chat/recording_view_model.dart';
 import 'package:fluffychat/pages/chat/video_message/record_mode_button.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
+import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
-import '../../config/themes.dart';
 import 'chat.dart';
 import 'input_bar.dart';
 
+/// The composer: '+' opens the attach sheet, the field grows line by line
+/// to 6, and the trailing button swaps by state: mic when empty, send when
+/// there is text, check when editing. '+' and send stay pinned to the
+/// bottom.
 class ChatInputRow extends StatelessWidget {
   final ChatController controller;
 
-  static const double height = 56.0;
+  static const double height = 48.0;
 
   const ChatInputRow(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textMessageOnly =
-        controller.sendController.text.isNotEmpty ||
-        controller.replyEvent != null ||
-        controller.editEvent != null;
+    final l10n = L10n.of(context);
 
     if (!controller.room.otherPartyCanReceiveMessages) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Text(
-            L10n.of(context).otherPartyNotLoggedIn,
+            l10n.otherPartyNotLoggedIn,
             style: theme.textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
         ),
       );
     }
-
-    final selectedTextButtonStyle = TextButton.styleFrom(
-      foregroundColor: theme.colorScheme.onTertiaryContainer,
-    );
 
     return RecordingViewModel(
       builder: (context, recordingViewModel) {
@@ -60,231 +62,62 @@ class ChatInputRow extends StatelessWidget {
             onSend: controller.onVoiceMessageSend,
           );
         }
+        final isEditing = controller.editEvent != null;
+        final showRecord =
+            PlatformInfos.platformCanRecord &&
+            controller.sendController.text.isEmpty &&
+            !isEditing;
         return Row(
           crossAxisAlignment: .end,
-          mainAxisAlignment: .spaceBetween,
-          children: controller.selectMode
-              ? <Widget>[
-                  if (controller.selectedEvents.every(
-                    (event) => event.status == EventStatus.error,
-                  ))
-                    SizedBox(
-                      height: height,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
-                        ),
-                        onPressed: controller.deleteErrorEventsAction,
-                        child: Row(
-                          children: <Widget>[
-                            const Icon(Icons.delete_forever_outlined),
-                            Text(L10n.of(context).delete),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: height,
-                      child: TextButton(
-                        style: selectedTextButtonStyle,
-                        onPressed: controller.forwardEventsAction,
-                        child: Row(
-                          children: <Widget>[
-                            const Icon(Icons.keyboard_arrow_left_outlined),
-                            Text(L10n.of(context).forward),
-                          ],
-                        ),
-                      ),
-                    ),
-                  controller.selectedEvents.length == 1
-                      ? controller.selectedEvents.first
-                                .getDisplayEvent(controller.timeline!)
-                                .status
-                                .isSent
-                            ? SizedBox(
-                                height: height,
-                                child: TextButton(
-                                  style: selectedTextButtonStyle,
-                                  onPressed: controller.replyAction,
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(L10n.of(context).reply),
-                                      const Icon(Icons.keyboard_arrow_right),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : SizedBox(
-                                height: height,
-                                child: TextButton(
-                                  style: selectedTextButtonStyle,
-                                  onPressed: controller.sendAgainAction,
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(L10n.of(context).tryToSendAgain),
-                                      const SizedBox(width: 4),
-                                      const Icon(Icons.send_outlined, size: 16),
-                                    ],
-                                  ),
-                                ),
-                              )
-                      : const SizedBox.shrink(),
-                ]
-              : <Widget>[
-                  const SizedBox(width: 8),
-                  AnimatedContainer(
-                    duration: FluffyThemes.animationDuration,
-                    curve: FluffyThemes.animationCurve,
-                    width: textMessageOnly ? 0 : 48,
-                    height: height,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(),
-                    clipBehavior: Clip.hardEdge,
-                    child: PopupMenuButton<AddPopupMenuActions>(
-                      useRootNavigator: true,
-                      icon: const Icon(Icons.add_circle_outline),
-                      iconColor: theme.colorScheme.onPrimaryContainer,
-                      onSelected: controller.onAddPopupMenuButtonSelected,
-                      itemBuilder: (BuildContext context) => [
-                        if (PlatformInfos.isMobile)
-                          PopupMenuItem(
-                            value: AddPopupMenuActions.location,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor:
-                                    theme.colorScheme.onPrimaryContainer,
-                                foregroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.gps_fixed_outlined),
-                              ),
-                              title: Text(L10n.of(context).shareLocation),
-                              contentPadding: const EdgeInsets.all(0),
-                            ),
-                          ),
-                        PopupMenuItem(
-                          value: AddPopupMenuActions.poll,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.poll_outlined),
-                            ),
-                            title: Text(L10n.of(context).startPoll),
-                            contentPadding: const EdgeInsets.all(0),
-                          ),
-                        ),
-                        PopupMenuDivider(),
-                        if (PlatformInfos.isMobile) ...[
-                          PopupMenuItem(
-                            value: AddPopupMenuActions.videoCamera,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor:
-                                    theme.colorScheme.onPrimaryContainer,
-                                foregroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.videocam_outlined),
-                              ),
-                              title: Text(L10n.of(context).recordAVideo),
-                              contentPadding: const EdgeInsets.all(0),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: AddPopupMenuActions.photoCamera,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor:
-                                    theme.colorScheme.onPrimaryContainer,
-                                foregroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.camera_alt_outlined),
-                              ),
-                              title: Text(L10n.of(context).takeAPhoto),
-                              contentPadding: const EdgeInsets.all(0),
-                            ),
-                          ),
-                          PopupMenuDivider(),
-                        ],
-                        PopupMenuItem(
-                          value: AddPopupMenuActions.video,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.movie_outlined),
-                            ),
-                            title: Text(L10n.of(context).sendVideo),
-                            contentPadding: const EdgeInsets.all(0),
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: AddPopupMenuActions.image,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.image_outlined),
-                            ),
-                            title: Text(L10n.of(context).sendImage),
-                            contentPadding: const EdgeInsets.all(0),
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: AddPopupMenuActions.file,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.attachment_outlined),
-                            ),
-                            title: Text(L10n.of(context).sendFile),
-                            contentPadding: const EdgeInsets.all(0),
-                          ),
-                        ),
-                      ],
+          children: <Widget>[
+            Builder(
+              builder: (buttonContext) => IconButton(
+                tooltip: l10n.attach,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size.square(height),
+                  side: BorderSide(color: theme.colorScheme.outline, width: 2),
+                ),
+                icon: const Icon(Symbols.add_rounded),
+                onPressed: () =>
+                    _showAttachSheet(context, d0b0AnchorOf(buttonContext)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (Matrix.of(context).isMultiAccount &&
+                Matrix.of(context).hasComplexBundles &&
+                Matrix.of(context).currentBundle!.length > 1)
+              SizedBox(
+                height: height,
+                width: 40,
+                child: _ChatAccountPicker(controller),
+              ),
+            Expanded(
+              // The focused composer shows the Mint focus ring.
+              child: ListenableBuilder(
+                listenable: controller.inputFocus,
+                builder: (context, child) => AnimatedContainer(
+                  duration: D0b0Motion.state,
+                  constraints: const BoxConstraints(minHeight: height),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: controller.inputFocus.hasFocus
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      width: 2,
                     ),
                   ),
-                  Container(
-                    height: height,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: IconButton(
-                      tooltip: L10n.of(context).emojis,
-                      color: theme.colorScheme.onPrimaryContainer,
-                      icon: Icon(
-                        controller.showEmojiPicker
-                            ? Icons.keyboard
-                            : Icons.add_reaction_outlined,
-                        key: ValueKey(controller.showEmojiPicker),
-                      ),
-                      onPressed: controller.emojiPickerAction,
-                    ),
-                  ),
-                  if (Matrix.of(context).isMultiAccount &&
-                      Matrix.of(context).hasComplexBundles &&
-                      Matrix.of(context).currentBundle!.length > 1)
-                    Container(
-                      height: height,
-                      width: 48,
-                      alignment: Alignment.center,
-                      child: _ChatAccountPicker(controller),
-                    ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                  child: child,
+                ),
+                child: Row(
+                  crossAxisAlignment: .end,
+                  children: [
+                    Expanded(
                       child: InputBar(
                         room: controller.room,
                         minLines: 1,
-                        maxLines: 8,
+                        maxLines: 6,
                         autofocus: !PlatformInfos.isMobile,
                         keyboardType: TextInputType.multiline,
                         textInputAction:
@@ -298,18 +131,28 @@ class ChatInputRow extends StatelessWidget {
                         controller: controller.sendController,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.only(
-                            left: 6.0,
-                            right: 6.0,
-                            bottom: 6.0,
-                            top: 3.0,
+                            left: 18,
+                            right: 4,
+                            top: 13,
+                            bottom: 13,
                           ),
+                          isDense: true,
                           counter: const SizedBox.shrink(),
-                          hintText: controller.room.encrypted
-                              ? L10n.of(context).encryptedMessage
-                              : L10n.of(context).unencryptedMessage,
+                          hintText:
+                              (PlatformInfos.isMobile
+                              ? l10n.messageRoom
+                              : l10n.composerDesktopHint)(
+                                controller.room.getLocalizedDisplayname(
+                                  MatrixLocals(l10n),
+                                ),
+                              ),
                           hintMaxLines: 1,
+                          hintStyle: D0b0Type.body.copyWith(
+                            color: theme.d0b0.text3,
+                          ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
                           filled: false,
                         ),
                         onChanged: controller.onInputBarChanged,
@@ -327,38 +170,122 @@ class ChatInputRow extends StatelessWidget {
                             ),
                       ),
                     ),
-                  ),
-                  Container(
-                    height: height,
-                    width: height,
-                    alignment: Alignment.center,
-                    child:
-                        PlatformInfos.platformCanRecord &&
-                            !controller.sendController.text.isNotEmpty &&
-                            controller.editEvent == null
-                        ? RecordModeButton(
-                            size: height,
-                            onVoiceMessage: () => recordingViewModel
-                                .startRecording(controller.room),
-                            onVideoMessage: PlatformInfos.isMobile
-                                ? controller.openVideoMessageRecorder
-                                : null,
-                          )
-                        : IconButton(
-                            key: Key('send_button'),
-                            tooltip: L10n.of(context).send,
-                            onPressed: controller.send,
-                            style: IconButton.styleFrom(
-                              backgroundColor: theme.bubbleColor,
-                              foregroundColor: theme.onBubbleColor,
-                            ),
-                            icon: const Icon(Icons.send_outlined),
-                          ),
-                  ),
-                ],
+                    IconButton(
+                      tooltip: l10n.emojis,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      icon: Icon(
+                        controller.showEmojiPicker
+                            ? Symbols.keyboard_rounded
+                            : Symbols.sentiment_satisfied_rounded,
+                        size: 22,
+                        key: ValueKey(controller.showEmojiPicker),
+                      ),
+                      onPressed: controller.emojiPickerAction,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox.square(
+              dimension: height,
+              child: showRecord
+                  ? RecordModeButton(
+                      size: height,
+                      onVoiceMessage: () =>
+                          recordingViewModel.startRecording(controller.room),
+                      onVideoMessage: PlatformInfos.isMobile
+                          ? controller.openVideoMessageRecorder
+                          : null,
+                    )
+                  : IconButton(
+                      key: const Key('send_button'),
+                      tooltip: isEditing ? l10n.edit : l10n.send,
+                      onPressed: controller.send,
+                      style: IconButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        minimumSize: const Size.square(height),
+                      ),
+                      icon: Icon(
+                        isEditing
+                            ? Symbols.check_rounded
+                            : Symbols.arrow_upward_rounded,
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
+  }
+
+  Future<void> _showAttachSheet(BuildContext context, Rect? anchor) async {
+    final l10n = L10n.of(context);
+    final choice = await showD0b0Sheet<AddPopupMenuActions>(
+      context: context,
+      anchor: anchor,
+      builder: (context) {
+        Widget row(AddPopupMenuActions value, IconData icon, String title) =>
+            D0b0SheetRow(
+              icon: icon,
+              title: title,
+              onTap: () => Navigator.of(context).pop(value),
+            );
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .stretch,
+              children: [
+                if (PlatformInfos.isMobile) ...[
+                  row(
+                    AddPopupMenuActions.photoCamera,
+                    Symbols.photo_camera_rounded,
+                    l10n.takeAPhoto,
+                  ),
+                  row(
+                    AddPopupMenuActions.videoCamera,
+                    Symbols.videocam_rounded,
+                    l10n.recordAVideo,
+                  ),
+                ],
+                row(
+                  AddPopupMenuActions.image,
+                  Symbols.image_rounded,
+                  l10n.sendImage,
+                ),
+                row(
+                  AddPopupMenuActions.video,
+                  Symbols.movie_rounded,
+                  l10n.sendVideo,
+                ),
+                row(
+                  AddPopupMenuActions.file,
+                  Symbols.attach_file_rounded,
+                  l10n.sendFile,
+                ),
+                if (PlatformInfos.isMobile)
+                  row(
+                    AddPopupMenuActions.location,
+                    Symbols.location_on_rounded,
+                    l10n.shareLocation,
+                  ),
+                row(
+                  AddPopupMenuActions.poll,
+                  Symbols.ballot_rounded,
+                  l10n.startPoll,
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (choice == null) return;
+    controller.onAddPopupMenuButtonSelected(choice);
   }
 }
 

@@ -3,15 +3,16 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:matrix/matrix.dart';
 
-import '../../config/themes.dart';
 import 'chat.dart';
-import 'events/reply_content.dart';
 
+/// The strip above the composer while replying or editing: a Moss pill
+/// with what you are answering, and an ✕ to drop it.
 class ReplyDisplay extends StatelessWidget {
   final ChatController controller;
   const ReplyDisplay(this.controller, {super.key});
@@ -19,77 +20,92 @@ class ReplyDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = L10n.of(context);
+    final replyEvent = controller.replyEvent;
+    final editEvent = controller.editEvent;
+    final timeline = controller.timeline;
 
-    return AnimatedSize(
-      duration: FluffyThemes.animationDuration,
-      curve: FluffyThemes.animationCurve,
-      clipBehavior: Clip.hardEdge,
-      child: controller.editEvent != null || controller.replyEvent != null
-          ? Material(
-              color: theme.colorScheme.surfaceContainer,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: IconButton(
-                        tooltip: L10n.of(context).close,
-                        icon: const Icon(Icons.close),
-                        onPressed: controller.cancelReplyEventAction,
+    Widget? strip;
+    if (replyEvent != null || editEvent != null) {
+      final event = (replyEvent ?? editEvent)!;
+      final displayEvent = timeline == null
+          ? event
+          : event.getDisplayEvent(timeline);
+      final title = replyEvent != null
+          ? l10n.replyingTo(
+              displayEvent.senderFromMemoryOrFallback.calcDisplayname(),
+            )
+          : l10n.editingMessage;
+      final excerpt = displayEvent
+          .calcLocalizedBodyFallback(
+            MatrixLocals(l10n),
+            withSenderNamePrefix: false,
+            hideReply: true,
+            plaintextBody: true,
+          )
+          .trim()
+          .replaceAll('\n', ' ');
+      strip = Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.only(left: 16, right: 4),
+          decoration: ShapeDecoration(
+            color: theme.colorScheme.surfaceContainer,
+            shape: const StadiumBorder(),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                replyEvent != null
+                    ? Symbols.reply_rounded
+                    : Symbols.edit_rounded,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: D0b0Type.label.copyWith(
+                        fontSize: 13,
+                        letterSpacing: 0,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                    Expanded(
-                      child: controller.replyEvent != null
-                          ? ReplyContent(
-                              controller.replyEvent!,
-                              timeline: controller.timeline,
-                            )
-                          : _EditContent(
-                              controller.editEvent?.getDisplayEvent(
-                                controller.timeline!,
-                              ),
-                            ),
+                    Text(
+                      excerpt,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: D0b0Type.bodyS.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-            )
-          : SizedBox.shrink(),
-    );
-  }
-}
-
-class _EditContent extends StatelessWidget {
-  final Event? event;
-
-  const _EditContent(this.event);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final event = this.event;
-    if (event == null) {
-      return const SizedBox.shrink();
-    }
-    return Row(
-      children: <Widget>[
-        Icon(Icons.edit, color: theme.colorScheme.primary),
-        Container(width: 15.0),
-        Text(
-          event
-              .calcLocalizedBodyFallback(
-                MatrixLocals(L10n.of(context)),
-                withSenderNamePrefix: false,
-                hideReply: true,
-              )
-              .trim()
-              .replaceAll('\n', ' '),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-          style: TextStyle(color: theme.textTheme.bodyMedium!.color),
+              IconButton(
+                tooltip: l10n.close,
+                icon: const Icon(Symbols.close_rounded),
+                onPressed: controller.cancelReplyEventAction,
+              ),
+            ],
+          ),
         ),
-      ],
+      );
+    }
+
+    return AnimatedSize(
+      duration: D0b0Motion.move,
+      curve: D0b0Motion.standard,
+      clipBehavior: Clip.hardEdge,
+      child: strip ?? const SizedBox.shrink(),
     );
   }
 }

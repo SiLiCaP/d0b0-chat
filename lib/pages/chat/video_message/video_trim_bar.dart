@@ -20,7 +20,7 @@ class VideoTrimBar extends StatefulWidget {
   final void Function(Duration position)? onSeek;
 
   static const double height = 56;
-  static const double handleWidth = 16;
+  static const double handleWidth = 14;
   static const int frameCount = 10;
 
   const VideoTrimBar({
@@ -41,6 +41,9 @@ class VideoTrimBar extends StatefulWidget {
 }
 
 class _VideoTrimBarState extends State<VideoTrimBar> {
+  /// Outside the selection the frames are dimmed with glass.
+  static const _outside = Color(0xA60A130D);
+
   final List<Uint8List?> _frames = List.filled(VideoTrimBar.frameCount, null);
   StreamSubscription<ThumbnailFrame>? _framesSub;
 
@@ -146,7 +149,7 @@ class _VideoTrimBarState extends State<VideoTrimBar> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(radius / 2),
                     child: ColoredBox(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                      color: theme.colorScheme.surfaceContainer,
                       child: Row(
                         children: [
                           for (final frame in _frames)
@@ -172,18 +175,14 @@ class _VideoTrimBarState extends State<VideoTrimBar> {
                 width: startX,
                 top: 4,
                 bottom: 4,
-                child: IgnorePointer(
-                  child: ColoredBox(color: Colors.black.withAlpha(140)),
-                ),
+                child: IgnorePointer(child: ColoredBox(color: _outside)),
               ),
               Positioned(
                 left: h + endX,
                 right: h,
                 top: 4,
                 bottom: 4,
-                child: IgnorePointer(
-                  child: ColoredBox(color: Colors.black.withAlpha(140)),
-                ),
+                child: IgnorePointer(child: ColoredBox(color: _outside)),
               ),
               // Selection frame
               Positioned(
@@ -194,12 +193,11 @@ class _VideoTrimBarState extends State<VideoTrimBar> {
                 child: IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      border: Border.symmetric(
-                        horizontal: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 4,
-                        ),
+                      border: Border.all(
+                        color: theme.colorScheme.primary,
+                        width: 3,
                       ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),
@@ -208,16 +206,14 @@ class _VideoTrimBarState extends State<VideoTrimBar> {
               Positioned(
                 left: h + positionX - 1.5,
                 width: 3,
-                top: 0,
-                bottom: 0,
+                top: -4,
+                bottom: -4,
                 child: IgnorePointer(
+                  // A light 3 px pill.
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black38, blurRadius: 2),
-                      ],
+                      color: theme.colorScheme.onSurface,
+                      borderRadius: BorderRadius.circular(1.5),
                     ),
                   ),
                 ),
@@ -271,7 +267,6 @@ class _TrimHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final r = Radius.circular(radius);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
@@ -279,17 +274,15 @@ class _TrimHandle extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.primary,
-          borderRadius: isStart
-              ? BorderRadius.horizontal(left: r)
-              : BorderRadius.horizontal(right: r),
+          borderRadius: BorderRadius.circular(VideoTrimBar.handleWidth / 2),
         ),
         alignment: Alignment.center,
         child: Container(
-          width: 3,
-          height: 20,
+          width: 2,
+          height: 18,
           decoration: BoxDecoration(
             color: theme.colorScheme.onPrimary,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(1),
           ),
         ),
       ),

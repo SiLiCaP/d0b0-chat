@@ -24,6 +24,7 @@ import 'package:fluffychat/utils/size_string.dart';
 import 'package:fluffychat/utils/start_push_foreground_service.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/adaptive_dialog_action.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/dialog_text_field.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' hide Result;
 import 'package:mime/mime.dart';
@@ -299,7 +300,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                                               width: 256,
                                               height: 256,
                                               child: Icon(
-                                                Icons.broken_image_outlined,
+                                                Symbols.broken_image_rounded,
                                                 size: 64,
                                               ),
                                             ),
@@ -323,7 +324,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                                                 width: 256,
                                                 height: 256,
                                                 child: Icon(
-                                                  Icons.broken_image_outlined,
+                                                  Symbols.broken_image_rounded,
                                                   size: 64,
                                                 ),
                                               ),
@@ -342,7 +343,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                                       child: IconButton(
                                         tooltip: L10n.of(context).editImage,
                                         icon: const Icon(
-                                          Icons.edit_outlined,
+                                          Symbols.edit_rounded,
                                           color: Colors.white,
                                           size: 20,
                                         ),
@@ -364,12 +365,12 @@ class SendFileDialogState extends State<SendFileDialog> {
                         children: [
                           Icon(
                             uniqueFileType == null
-                                ? Icons.description_outlined
+                                ? Symbols.description_rounded
                                 : uniqueFileType == 'video'
-                                ? Icons.video_file_outlined
+                                ? Symbols.video_file_rounded
                                 : uniqueFileType == 'audio'
-                                ? Icons.audio_file_outlined
-                                : Icons.description_outlined,
+                                ? Symbols.audio_file_rounded
+                                : Symbols.description_rounded,
                             size: 32,
                           ),
                           const SizedBox(width: 8),
@@ -705,7 +706,7 @@ class _ImageEditPageState extends State<_ImageEditPage> {
           else
             IconButton(
               tooltip: l10n.save,
-              icon: const Icon(Icons.check),
+              icon: const Icon(Symbols.check_rounded),
               onPressed: image == null ? null : _save,
             ),
         ],
@@ -719,12 +720,12 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                     segments: [
                       ButtonSegment(
                         value: _EditMode.crop,
-                        icon: const Icon(Icons.crop),
+                        icon: const Icon(Symbols.crop_rounded),
                         label: Text(l10n.crop),
                       ),
                       ButtonSegment(
                         value: _EditMode.draw,
-                        icon: const Icon(Icons.brush_outlined),
+                        icon: const Icon(Symbols.brush_rounded),
                         label: Text(l10n.draw),
                       ),
                     ],
@@ -751,7 +752,7 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.broken_image_outlined, size: 64),
+                    const Icon(Symbols.broken_image_rounded, size: 64),
                     const SizedBox(height: 16),
                     Text(l10n.oopsSomethingWentWrong),
                   ],
@@ -822,18 +823,18 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                             children: [
                               IconButton(
                                 tooltip: l10n.rotateLeft,
-                                icon: const Icon(Icons.rotate_left),
+                                icon: const Icon(Symbols.rotate_left_rounded),
                                 onPressed: () => _rotate(-1),
                               ),
                               IconButton(
                                 tooltip: l10n.rotateRight,
-                                icon: const Icon(Icons.rotate_right),
+                                icon: const Icon(Symbols.rotate_right_rounded),
                                 onPressed: () => _rotate(1),
                               ),
                               IconButton(
                                 tooltip: l10n.mirror,
                                 isSelected: _mirror,
-                                icon: const Icon(Icons.flip),
+                                icon: const Icon(Symbols.flip_rounded),
                                 onPressed: _toggleMirror,
                               ),
                             ],
@@ -847,8 +848,10 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                                 IconButton(
                                   tooltip: l10n.draw,
                                   isSelected: !_eraser,
-                                  icon: const Icon(Icons.brush_outlined),
-                                  selectedIcon: const Icon(Icons.brush),
+                                  icon: const Icon(Symbols.brush_rounded),
+                                  selectedIcon: const Icon(
+                                    Symbols.brush_rounded,
+                                  ),
                                   onPressed: () =>
                                       setState(() => _eraser = false),
                                 ),
@@ -856,10 +859,10 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                                   tooltip: l10n.eraser,
                                   isSelected: _eraser,
                                   icon: const Icon(
-                                    Icons.cleaning_services_outlined,
+                                    Symbols.cleaning_services_rounded,
                                   ),
                                   selectedIcon: const Icon(
-                                    Icons.cleaning_services,
+                                    Symbols.cleaning_services_rounded,
                                   ),
                                   onPressed: () =>
                                       setState(() => _eraser = true),
@@ -875,14 +878,14 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                                 ),
                                 IconButton(
                                   tooltip: l10n.undo,
-                                  icon: const Icon(Icons.undo),
+                                  icon: const Icon(Symbols.undo_rounded),
                                   onPressed: _strokes.isEmpty
                                       ? null
                                       : () => setState(_strokes.removeLast),
                                 ),
                                 IconButton(
                                   tooltip: l10n.clear,
-                                  icon: const Icon(Icons.delete_outline),
+                                  icon: const Icon(Symbols.delete_rounded),
                                   onPressed: _strokes.isEmpty
                                       ? null
                                       : () => setState(_strokes.clear),

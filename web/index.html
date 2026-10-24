@@ -34,6 +34,16 @@
 
   <title>d0b0 chat</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Deep while the engine loads, so it flows into the splash marquee. -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #16520E; }
+    /* The first frame of the splash marquee, until Flutter draws it. */
+    #splash {
+      position: fixed; left: 50%; top: 50%;
+      width: 240px; height: 760px;
+      margin: -380px 0 0 -120px;
+    }
+  </style>
   <script src="Imaging.js"></script>
 
   <!-- This script adds the flutter initialization JS code -->
@@ -41,6 +51,7 @@
 </head>
 
 <body>
+  <img id="splash" src="splash/splash.png" alt="">
   <script>
     window.addEventListener('load', function (ev) {
       {{flutter_js}}

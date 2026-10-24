@@ -45,7 +45,9 @@ void main() {
             await tester.pump(const Duration(milliseconds: 100));
 
             await tester.loadAssets();
-            await tester.pump(const Duration(milliseconds: 100));
+            // Let the theme animation finish so the screenshot shows the
+            // settled theme instead of a lerp between two.
+            await tester.pump(const Duration(milliseconds: 400));
             await tester.expectScreenshot(
               device.device,
               '${themeMode.name}_chat_list_page',

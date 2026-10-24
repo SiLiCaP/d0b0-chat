@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/file_description.dart';
@@ -16,6 +17,7 @@ import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:ogg_caf_converter/ogg_caf_converter.dart';
@@ -82,8 +84,8 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                     }
                   },
                   icon: audioPlayer.playing && !audioPlayer.isAtEndPosition
-                      ? const Icon(Icons.pause_outlined)
-                      : const Icon(Icons.play_arrow_outlined),
+                      ? const Icon(Symbols.pause_rounded)
+                      : const Icon(Symbols.play_arrow_rounded),
                 ),
               ),
               content: StreamBuilder(
@@ -113,7 +115,7 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                       ).clearMaterialBanners();
                     });
                   },
-                  icon: const Icon(Icons.close_outlined),
+                  icon: const Icon(Symbols.close_rounded),
                 ),
               ],
             ),
@@ -306,6 +308,15 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final onMintBubble =
+        theme.brightness == Brightness.light &&
+        widget.event.senderId == widget.event.room.client.userID;
+    final playButtonColor = onMintBubble
+        ? theme.d0b0.brand
+        : theme.colorScheme.primary;
+    final onPlayButtonColor = onMintBubble
+        ? theme.d0b0.onBrand
+        : theme.colorScheme.onPrimary;
     final waveform = _waveform;
 
     return ValueListenableBuilder(
@@ -364,16 +375,19 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                                   onLongPress: () =>
                                       widget.event.saveFile(context),
                                   onTap: _onButtonTap,
+                                  // A solid play button: Mint, or Deep on
+                                  // a Mint bubble.
                                   child: Material(
-                                    color: widget.color.withAlpha(64),
-                                    borderRadius: BorderRadius.circular(64),
+                                    color: playButtonColor,
+                                    shape: const CircleBorder(),
                                     child: Icon(
                                       audioPlayer?.playing == true &&
                                               audioPlayer?.isAtEndPosition ==
                                                   false
-                                          ? Icons.pause_outlined
-                                          : Icons.play_arrow_outlined,
-                                      color: widget.color,
+                                          ? Symbols.pause_rounded
+                                          : Symbols.play_arrow_rounded,
+                                      fill: 1,
+                                      color: onPlayButtonColor,
                                     ),
                                   ),
                                 ),
@@ -454,7 +468,9 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                           width: 36,
                           child: Text(
                             statusText,
-                            style: TextStyle(color: widget.color, fontSize: 12),
+                            style: D0b0Type.monoS.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -462,7 +478,7 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                           firstChild: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Icon(
-                              Icons.mic_none_outlined,
+                              Symbols.mic_none_rounded,
                               color: widget.color,
                             ),
                           ),

@@ -16,6 +16,7 @@ import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -54,17 +55,17 @@ class SettingsStyleView extends StatelessWidget {
                   ButtonSegment(
                     value: ThemeMode.light,
                     label: Text(L10n.of(context).lightTheme),
-                    icon: const Icon(Icons.light_mode_outlined),
+                    icon: const Icon(Symbols.light_mode_rounded),
                   ),
                   ButtonSegment(
                     value: ThemeMode.dark,
                     label: Text(L10n.of(context).darkTheme),
-                    icon: const Icon(Icons.dark_mode_outlined),
+                    icon: const Icon(Symbols.dark_mode_rounded),
                   ),
                   ButtonSegment(
                     value: ThemeMode.system,
                     label: Text(L10n.of(context).systemTheme),
-                    icon: const Icon(Icons.auto_mode_outlined),
+                    icon: const Icon(Symbols.auto_mode_rounded),
                   ),
                 ],
               ),
@@ -119,7 +120,7 @@ class SettingsStyleView extends StatelessWidget {
                               child: controller.currentColor == color
                                   ? Center(
                                       child: Icon(
-                                        Icons.check,
+                                        Symbols.check_rounded,
                                         size: 16,
                                         color: Theme.of(
                                           context,
@@ -292,13 +293,13 @@ class SettingsStyleView extends StatelessWidget {
                               theme.colorScheme.onSecondaryContainer,
                         ),
                         onPressed: controller.setWallpaper,
-                        icon: const Icon(Icons.edit_outlined),
+                        icon: const Icon(Symbols.edit_rounded),
                         label: Text(L10n.of(context).setWallpaper),
                       ),
                       trailing: accountConfig.wallpaperUrl == null
                           ? null
                           : IconButton(
-                              icon: const Icon(Icons.delete_outlined),
+                              icon: const Icon(Symbols.delete_rounded),
                               color: theme.colorScheme.error,
                               onPressed: controller.deleteChatWallpaper,
                             ),

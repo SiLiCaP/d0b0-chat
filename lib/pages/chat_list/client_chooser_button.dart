@@ -4,221 +4,315 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:async/async.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/utils/archive_count.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
+import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:fluffychat/widgets/qr_code_viewer.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' hide Result;
 
-import '../../utils/fluffy_share.dart';
 import 'chat_list.dart';
 
+/// The account avatar in the chat list header. Tapping it opens the account
+/// sheet, which holds everything the old hamburger menu held minus what
+/// moved: creating a group lives behind the FAB, the archive at the end of
+/// the list.
 class ClientChooserButton extends StatelessWidget {
   final ChatListController controller;
+  final double size;
 
-  const ClientChooserButton(this.controller, {super.key});
-
-  List<PopupMenuEntry<Object>> _bundleMenuItems(BuildContext context) {
-    final matrix = Matrix.of(context);
-    final bundles = matrix.accountBundles.keys.toList()
-      ..sort(
-        (a, b) => a!.isValidMatrixIdStrict() == b!.isValidMatrixIdStrict()
-            ? 0
-            : a.isValidMatrixIdStrict() && !b.isValidMatrixIdStrict()
-            ? -1
-            : 1,
-      );
-    return <PopupMenuEntry<Object>>[
-      PopupMenuItem(
-        value: SettingsAction.newGroup,
-        child: Row(
-          children: [
-            const Icon(Icons.group_add_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).createGroup),
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: SettingsAction.setStatus,
-        child: Row(
-          children: [
-            const Icon(Icons.edit_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).setStatus),
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: SettingsAction.invite,
-        child: Row(
-          children: [
-            Icon(Icons.adaptive.share_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).inviteContact),
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: SettingsAction.archive,
-        child: Row(
-          children: [
-            const Icon(Icons.archive_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).archive),
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: SettingsAction.settings,
-        child: Row(
-          children: [
-            const Icon(Icons.settings_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).settings),
-          ],
-        ),
-      ),
-      const PopupMenuDivider(),
-      for (final bundle in bundles) ...[
-        if (matrix.accountBundles[bundle]!.length != 1 ||
-            matrix.accountBundles[bundle]!.single!.userID != bundle)
-          PopupMenuItem(
-            value: null,
-            child: Column(
-              crossAxisAlignment: .start,
-              mainAxisSize: .min,
-              children: [
-                Text(
-                  bundle!,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.titleMedium!.color,
-                    fontSize: 14,
-                  ),
-                ),
-                const Divider(height: 1),
-              ],
-            ),
-          ),
-        ...matrix.accountBundles[bundle]!
-            .whereType<Client>()
-            .where((client) => client.isLogged())
-            .map(
-              (client) => PopupMenuItem(
-                value: client,
-                child: FutureBuilder<Profile?>(
-                  future: client.fetchOwnProfile(),
-                  builder: (context, snapshot) {
-                    final displayname =
-                        snapshot.data?.displayName ?? client.userID!.localpart!;
-                    return Row(
-                      key: ValueKey('switch_account_$displayname'),
-                      children: [
-                        Avatar(
-                          mxContent: snapshot.data?.avatarUrl,
-                          name: displayname,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            displayname,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: () => controller.editBundlesForAccount(
-                            client.userID,
-                            bundle,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-      ],
-      PopupMenuItem(
-        value: SettingsAction.addAccount,
-        child: Row(
-          children: [
-            const Icon(Icons.person_add_outlined),
-            const SizedBox(width: 18),
-            Text(L10n.of(context).addAccount),
-          ],
-        ),
-      ),
-    ];
-  }
+  const ClientChooserButton(this.controller, {this.size = 40, super.key});
 
   @override
   Widget build(BuildContext context) {
     final matrix = Matrix.of(context);
     final client = Result(() => matrix.client).asValue?.value;
-
-    var clientCount = 0;
-    matrix.accountBundles.forEach((key, value) => clientCount += value.length);
     return FutureBuilder<Profile>(
       future: client?.isLogged() == true ? client?.fetchOwnProfile() : null,
-      builder: (context, snapshot) => Material(
-        clipBehavior: Clip.hardEdge,
-        borderRadius: BorderRadius.circular(99),
-        color: Colors.transparent,
-        child: PopupMenuButton<Object>(
-          key: Key('accounts_and_settings_buttons'),
-          tooltip: L10n.of(context).accountsAndSettings,
-          onSelected: (o) => _clientSelected(o, context),
-          itemBuilder: _bundleMenuItems,
-          icon: Avatar(
-            mxContent: snapshot.data?.avatarUrl,
-            name: snapshot.data?.displayName ?? client?.userID?.localpart,
-            size: 32,
+      builder: (context, snapshot) => Tooltip(
+        message: L10n.of(context).accountsAndSettings,
+        child: Semantics(
+          button: true,
+          label: L10n.of(context).accountsAndSettings,
+          child: SizedBox.square(
+            dimension: 48,
+            child: Center(
+              child: Avatar(
+                key: const Key('accounts_and_settings_buttons'),
+                mxContent: snapshot.data?.avatarUrl,
+                name: snapshot.data?.displayName ?? client?.userID?.localpart,
+                toneSeed: client?.userID,
+                presenceUserId: client?.userID,
+                size: size,
+                onTap: () => _showAccountSheet(context),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _clientSelected(Object object, BuildContext context) async {
-    if (object is Client) {
-      controller.setActiveClient(object);
-    } else if (object is String) {
-      controller.setActiveBundle(object);
-    } else if (object is SettingsAction) {
-      switch (object) {
-        case SettingsAction.addAccount:
-          if (!context.mounted) return;
-          context.go('/rooms/settings/addaccount');
-          break;
-        case SettingsAction.newGroup:
-          context.go('/rooms/newgroup');
-          break;
-        case SettingsAction.invite:
-          FluffyShare.shareInviteLink(context);
-          break;
-        case SettingsAction.settings:
-          context.go('/rooms/settings');
-          break;
-        case SettingsAction.archive:
-          context.go('/rooms/archive');
-          break;
-        case SettingsAction.setStatus:
-          controller.setStatus();
-          break;
-      }
-    }
+  Future<void> _showAccountSheet(BuildContext context) {
+    final router = GoRouter.of(context);
+    return showD0b0Sheet<void>(
+      context: context,
+      isScrollControlled: true,
+      anchor: d0b0AnchorOf(context),
+      builder: (sheetContext) {
+        void close() => Navigator.of(sheetContext).pop();
+        return _AccountSheet(
+          controller: controller,
+          onSetStatus: () {
+            close();
+            controller.setStatus();
+          },
+          onArchive: () {
+            close();
+            router.go('/rooms/archive');
+          },
+          onSettings: () {
+            close();
+            router.go('/rooms/settings');
+          },
+          onAddAccount: () {
+            close();
+            router.go('/rooms/settings/addaccount');
+          },
+          onSwitch: (client) {
+            close();
+            controller.setActiveClient(client);
+          },
+          onEditBundles: (client, bundle) {
+            close();
+            controller.editBundlesForAccount(client.userID, bundle);
+          },
+        );
+      },
+    );
   }
 }
 
-enum SettingsAction {
-  addAccount,
-  newGroup,
-  setStatus,
-  invite,
-  settings,
-  archive,
+class _AccountSheet extends StatelessWidget {
+  final ChatListController controller;
+  final VoidCallback onSetStatus;
+  final VoidCallback onArchive;
+  final VoidCallback onSettings;
+  final VoidCallback onAddAccount;
+  final void Function(Client client) onSwitch;
+  final void Function(Client client, String? bundle) onEditBundles;
+
+  const _AccountSheet({
+    required this.controller,
+    required this.onSetStatus,
+    required this.onArchive,
+    required this.onSettings,
+    required this.onAddAccount,
+    required this.onSwitch,
+    required this.onEditBundles,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = L10n.of(context);
+    final matrix = Matrix.of(context);
+    final active = matrix.client;
+    final accounts = <(Client, String?)>[
+      for (final entry in matrix.accountBundles.entries)
+        for (final client in entry.value.whereType<Client>())
+          if (client.isLogged()) (client, entry.key),
+    ];
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            // Me: who you are, your Matrix ID in mono, and your QR code.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Material(
+                color: scheme.surfaceContainer,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(D0b0Radius.card),
+                ),
+                child: FutureBuilder<Profile>(
+                  future: active.fetchOwnProfile(),
+                  builder: (context, snapshot) {
+                    final name =
+                        snapshot.data?.displayName ??
+                        active.userID?.localpart ??
+                        '';
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                      child: Row(
+                        children: [
+                          Avatar(
+                            mxContent: snapshot.data?.avatarUrl,
+                            name: name,
+                            toneSeed: active.userID,
+                            presenceUserId: active.userID,
+                            presenceBackgroundColor: scheme.surfaceContainer,
+                            size: 56,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: .start,
+                              children: [
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: D0b0Type.subtitle.copyWith(
+                                    color: scheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  active.userID ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: D0b0Type.monoStyle.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.share,
+                            icon: const Icon(Symbols.qr_code_rounded),
+                            onPressed: () {
+                              final userId = active.userID;
+                              if (userId != null) {
+                                showQrCodeViewer(context, userId);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: onSetStatus,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    foregroundColor: scheme.onSurfaceVariant,
+                  ),
+                  icon: const Icon(Symbols.edit_rounded, size: 18),
+                  label: Text(l10n.setAStatus),
+                ),
+              ),
+            ),
+            if (accounts.length > 1)
+              for (final (client, bundle) in accounts)
+                FutureBuilder<Profile>(
+                  future: client.fetchOwnProfile(),
+                  builder: (context, snapshot) {
+                    final name =
+                        snapshot.data?.displayName ??
+                        client.userID?.localpart ??
+                        '';
+                    final isActive = client == active;
+                    return D0b0SheetRow(
+                      key: ValueKey('switch_account_$name'),
+                      plain: true,
+                      leading: Avatar(
+                        mxContent: snapshot.data?.avatarUrl,
+                        name: name,
+                        toneSeed: client.userID,
+                        size: 32,
+                      ),
+                      title: name,
+                      onTap: () => onSwitch(client),
+                      trailing: isActive
+                          ? Icon(
+                              Symbols.check_circle_rounded,
+                              fill: 1,
+                              color: scheme.primary,
+                            )
+                          : IconButton(
+                              tooltip: l10n.editBundlesForAccount,
+                              icon: const Icon(Symbols.edit_rounded),
+                              onPressed: () => onEditBundles(client, bundle),
+                            ),
+                    );
+                  },
+                ),
+            D0b0SheetRow(
+              plain: true,
+              icon: Symbols.archive_rounded,
+              title: l10n.archive,
+              trailing: _ArchiveCount(client: active),
+              onTap: onArchive,
+            ),
+            D0b0SheetRow(
+              plain: true,
+              icon: Symbols.person_add_rounded,
+              title: l10n.addAnotherAccount,
+              onTap: onAddAccount,
+            ),
+            D0b0SheetRow(
+              plain: true,
+              icon: Symbols.settings_rounded,
+              title: l10n.settings,
+              onTap: onSettings,
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The number of archived chats, in mono. Shows the last known count while
+/// asking the server again; nothing while it's unknown or zero.
+class _ArchiveCount extends StatefulWidget {
+  final Client client;
+
+  const _ArchiveCount({required this.client});
+
+  @override
+  State<_ArchiveCount> createState() => _ArchiveCountState();
+}
+
+class _ArchiveCountState extends State<_ArchiveCount> {
+  late final Future<int> _count = ArchiveCount.load(widget.client);
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<int>(
+    future: _count,
+    initialData: ArchiveCount.cached(widget.client),
+    builder: (context, snapshot) {
+      final count = snapshot.data;
+      if (count == null || count == 0) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Text(
+          count.toString(),
+          style: D0b0Type.monoS.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    },
+  );
 }
