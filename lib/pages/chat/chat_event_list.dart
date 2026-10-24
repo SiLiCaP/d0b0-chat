@@ -5,13 +5,13 @@
 
 import 'package:collection/collection.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/pages/chat/encryption_info.dart';
 import 'package:fluffychat/pages/chat/events/message.dart';
-import 'package:fluffychat/pages/chat/seen_by_row.dart';
 import 'package:fluffychat/pages/chat/typing_indicators.dart';
 import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
@@ -34,7 +34,6 @@ class ChatEventList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeline = controller.timeline;
-    final theme = Theme.of(context);
 
     if (controller.room.membership == .invite) {
       final room = controller.room;
@@ -97,8 +96,6 @@ class ChatEventList extends StatelessWidget {
       return const Center(child: CupertinoActivityIndicator());
     }
 
-    final colors = [theme.secondaryBubbleColor, theme.bubbleColor];
-
     final horizontalPadding = FluffyThemes.isColumnMode(context) ? 8.0 : 0.0;
 
     final events = timeline.events.filterByVisibleInGui(
@@ -111,6 +108,12 @@ class ChatEventList extends StatelessWidget {
     for (var i = 0; i < events.length; i++) {
       thisEventsKeyMap[events[i].eventId] = i;
     }
+
+    // Own messages up to the newest one someone else has read show 'read'.
+    final ownUserId = controller.room.client.userID;
+    final readUpToIndex = events.indexWhere(
+      (event) => event.receipts.any((receipt) => receipt.user.id != ownUserId),
+    );
 
     final hasWallpaper =
         controller.room.client.applicationAccountConfig.wallpaperUrl != null;
@@ -155,7 +158,6 @@ class ChatEventList extends StatelessWidget {
                 return Column(
                   mainAxisSize: .min,
                   children: [
-                    if (events.isNotEmpty) SeenByRow(event: events.first),
                     TypingIndicators(controller),
                     EncryptionInfo(room: controller.room),
                   ],
@@ -227,35 +229,7 @@ class ChatEventList extends StatelessWidget {
                   mainAxisSize: .min,
                   children: [
                     if (!isCollapsed && displayDate)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Material(
-                              borderRadius: BorderRadius.circular(
-                                AppConfig.borderRadius * 2,
-                              ),
-                              color: theme.colorScheme.inverseSurface.withAlpha(
-                                200,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                  vertical: 2.0,
-                                ),
-                                child: Text(
-                                  event.originServerTs.localizedDate(context),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onInverseSurface,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      _DayChip(date: event.originServerTs),
                     Message(
                       event,
                       bigEmojis: controller.bigEmojis,
@@ -267,6 +241,8 @@ class ChatEventList extends StatelessWidget {
                       highlightMarker:
                           controller.scrollToEventIdMarker == event.eventId,
                       onSelect: controller.onSelectMessage,
+                      onLongPress: controller.showMessageActions,
+                      read: readUpToIndex != -1 && i >= readUpToIndex,
                       scrollToEventId: controller.scrollToEventId,
                       longPressSelect: controller.selectedEvents.isNotEmpty,
                       selected: controller.selectedEvents.any(
@@ -277,14 +253,10 @@ class ChatEventList extends StatelessWidget {
                           event.eventId,
                       onEdit: controller.editSelectedEventAction,
                       timeline: timeline,
-                      displayReadMarker:
-                          i > 0 &&
-                          controller.readMarkerEventId == event.eventId,
                       nextEvent: nextEvent,
                       previousEvent: previousEvent,
                       wallpaperMode: hasWallpaper,
                       scrollController: controller.scrollController,
-                      colors: colors,
                       isCollapsed: isCollapsed,
                       enterThread: controller.activeThreadId == null
                           ? controller.enterThread
@@ -298,6 +270,8 @@ class ChatEventList extends StatelessWidget {
                             )
                           : null,
                     ),
+                    if (i > 0 && controller.readMarkerEventId == event.eventId)
+                      NewMessagesMarker(count: i),
                   ],
                 ),
               );
@@ -305,6 +279,40 @@ class ChatEventList extends StatelessWidget {
             childCount: events.length + 2,
             findChildIndexCallback: (key) =>
                 controller.findChildIndexCallback(key, thisEventsKeyMap),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The day a run of messages starts: a Moss pill, label at 12 in text-2.
+class _DayChip extends StatelessWidget {
+  final DateTime date;
+
+  const _DayChip({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
+      child: Center(
+        child: Container(
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: scheme.surfaceContainer,
+            shape: const StadiumBorder(),
+          ),
+          child: Text(
+            date.localizedDate(context),
+            style: D0b0Type.label.copyWith(
+              fontSize: 12,
+              letterSpacing: 0,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),

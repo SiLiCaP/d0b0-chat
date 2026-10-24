@@ -5,7 +5,9 @@
 
 import 'dart:math';
 
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/events/poll.dart';
 import 'package:fluffychat/pages/chat/events/video_player.dart';
@@ -187,7 +189,7 @@ class MessageContent extends StatelessWidget {
                 !event.isRichMessage && bigEmojis.contains(event.body);
 
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               child: HtmlMessage(
                 html: html,
                 textColor: textColor,
@@ -276,24 +278,21 @@ class RedactionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<User?>(
-      future: event.redactedBecause?.fetchSenderUser(),
-      builder: (context, snapshot) {
-        final reason = event.redactedBecause?.content.tryGet<String>('reason');
-        final redactedBy =
-            snapshot.data?.calcDisplayname() ??
-            event.redactedBecause?.senderId.localpart ??
-            L10n.of(context).user;
-        return _ButtonContent(
-          label: reason == null
-              ? L10n.of(context).redactedBy(redactedBy)
-              : L10n.of(context).redactedByBecause(redactedBy, reason),
-          icon: '🗑️',
-          textColor: buttonTextColor.withAlpha(128),
-          onPressed: () => onInfoTab!(event),
-          fontSize: fontSize,
-        );
-      },
+    // Deleted messages keep a dim, static outline and one italic line;
+    // who deleted it and why live behind the message info.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      child: InkWell(
+        onTap: onInfoTab == null ? null : () => onInfoTab!(event),
+        child: Text(
+          L10n.of(context).messageDeleted,
+          style: D0b0Type.body.copyWith(
+            fontStyle: FontStyle.italic,
+            color: Theme.of(context).d0b0.text3,
+            fontSize: fontSize,
+          ),
+        ),
+      ),
     );
   }
 }

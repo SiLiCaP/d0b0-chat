@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -50,8 +50,8 @@ class MessageReactions extends StatelessWidget {
     reactionList.sort((a, b) => b.count - a.count > 0 ? 1 : -1);
     final ownMessage = event.senderId == event.room.client.userID;
     return Wrap(
-      spacing: 4.0,
-      runSpacing: 4.0,
+      spacing: 6.0,
+      runSpacing: 6.0,
       alignment: ownMessage ? WrapAlignment.end : WrapAlignment.start,
       children: [
         ...reactionList.map(
@@ -120,32 +120,48 @@ class _Reaction extends StatelessWidget {
       if (renderKey.length > 10) {
         renderKey = renderKey.getRange(0, 9) + Characters('…');
       }
-      content = Text(renderKey.toString(), style: TextStyle(fontSize: 14));
+      content = Text(
+        renderKey.toString(),
+        style: const TextStyle(fontSize: 14),
+      );
     }
-    return Badge(
-      isLabelVisible: count > 1,
-      label: Text(count.toString()),
-      textStyle: TextStyle(fontSize: 10),
-      textColor: theme.colorScheme.onPrimary,
-      backgroundColor: theme.colorScheme.primary.withAlpha(200),
+    // A pill on the background with an outline; your own reaction is drawn
+    // in Mint.
+    final color = reacted == true
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: reacted == true
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outline,
+          width: 2,
+        ),
+      ),
       child: InkWell(
+        customBorder: const StadiumBorder(),
         onTap: () => onTap != null ? onTap!() : null,
         onLongPress: () => onLongPress != null ? onLongPress!() : null,
-        borderRadius: BorderRadius.circular(AppConfig.borderRadius / 2),
         child: Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer,
-            border: Border.all(
-              color: reacted == true
-                  ? theme.colorScheme.secondary
-                  : theme.colorScheme.secondaryContainer,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(AppConfig.borderRadius / 2),
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisSize: .min,
+            spacing: 4,
+            children: [
+              content,
+              Text(
+                '$count',
+                style: D0b0Type.label.copyWith(
+                  fontSize: 13,
+                  letterSpacing: 0,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: content,
         ),
       ),
     );
