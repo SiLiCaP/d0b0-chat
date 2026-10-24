@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
@@ -23,8 +24,10 @@ import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/share_scaffold_dialog.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
@@ -50,7 +53,7 @@ extension LocalizedActiveFilter on ActiveFilter {
       case ActiveFilter.allChats:
         return L10n.of(context).all;
       case ActiveFilter.messages:
-        return L10n.of(context).messages;
+        return L10n.of(context).people;
       case ActiveFilter.unread:
         return L10n.of(context).unread;
       case ActiveFilter.groups:
@@ -66,11 +69,15 @@ class ChatList extends StatefulWidget {
   final String? activeSpace;
   final bool displayNavigationRail;
 
+  /// `spaces` opens the Spaces tab, e.g. when coming from the You tab.
+  final String? initialTab;
+
   const ChatList({
     super.key,
     required this.activeChat,
     this.activeSpace,
     this.displayNavigationRail = false,
+    this.initialTab,
   });
 
   @override
@@ -321,10 +328,52 @@ class ChatListController extends State<ChatList>
 
   void addAccountAction() => context.go('/rooms/settings/account');
 
+  /// The FAB collapses to a circle when the list scrolls down and expands
+  /// again on scroll up.
+  final ValueNotifier<bool> fabExtended = ValueNotifier(true);
+
   void _onScroll() {
-    final newScrolledToTop = scrollController.position.pixels <= 0;
+    final position = scrollController.position;
+    final newScrolledToTop = position.pixels <= 0;
     if (newScrolledToTop != scrolledToTop.value) {
       scrolledToTop.value = newScrolledToTop;
+    }
+    switch (position.userScrollDirection) {
+      case ScrollDirection.reverse:
+        fabExtended.value = false;
+      case ScrollDirection.forward:
+        fabExtended.value = true;
+      case ScrollDirection.idle:
+        if (newScrolledToTop) fabExtended.value = true;
+    }
+  }
+
+  HomeTab homeTab = HomeTab.chats;
+
+  void setHomeTab(HomeTab tab) {
+    switch (tab) {
+      case HomeTab.you:
+        context.go('/rooms/settings');
+        return;
+      case HomeTab.chats:
+      case HomeTab.spaces:
+        if (isSearchMode) cancelSearch();
+        if (tab == homeTab) {
+          if (scrollController.hasClients) {
+            scrollController.animateTo(
+              0,
+              duration: D0b0Motion.move,
+              curve: D0b0Motion.standard,
+            );
+          }
+          if (activeSpaceId != null) clearActiveSpace();
+          return;
+        }
+        setState(() {
+          homeTab = tab;
+          _activeSpaceId = null;
+        });
+        fabExtended.value = true;
     }
   }
 
@@ -407,10 +456,17 @@ class ChatListController extends State<ChatList>
         widget.activeSpace != oldWidget.activeSpace) {
       setActiveSpace(widget.activeSpace!);
     }
+    if (widget.initialTab != oldWidget.initialTab) {
+      homeTab = _tabFromQuery(widget.initialTab);
+    }
   }
+
+  static HomeTab _tabFromQuery(String? tab) =>
+      tab == 'spaces' ? HomeTab.spaces : HomeTab.chats;
 
   @override
   void initState() {
+    homeTab = _tabFromQuery(widget.initialTab);
     _initReceiveSharingIntent();
 
     scrollController.addListener(_onScroll);
@@ -777,19 +833,7 @@ class ChatListController extends State<ChatList>
           extra: inviteEvent?.senderId,
         );
       case ChatContextAction.leave:
-        final confirmed = await showOkCancelAlertDialog(
-          context: context,
-          title: L10n.of(context).areYouSure,
-          message: L10n.of(context).archiveRoomDescription,
-          okLabel: L10n.of(context).leave,
-          cancelLabel: L10n.of(context).cancel,
-          isDestructive: true,
-        );
-        if (confirmed == OkCancelResult.cancel) return;
-        if (!mounted) return;
-
-        await showFutureLoadingDialog(context: context, future: room.leave);
-
+        await archiveRoom(room);
         return;
       case ChatContextAction.addToSpace:
         final space = await showModalActionPopup(
@@ -866,6 +910,35 @@ class ChatListController extends State<ChatList>
   }
 
   Map<String, int> roomTags = {};
+
+  /// Swipe right on a row: mark read when unread, unread otherwise.
+  Future<void> toggleRead(Room room) async {
+    if (!room.isUnreadOrInvited) {
+      await room.markUnread(true);
+      return;
+    }
+    if (room.markedUnread) await room.markUnread(false);
+    final lastEvent = room.lastEvent;
+    if (room.notificationCount > 0 && lastEvent != null) {
+      await room.setReadMarker(lastEvent.eventId, mRead: lastEvent.eventId);
+    }
+  }
+
+  /// Swipe left on a row: leaving moves the room to the archive. Needs a
+  /// second step like every destructive action.
+  Future<void> archiveRoom(Room room) async {
+    final confirmed = await showOkCancelAlertDialog(
+      context: context,
+      title: L10n.of(context).areYouSure,
+      message: L10n.of(context).archiveRoomDescription,
+      okLabel: L10n.of(context).leave,
+      cancelLabel: L10n.of(context).cancel,
+      isDestructive: true,
+    );
+    if (confirmed == OkCancelResult.cancel) return;
+    if (!mounted) return;
+    await showFutureLoadingDialog(context: context, future: room.leave);
+  }
 
   void _updateRoomTags([_]) {
     roomTags.clear();

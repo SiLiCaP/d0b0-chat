@@ -5,10 +5,12 @@
 
 import 'package:async/async.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -32,13 +34,28 @@ class SettingsView extends StatelessWidget {
       context,
     ).routeInformationProvider.value.uri.path;
 
+    // On phones settings is the 'You' tab: no back button, the nav pill
+    // instead.
+    final isTab = !FluffyThemes.isColumnMode(context);
     return Scaffold(
+      extendBody: isTab,
       appBar: AppBar(
         title: Text(L10n.of(context).settings),
-        leading: Center(
-          child: BackButton(onPressed: () => context.go('/rooms')),
-        ),
+        automaticallyImplyLeading: false,
+        leading: isTab
+            ? null
+            : Center(child: BackButton(onPressed: () => context.go('/rooms'))),
       ),
+      bottomNavigationBar: isTab
+          ? D0b0NavPill(
+              current: HomeTab.you,
+              onSelect: (tab) => switch (tab) {
+                HomeTab.chats => context.go('/rooms'),
+                HomeTab.spaces => context.go('/rooms?tab=spaces'),
+                HomeTab.you => null,
+              },
+            )
+          : null,
       body: ListTileTheme(
         iconColor: theme.colorScheme.onSurface,
         child: ListView(

@@ -3,7 +3,9 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/utils/string_color.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
+import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/widgets/d0b0/avatar_tone.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -25,6 +27,13 @@ class Avatar extends StatelessWidget {
   final Color? backgroundColor;
   final Color? textColor;
 
+  /// Picks the fallback tone; pass the room or user ID. Defaults to [name].
+  final String? toneSeed;
+
+  /// Rooms and spaces are rounded squares (radius = size ÷ 3); people are
+  /// always circles.
+  final bool isRoom;
+
   const Avatar({
     this.mxContent,
     this.name,
@@ -38,15 +47,15 @@ class Avatar extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.textColor,
+    this.toneSeed,
+    this.isRoom = false,
     super.key,
   });
 
   String _calcFallbackLetters() {
-    final name = this.name?.trim();
+    final name = this.name?.trim().replaceFirst(RegExp(r'^[@#!]'), '');
     if (name == null || name.isEmpty) return '@';
-    final words = name.split(' ');
-    if (words.length <= 1) return name.characters.first;
-    return '${words.first.characters.first}${words.last.characters.first}';
+    return name.characters.take(2).toUpperCase().toString();
   }
 
   @override
@@ -59,7 +68,10 @@ class Avatar extends StatelessWidget {
         mxContent == null ||
         mxContent.toString().isEmpty ||
         mxContent.toString() == 'null';
-    final borderRadius = this.borderRadius ?? BorderRadius.circular(size / 2);
+    final borderRadius =
+        this.borderRadius ??
+        BorderRadius.circular(isRoom ? size / 3 : size / 2);
+    final tone = AvatarTone.of(toneSeed ?? name ?? '', theme.brightness);
     final presenceUserId = this.presenceUserId;
     final container = Stack(
       children: [
@@ -67,12 +79,10 @@ class Avatar extends StatelessWidget {
           width: size,
           height: size,
           child: Material(
-            color: theme.brightness == Brightness.light
-                ? Colors.white
-                : Colors.black,
+            color: theme.colorScheme.surfaceContainer,
             shape:
                 shapeBorder ??
-                RoundedSuperellipseBorder(
+                RoundedRectangleBorder(
                   borderRadius: borderRadius,
                   side: BorderSide.none,
                 ),
@@ -89,28 +99,24 @@ class Avatar extends StatelessWidget {
               placeholder: (_) => noPic
                   ? Container(
                       decoration: BoxDecoration(
-                        color:
-                            backgroundColor ??
-                            fallbackLetters.colorScheme.primaryContainer,
+                        color: backgroundColor ?? tone.background,
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         fallbackLetters,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'JetBrains Mono',
-                          color:
-                              textColor ??
-                              fallbackLetters.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                          fontSize: (size / 2.5).roundToDouble(),
+                        style: D0b0Type.label.copyWith(
+                          color: textColor ?? tone.foreground,
+                          fontSize: (size * 0.36).roundToDouble(),
+                          letterSpacing: 0,
+                          height: 1,
                         ),
                       ),
                     )
                   : Center(
                       child: Icon(
                         Symbols.person_2_rounded,
-                        color: theme.colorScheme.tertiary,
+                        color: theme.colorScheme.onSurfaceVariant,
                         size: size / 1.5,
                       ),
                     ),
@@ -127,32 +133,35 @@ class Avatar extends StatelessWidget {
                       presence.lastActiveTimestamp == null)) {
                 return const SizedBox.shrink();
               }
-              final dotColor = presence.presence.isOnline
-                  ? Colors.green
-                  : presence.presence.isUnavailable
-                  ? Colors.orange
-                  : Colors.grey;
+              // Online = filled Signal dot, away = Signal ring (outline =
+              // waiting). Offline shows nothing.
+              final isOnline = presence.presence.isOnline;
+              if (!isOnline && !presence.presence.isUnavailable) {
+                return const SizedBox.shrink();
+              }
+              final colors = theme.d0b0;
+              final dot = (size * 0.29).roundToDouble();
+              const ring = 3.0;
               return Positioned(
-                bottom: -3,
-                right: -3,
+                bottom: -ring,
+                right: -ring,
                 child: Container(
-                  width: 16,
-                  height: 16,
+                  width: dot + ring * 2,
+                  height: dot + ring * 2,
                   decoration: BoxDecoration(
                     color: presenceBackgroundColor ?? theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(32),
+                    shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Container(
-                    width: 10,
-                    height: 10,
+                    width: dot,
+                    height: dot,
                     decoration: BoxDecoration(
-                      color: dotColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        width: 1,
-                        color: theme.colorScheme.surface,
-                      ),
+                      color: isOnline ? colors.online : null,
+                      shape: BoxShape.circle,
+                      border: isOnline
+                          ? null
+                          : Border.all(width: dot / 4, color: colors.away),
                     ),
                   ),
                 ),

@@ -3131,5 +3131,109 @@
         "placeholders": {
             "time": {"type": "String"}
         }
+    },
+    "previewPhoto": "Photo",
+    "@previewPhoto": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewVideo": "Video",
+    "@previewVideo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewVoice": "Voice · {duration}",
+    "@previewVoice": {
+        "type": "String",
+        "placeholders": {
+            "duration": {"type": "String"}
+        }
+    },
+    "previewAudio": "Audio",
+    "@previewAudio": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewFile": "File",
+    "@previewFile": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewSticker": "Sticker",
+    "@previewSticker": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewLocation": "Location",
+    "@previewLocation": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewPoll": "Poll",
+    "@previewPoll": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewSender": "{name}:",
+    "@previewSender": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "draftPrefix": "Draft:",
+    "@draftPrefix": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "people": "People",
+    "@people": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "searchRoomsAndPeople": "Search rooms and people",
+    "@searchRoomsAndPeople": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navChats": "Chats",
+    "@navChats": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navSpaces": "Spaces",
+    "@navSpaces": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navYou": "You",
+    "@navYou": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newChatDescription": "Message someone by name or @id",
+    "@newChatDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newSheetTitle": "New",
+    "@newSheetTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptyChatsTitle": "No chats yet",
+    "@emptyChatsTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptyChatsBody": "Start a conversation, or invite someone to d0b0 chat.",
+    "@emptyChatsBody": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptySpacesTitle": "No spaces yet",
+    "@emptySpacesTitle": {
+        "type": "String",
+        "placeholders": {}
     }
 }

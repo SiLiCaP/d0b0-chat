@@ -3,13 +3,15 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/config/app_config.dart';
-import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/navigation_rail.dart';
 import 'package:fluffychat/pages/chat_list/start_chat_fab.dart';
+import 'package:fluffychat/utils/stream_extension.dart';
+import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
+import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:matrix/matrix.dart';
 
 import 'chat_list_body.dart';
 
@@ -20,11 +22,13 @@ class ChatListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final oneColumnSpacesMode =
-        !FluffyThemes.isColumnMode(context) &&
-        AppSettings.displayNavigationRail.value;
+    final isColumnMode = FluffyThemes.isColumnMode(context);
+    final theme = Theme.of(context);
     return PopScope(
-      canPop: !controller.isSearchMode && controller.activeSpaceId == null,
+      canPop:
+          !controller.isSearchMode &&
+          controller.activeSpaceId == null &&
+          controller.homeTab == HomeTab.chats,
       onPopInvokedWithResult: (pop, _) {
         if (pop) return;
         if (controller.activeSpaceId != null) {
@@ -35,80 +39,86 @@ class ChatListView extends StatelessWidget {
           controller.cancelSearch();
           return;
         }
+        if (controller.homeTab != HomeTab.chats) {
+          controller.setHomeTab(HomeTab.chats);
+        }
       },
       child: Row(
         children: [
-          Material(
-            color: Theme.of(context).colorScheme.surface,
-            child: AnimatedSize(
-              duration: FluffyThemes.animationDuration,
-              curve: FluffyThemes.animationCurve,
-              child:
-                  (FluffyThemes.isColumnMode(context) ||
-                      AppSettings.displayNavigationRail.value)
-                  ? SpacesNavigationRail(
-                      activeSpaceId: controller.activeSpaceId,
-                      onGoToChats: controller.clearActiveSpace,
-                      onGoToSpaceId: controller.setActiveSpace,
-                    )
-                  : SizedBox(
-                      width: 0,
-                      height: MediaQuery.sizeOf(context).height,
-                    ),
+          // Wide windows keep the rail; on phones Spaces is a tab.
+          if (isColumnMode) ...[
+            Material(
+              color: theme.colorScheme.surface,
+              child: SpacesNavigationRail(
+                activeSpaceId: controller.activeSpaceId,
+                onGoToChats: controller.clearActiveSpace,
+                onGoToSpaceId: controller.setActiveSpace,
+              ),
             ),
-          ),
-          if (FluffyThemes.isColumnMode(context) ||
-              AppSettings.displayNavigationRail.value)
-            if (FluffyThemes.isColumnMode(context))
-              Container(width: 1, color: Theme.of(context).dividerColor),
-
+            Container(width: 1, color: theme.dividerColor),
+          ],
           Expanded(
             child: GestureDetector(
               onTap: FocusManager.instance.primaryFocus?.unfocus,
               excludeFromSemantics: true,
               behavior: HitTestBehavior.translucent,
               child: Scaffold(
-                backgroundColor: oneColumnSpacesMode
-                    ? Theme.of(context).colorScheme.surfaceContainer
-                    : null,
-                body: SafeArea(
-                  top: oneColumnSpacesMode,
-                  bottom: false,
-                  left: false,
-                  right: false,
-                  child: Material(
-                    clipBehavior: oneColumnSpacesMode
-                        ? Clip.hardEdge
-                        : Clip.none,
-                    borderRadius: oneColumnSpacesMode
-                        ? BorderRadius.only(
-                            topLeft: Radius.circular(AppConfig.borderRadius),
-                          )
-                        : null,
-                    color: oneColumnSpacesMode
-                        ? Theme.of(context).colorScheme.surface
-                        : null,
-                    child: ChatListViewBody(controller),
-                  ),
-                ),
+                extendBody: true,
+                body: ChatListViewBody(controller),
+                bottomNavigationBar: isColumnMode || controller.isSearchMode
+                    ? null
+                    : _HomeNavPill(controller),
                 floatingActionButton:
                     !controller.isSearchMode &&
                         controller.activeSpaceId == null &&
-                        !FluffyThemes.isColumnMode(context)
+                        controller.homeTab == HomeTab.chats &&
+                        !isColumnMode
                     ? ValueListenableBuilder(
-                        valueListenable: controller.scrolledToTop,
-                        builder: (context, scrolledToTop, _) => StartChatFab(
-                          extended:
-                              scrolledToTop &&
-                              !AppSettings.displayNavigationRail.value,
-                        ),
+                        valueListenable: controller.fabExtended,
+                        builder: (context, extended, _) =>
+                            StartChatFab(extended: extended),
                       )
-                    : const SizedBox.shrink(),
+                    : null,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+class _HomeNavPill extends StatelessWidget {
+  final ChatListController controller;
+
+  const _HomeNavPill(this.controller);
+
+  @override
+  Widget build(BuildContext context) {
+    final client = Matrix.of(context).client;
+    return StreamBuilder(
+      stream: client.onSync.stream
+          .where((s) => s.hasRoomUpdate)
+          .rateLimit(const Duration(seconds: 1)),
+      builder: (context, _) => D0b0NavPill(
+        current: controller.homeTab,
+        onSelect: controller.setHomeTab,
+        spacesUnread: _anySpaceUnread(client),
+      ),
+    );
+  }
+
+  static bool _anySpaceUnread(Client client) {
+    for (final space in client.rooms) {
+      if (!space.isSpace || space.membership != Membership.join) continue;
+      for (final child in space.spaceChildren) {
+        final roomId = child.roomId;
+        if (roomId == null) continue;
+        if (client.getRoomById(roomId)?.isUnreadOrInvited ?? false) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
