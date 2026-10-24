@@ -21,7 +21,6 @@ import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/pages/chat/utils/web_file_to_x_file.dart';
 import 'package:fluffychat/pages/chat/video_message/video_message_recorder.dart';
-import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/file_selector.dart';
@@ -47,7 +46,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:mime/mime.dart';
@@ -67,6 +65,11 @@ class ChatPage extends StatelessWidget {
   final Timeline? timeline;
   final String? action;
 
+  /// On large windows: what is open below the room (details, members, …),
+  /// shown beside it while [paneOpen].
+  final Widget? pane;
+  final bool paneOpen;
+
   const ChatPage({
     super.key,
     required this.roomId,
@@ -74,6 +77,8 @@ class ChatPage extends StatelessWidget {
     this.shareItems,
     this.timeline,
     this.action,
+    this.pane,
+    this.paneOpen = false,
   });
 
   @override
@@ -99,6 +104,8 @@ class ChatPage extends StatelessWidget {
       eventId: eventId,
       timeline: timeline,
       action: action,
+      pane: pane,
+      paneOpen: paneOpen,
     );
   }
 }
@@ -109,6 +116,8 @@ class ChatPageWithRoom extends StatefulWidget {
   final String? eventId;
   final Timeline? timeline;
   final String? action;
+  final Widget? pane;
+  final bool paneOpen;
 
   const ChatPageWithRoom({
     super.key,
@@ -117,6 +126,8 @@ class ChatPageWithRoom extends StatefulWidget {
     this.eventId,
     this.timeline,
     this.action,
+    this.pane,
+    this.paneOpen = false,
   });
 
   @override
@@ -459,9 +470,6 @@ class ChatController extends State<ChatPageWithRoom>
     web.window.addEventListener('paste', _handleClipboardFilePasteWeb);
 
     super.initState();
-    _displayChatDetailsColumn = ValueNotifier(
-      AppSettings.displayChatDetailsColumn.value,
-    );
 
     bigEmojis = defaultEmojiSet.fold(
       <String>{},
@@ -728,7 +736,6 @@ class ChatController extends State<ChatPageWithRoom>
     scrollController.dispose();
     inputFocus.removeListener(_inputFocusListener);
     inputFocus.dispose();
-    _displayChatDetailsColumn.dispose();
     web.window.removeEventListener('paste', _handleClipboardFilePasteWeb);
     if (currentlyTyping) room.setTyping(false);
     MxcImage.clearCache(widget.room.id);
@@ -1588,7 +1595,11 @@ class ChatController extends State<ChatPageWithRoom>
   }
 
   /// Long-press on a message: the actions sheet for just that message.
-  Future<void> showMessageActions(Event event, [LiftedBubble? lifted]) async {
+  Future<void> showMessageActions(
+    Event event, {
+    LiftedBubble? lifted,
+    Rect? anchor,
+  }) async {
     final timeline = this.timeline;
     if (timeline == null || event.redacted) {
       lifted?.dispose();
@@ -1634,6 +1645,7 @@ class ChatController extends State<ChatPageWithRoom>
       options: options,
       sentReactions: sentReactions,
       lifted: lifted,
+      anchor: anchor,
     );
     if (result == null || !mounted) return;
     if (result is String) {
@@ -1899,13 +1911,12 @@ class ChatController extends State<ChatPageWithRoom>
     cancelReplyEventAction();
   }
 
-  late final ValueNotifier<bool> _displayChatDetailsColumn;
-
-  Future<void> toggleDisplayChatDetailsColumn() async {
-    await AppSettings.displayChatDetailsColumn.setItem(
-      !_displayChatDetailsColumn.value,
-    );
-    _displayChatDetailsColumn.value = !_displayChatDetailsColumn.value;
+  /// Opens or closes the details pane on large windows. The URL says
+  /// whether it is open; the setting remembers it for the next room.
+  void toggleDisplayChatDetailsColumn() {
+    final open = !widget.paneOpen;
+    AppSettings.displayChatDetailsColumn.setItem(open);
+    context.go(open ? '/rooms/$roomId/details' : '/rooms/$roomId');
   }
 
   @override
@@ -1923,30 +1934,22 @@ class ChatController extends State<ChatPageWithRoom>
       child: Row(
         children: [
           Expanded(child: ChatView(this)),
-          ValueListenableBuilder(
-            valueListenable: _displayChatDetailsColumn,
-            builder: (context, displayChatDetailsColumn, _) =>
-                !FluffyThemes.isThreeColumnMode(context) ||
-                    room.membership != Membership.join ||
-                    !displayChatDetailsColumn
-                ? const SizedBox(height: double.infinity, width: 0)
-                : Container(
-                    width: FluffyThemes.detailsPaneWidth,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(width: 1, color: theme.dividerColor),
-                      ),
-                    ),
-                    child: ChatDetails(
-                      roomId: roomId,
-                      embeddedCloseButton: IconButton(
-                        icon: const Icon(Symbols.close_rounded),
-                        onPressed: toggleDisplayChatDetailsColumn,
-                      ),
-                    ),
+          // The pane's navigator stays mounted while closed, so Back keeps
+          // working on it.
+          if (widget.pane case final pane?)
+            Offstage(
+              offstage: !widget.paneOpen,
+              child: Container(
+                width: FluffyThemes.detailsPaneWidth,
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(width: 1, color: theme.dividerColor),
                   ),
-          ),
+                ),
+                child: pane,
+              ),
+            ),
         ],
       ),
     );

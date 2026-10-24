@@ -15,11 +15,16 @@ import 'package:material_ui/material_ui.dart';
 /// follow. The sheet drops in with the overshoot curve.
 ///
 /// [onJoinSpace] opens the search, where spaces can be browsed or a link
-/// pasted.
-Future<void> showNewSheet(BuildContext context, {VoidCallback? onJoinSpace}) {
+/// pasted. On wide windows it opens beside [anchor].
+Future<void> showNewSheet(
+  BuildContext context, {
+  VoidCallback? onJoinSpace,
+  Rect? anchor,
+}) {
   final router = GoRouter.of(context);
   return showD0b0Sheet<void>(
     context: context,
+    anchor: anchor,
     builder: (sheetContext) {
       final l10n = L10n.of(sheetContext);
       final scheme = Theme.of(sheetContext).colorScheme;

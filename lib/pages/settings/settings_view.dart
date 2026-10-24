@@ -119,7 +119,7 @@ class SettingsView extends StatelessWidget {
                           name: displayname,
                           userId: mxid,
                           onAvatarTap: controller.setAvatarAction,
-                          onEdit: () => _editProfile(context),
+                          onEdit: (anchor) => _editProfile(context, anchor),
                         );
                       },
                     ),
@@ -256,10 +256,11 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  Future<void> _editProfile(BuildContext context) async {
+  Future<void> _editProfile(BuildContext context, Rect? anchor) async {
     final l10n = L10n.of(context);
     final action = await showD0b0Sheet<int>(
       context: context,
+      anchor: anchor,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: .min,
@@ -302,7 +303,9 @@ class _MeCard extends StatelessWidget {
   final String name;
   final String userId;
   final VoidCallback onAvatarTap;
-  final VoidCallback onEdit;
+
+  /// Opens the edit sheet, anchored to the edit button.
+  final void Function(Rect? anchor) onEdit;
 
   const _MeCard({
     required this.avatar,
@@ -369,10 +372,12 @@ class _MeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: L10n.of(context).editProfile,
-                icon: const Icon(Symbols.edit_rounded),
-                onPressed: onEdit,
+              Builder(
+                builder: (context) => IconButton(
+                  tooltip: L10n.of(context).editProfile,
+                  icon: const Icon(Symbols.edit_rounded),
+                  onPressed: () => onEdit(d0b0AnchorOf(context)),
+                ),
               ),
             ],
           ),

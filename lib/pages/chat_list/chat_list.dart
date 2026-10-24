@@ -155,7 +155,12 @@ class ChatListController extends State<ChatList>
       return;
     }
 
-    context.go('/rooms/${room.id}');
+    // Large windows keep the details pane open from room to room.
+    final keepPane =
+        FluffyThemes.isThreeColumnMode(context) &&
+        room.membership == .join &&
+        AppSettings.displayChatDetailsColumn.value;
+    context.go('/rooms/${room.id}${keepPane ? '/details' : ''}');
   }
 
   bool Function(Room) getRoomFilterByActiveFilter(ActiveFilter activeFilter) {

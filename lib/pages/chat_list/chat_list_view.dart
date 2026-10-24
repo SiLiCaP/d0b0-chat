@@ -58,8 +58,11 @@ class ChatListView extends StatelessWidget {
                 spacesUnread: _HomeNavPill._anySpaceUnread(
                   Matrix.of(context).client,
                 ),
-                onNewChat: () =>
-                    showNewSheet(context, onJoinSpace: controller.startSearch),
+                onNewChat: (anchor) => showNewSheet(
+                  context,
+                  anchor: anchor,
+                  onJoinSpace: controller.startSearch,
+                ),
                 account: ClientChooserButton(controller),
               ),
             ),

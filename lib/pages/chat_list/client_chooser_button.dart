@@ -6,6 +6,7 @@
 import 'package:async/async.dart';
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/utils/archive_count.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
@@ -63,6 +64,7 @@ class ClientChooserButton extends StatelessWidget {
     return showD0b0Sheet<void>(
       context: context,
       isScrollControlled: true,
+      anchor: d0b0AnchorOf(context),
       builder: (sheetContext) {
         void close() => Navigator.of(sheetContext).pop();
         return _AccountSheet(
@@ -258,6 +260,7 @@ class _AccountSheet extends StatelessWidget {
               plain: true,
               icon: Symbols.archive_rounded,
               title: l10n.archive,
+              trailing: _ArchiveCount(client: active),
               onTap: onArchive,
             ),
             D0b0SheetRow(
@@ -278,4 +281,38 @@ class _AccountSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The number of archived chats, in mono. Shows the last known count while
+/// asking the server again; nothing while it's unknown or zero.
+class _ArchiveCount extends StatefulWidget {
+  final Client client;
+
+  const _ArchiveCount({required this.client});
+
+  @override
+  State<_ArchiveCount> createState() => _ArchiveCountState();
+}
+
+class _ArchiveCountState extends State<_ArchiveCount> {
+  late final Future<int> _count = ArchiveCount.load(widget.client);
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<int>(
+    future: _count,
+    initialData: ArchiveCount.cached(widget.client),
+    builder: (context, snapshot) {
+      final count = snapshot.data;
+      if (count == null || count == 0) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Text(
+          count.toString(),
+          style: D0b0Type.monoS.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    },
+  );
 }

@@ -159,7 +159,9 @@ class CallPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _BetaTag(onTap: () => _showBetaInfo(context)),
+                      _BetaTag(
+                        onTap: (anchor) => _showBetaInfo(context, anchor),
+                      ),
                     ],
                   ),
                   if (inCall && startTime != null)
@@ -262,10 +264,11 @@ class CallPage extends StatelessWidget {
     );
   }
 
-  static void _showBetaInfo(BuildContext context) {
+  static void _showBetaInfo(BuildContext context, Rect? anchor) {
     final l10n = L10n.of(context);
     showD0b0Sheet<void>(
       context: context,
+      anchor: anchor,
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
@@ -292,7 +295,8 @@ class CallPage extends StatelessWidget {
 /// Beta is a small outline tag beside the title; tapping it explains, so
 /// there is no banner on every call.
 class _BetaTag extends StatelessWidget {
-  final VoidCallback onTap;
+  /// Opens the explanation, anchored to the tag.
+  final void Function(Rect? anchor) onTap;
 
   const _BetaTag({required this.onTap});
 
@@ -300,7 +304,7 @@ class _BetaTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: onTap,
+      onTap: () => onTap(d0b0AnchorOf(context)),
       customBorder: const StadiumBorder(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

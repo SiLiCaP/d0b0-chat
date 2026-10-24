@@ -69,6 +69,7 @@ Future<Object?> showMessageActionsSheet({
   required MessageActionOptions options,
   required Set<String> sentReactions,
   LiftedBubble? lifted,
+  Rect? anchor,
 }) {
   // The lift is for the sheet rising from the bottom on touch screens.
   if (lifted != null && FluffyThemes.isColumnMode(context)) {
@@ -77,6 +78,7 @@ Future<Object?> showMessageActionsSheet({
   }
   return showD0b0Sheet<Object>(
     context: context,
+    anchor: anchor,
     isScrollControlled: true,
     builder: (context) {
       final l10n = L10n.of(context);

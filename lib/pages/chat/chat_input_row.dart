@@ -70,14 +70,17 @@ class ChatInputRow extends StatelessWidget {
         return Row(
           crossAxisAlignment: .end,
           children: <Widget>[
-            IconButton(
-              tooltip: l10n.attach,
-              style: IconButton.styleFrom(
-                minimumSize: const Size.square(height),
-                side: BorderSide(color: theme.colorScheme.outline, width: 2),
+            Builder(
+              builder: (buttonContext) => IconButton(
+                tooltip: l10n.attach,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size.square(height),
+                  side: BorderSide(color: theme.colorScheme.outline, width: 2),
+                ),
+                icon: const Icon(Symbols.add_rounded),
+                onPressed: () =>
+                    _showAttachSheet(context, d0b0AnchorOf(buttonContext)),
               ),
-              icon: const Icon(Symbols.add_rounded),
-              onPressed: () => _showAttachSheet(context),
             ),
             const SizedBox(width: 8),
             if (Matrix.of(context).isMultiAccount &&
@@ -218,10 +221,11 @@ class ChatInputRow extends StatelessWidget {
     );
   }
 
-  Future<void> _showAttachSheet(BuildContext context) async {
+  Future<void> _showAttachSheet(BuildContext context, Rect? anchor) async {
     final l10n = L10n.of(context);
     final choice = await showD0b0Sheet<AddPopupMenuActions>(
       context: context,
+      anchor: anchor,
       builder: (context) {
         Widget row(AddPopupMenuActions value, IconData icon, String title) =>
             D0b0SheetRow(

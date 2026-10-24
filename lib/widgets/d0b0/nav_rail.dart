@@ -5,6 +5,7 @@
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/d0b0_mark.dart';
 import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -19,7 +20,8 @@ class D0b0NavRail extends StatelessWidget {
   final bool spacesUnread;
 
   /// The FAB; hidden when null.
-  final VoidCallback? onNewChat;
+  /// Opens the New sheet, anchored to the rail's FAB.
+  final void Function(Rect? anchor)? onNewChat;
 
   /// The account avatar at the bottom.
   final Widget? account;
@@ -55,12 +57,14 @@ class D0b0NavRail extends StatelessWidget {
             D0b0Mark(height: 26, color: theme.colorScheme.primary),
             const SizedBox(height: 26),
             if (onNewChat != null)
-              FloatingActionButton(
-                heroTag: 'rail_new_chat',
-                tooltip: l10n.newChat,
-                shape: const CircleBorder(),
-                onPressed: onNewChat,
-                child: const Icon(Symbols.edit_rounded),
+              Builder(
+                builder: (context) => FloatingActionButton(
+                  heroTag: 'rail_new_chat',
+                  tooltip: l10n.newChat,
+                  shape: const CircleBorder(),
+                  onPressed: () => onNewChat(d0b0AnchorOf(context)),
+                  child: const Icon(Symbols.edit_rounded),
+                ),
               )
             else
               const SizedBox(height: 56),

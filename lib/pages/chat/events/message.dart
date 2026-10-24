@@ -15,6 +15,7 @@ import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/lift.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -55,8 +56,10 @@ class Message extends StatelessWidget {
   final bool read;
 
   /// Long-press (or right-click) opens the message actions.
-  /// Long-press or right-click; with a copy of the bubble to lift on touch.
-  final void Function(Event event, [LiftedBubble? lifted]) onLongPress;
+  /// Long-press, right-click or the hover pill: with a copy of the bubble
+  /// to lift on touch, or where to anchor the menu on wide screens.
+  final void Function(Event event, {LiftedBubble? lifted, Rect? anchor})
+  onLongPress;
   final void Function()? onExpand;
   final bool isCollapsed;
   final Set<String> bigEmojis;
@@ -315,9 +318,14 @@ class Message extends StatelessWidget {
                 ? () => onSelect(event)
                 : () {
                     HapticFeedback.lightImpact();
-                    onLongPress(event, LiftedBubble.capture(context));
+                    onLongPress(event, lifted: LiftedBubble.capture(context));
                   },
-            onSecondaryTap: longPressSelect ? null : () => onLongPress(event),
+            onSecondaryTapUp: longPressSelect
+                ? null
+                : (details) => onLongPress(
+                    event,
+                    anchor: details.globalPosition & Size.zero,
+                  ),
             child: Container(
               constraints: const BoxConstraints(
                 maxWidth: FluffyThemes.maxTimelineWidth,
@@ -347,9 +355,9 @@ class Message extends StatelessWidget {
                       right: ownMessage ? 8 : 0,
                     ),
                     child: _HoverPill(
-                      onReact: () => onLongPress(event),
+                      onReact: (anchor) => onLongPress(event, anchor: anchor),
                       onReply: onSwipe,
-                      onMore: () => onLongPress(event),
+                      onMore: (anchor) => onLongPress(event, anchor: anchor),
                     ),
                   );
                   final selectOffset = longPressSelect ? 40.0 : 0.0;
@@ -516,9 +524,10 @@ class Message extends StatelessWidget {
 
 /// react · reply · more, shown while a pointer hovers a bubble.
 class _HoverPill extends StatelessWidget {
-  final VoidCallback onReact;
+  /// Open the actions, anchored to the pill.
+  final void Function(Rect? anchor) onReact;
   final VoidCallback onReply;
-  final VoidCallback onMore;
+  final void Function(Rect? anchor) onMore;
 
   const _HoverPill({
     required this.onReact,
@@ -557,9 +566,17 @@ class _HoverPill extends StatelessWidget {
       child: Row(
         mainAxisSize: .min,
         children: [
-          button(Symbols.add_reaction_rounded, l10n.customReaction, onReact),
+          button(
+            Symbols.add_reaction_rounded,
+            l10n.customReaction,
+            () => onReact(d0b0AnchorOf(context)),
+          ),
           button(Symbols.reply_rounded, l10n.reply, onReply),
-          button(Symbols.more_vert_rounded, l10n.more, onMore),
+          button(
+            Symbols.more_vert_rounded,
+            l10n.more,
+            () => onMore(d0b0AnchorOf(context)),
+          ),
         ],
       ),
     );
