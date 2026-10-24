@@ -3246,8 +3246,8 @@
         "type": "String",
         "placeholders": {}
     },
-    "joinSpace": "Join a space",
-    "@joinSpace": {
+    "joinASpace": "Join a space",
+    "@joinASpace": {
         "type": "String",
         "placeholders": {}
     },
