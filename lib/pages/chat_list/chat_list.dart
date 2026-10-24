@@ -184,6 +184,10 @@ class ChatListController extends State<ChatList>
   SearchUserDirectoryResponse? userSearchResult;
   QueryPublicRoomsResponse? roomSearchResult;
 
+  /// Message hits from the server's search. Encrypted rooms are not
+  /// searchable there, so these come from unencrypted rooms only.
+  List<MatrixEvent>? messageSearchResult;
+
   bool isSearching = false;
   static const String _serverStoreNamespace = 'im.fluffychat.search.server';
 
@@ -267,11 +271,34 @@ class ChatListController extends State<ChatList>
         SnackBar(content: Text(e.toLocalizedString(context))),
       );
     }
+    List<MatrixEvent>? messageSearchResult;
+    if (searchQuery.length >= 2) {
+      try {
+        final response = await client.search(
+          Categories(
+            roomEvents: RoomEventsCriteria(
+              searchTerm: searchQuery,
+              orderBy: SearchOrder.recent,
+            ),
+          ),
+        );
+        messageSearchResult = response.searchCategories.roomEvents?.results
+            ?.map((result) => result.result)
+            .whereType<MatrixEvent>()
+            .where((event) => client.getRoomById(event.roomId ?? '') != null)
+            .take(20)
+            .toList();
+      } catch (e, s) {
+        // Not every server implements search; the other sections still work.
+        Logs().w('Message search failed', e, s);
+      }
+    }
     if (!isSearchMode) return;
     setState(() {
       isSearching = false;
       this.roomSearchResult = roomSearchResult;
       this.userSearchResult = userSearchResult;
+      this.messageSearchResult = messageSearchResult;
     });
   }
 
@@ -312,6 +339,7 @@ class ChatListController extends State<ChatList>
       searchController.clear();
       isSearchMode = false;
       roomSearchResult = userSearchResult = null;
+      messageSearchResult = null;
       isSearching = false;
     });
     if (unfocus) searchFocusNode.unfocus();

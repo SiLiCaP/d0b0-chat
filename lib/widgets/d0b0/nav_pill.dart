@@ -51,7 +51,7 @@ class D0b0NavPill extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(margin),
         child: Material(
-          color: theme.colorScheme.surfaceContainerHigh,
+          color: theme.colorScheme.surfaceContainer,
           shape: const StadiumBorder(),
           clipBehavior: Clip.antiAlias,
           child: SizedBox(
@@ -142,16 +142,20 @@ class _NavPillItem extends StatelessWidget {
                     TweenAnimationBuilder<double>(
                       tween: Tween(end: selected ? 1 : 0),
                       duration: D0b0Motion.state,
-                      builder: (_, fill, _) =>
-                          Icon(icon, fill: fill, color: color),
+                      builder: (_, fill, _) => Icon(
+                        icon,
+                        fill: fill,
+                        size: selected ? 20 : 24,
+                        color: color,
+                      ),
                     ),
                     if (unread && !selected)
                       Positioned(
-                        top: -1,
-                        right: -3,
+                        top: -4,
+                        right: -4,
                         child: Container(
-                          width: 8,
-                          height: 8,
+                          width: 10,
+                          height: 10,
                           decoration: BoxDecoration(
                             color: theme.d0b0.signal,
                             shape: BoxShape.circle,
@@ -182,6 +186,35 @@ class _NavPillItem extends StatelessWidget {
                       : const SizedBox.shrink(),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Fades the list out behind the floating nav pill and FAB: 144 high, from
+/// transparent to the background at 55 %.
+class D0b0NavFade extends StatelessWidget {
+  const D0b0NavFade({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final background = Theme.of(context).colorScheme.surface;
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: IgnorePointer(
+        child: Container(
+          height: 144 + MediaQuery.viewPaddingOf(context).bottom,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [background.withAlpha(0), background],
+              stops: const [0, 0.55],
             ),
           ),
         ),

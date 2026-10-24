@@ -34,6 +34,9 @@ Future<Client> prepareTestClient({
   final client = Client(
     'FluffyChat Widget Tests',
     httpClient: FakeMatrixApi(),
+    // The golden tests run for longer than the default 30 s; keep the fake
+    // typing indicator from expiring halfway so screenshots are stable.
+    typingIndicatorTimeout: const Duration(days: 1),
     verificationMethods: {
       KeyVerificationMethod.numbers,
       KeyVerificationMethod.emoji,

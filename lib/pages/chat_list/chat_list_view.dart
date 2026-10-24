@@ -64,7 +64,14 @@ class ChatListView extends StatelessWidget {
               behavior: HitTestBehavior.translucent,
               child: Scaffold(
                 extendBody: true,
-                body: ChatListViewBody(controller),
+                body: isColumnMode || controller.isSearchMode
+                    ? ChatListViewBody(controller)
+                    : Stack(
+                        children: [
+                          ChatListViewBody(controller),
+                          const D0b0NavFade(),
+                        ],
+                      ),
                 bottomNavigationBar: isColumnMode || controller.isSearchMode
                     ? null
                     : _HomeNavPill(controller),
@@ -75,8 +82,10 @@ class ChatListView extends StatelessWidget {
                         !isColumnMode
                     ? ValueListenableBuilder(
                         valueListenable: controller.fabExtended,
-                        builder: (context, extended, _) =>
-                            StartChatFab(extended: extended),
+                        builder: (context, extended, _) => StartChatFab(
+                          extended: extended,
+                          onJoinSpace: controller.startSearch,
+                        ),
                       )
                     : null,
               ),

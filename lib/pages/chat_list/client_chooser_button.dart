@@ -9,6 +9,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:fluffychat/widgets/qr_code_viewer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
@@ -75,6 +76,10 @@ class ClientChooserButton extends StatelessWidget {
             close();
             controller.setStatus();
           },
+          onArchive: () {
+            close();
+            router.go('/rooms/archive');
+          },
           onSettings: () {
             close();
             router.go('/rooms/settings');
@@ -100,6 +105,7 @@ class ClientChooserButton extends StatelessWidget {
 class _AccountSheet extends StatelessWidget {
   final ChatListController controller;
   final VoidCallback onSetStatus;
+  final VoidCallback onArchive;
   final VoidCallback onSettings;
   final VoidCallback onAddAccount;
   final void Function(Client client) onSwitch;
@@ -108,6 +114,7 @@ class _AccountSheet extends StatelessWidget {
   const _AccountSheet({
     required this.controller,
     required this.onSetStatus,
+    required this.onArchive,
     required this.onSettings,
     required this.onAddAccount,
     required this.onSwitch,
@@ -117,6 +124,7 @@ class _AccountSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = L10n.of(context);
     final matrix = Matrix.of(context);
     final active = matrix.client;
@@ -131,70 +139,92 @@ class _AccountSheet extends StatelessWidget {
           mainAxisSize: .min,
           crossAxisAlignment: .stretch,
           children: [
-            FutureBuilder<Profile>(
-              future: active.fetchOwnProfile(),
-              builder: (context, snapshot) {
-                final name =
-                    snapshot.data?.displayName ??
-                    active.userID?.localpart ??
-                    '';
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                  child: Row(
-                    children: [
-                      Avatar(
-                        mxContent: snapshot.data?.avatarUrl,
-                        name: name,
-                        toneSeed: active.userID,
-                        presenceUserId: active.userID,
-                        presenceBackgroundColor:
-                            theme.colorScheme.surfaceContainerHigh,
-                        size: 56,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: .start,
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: D0b0Type.title.copyWith(
-                                color: theme.colorScheme.onSurface,
-                              ),
+            // Me: who you are, your Matrix ID in mono, and your QR code.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Material(
+                color: scheme.surfaceContainer,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(D0b0Radius.card),
+                ),
+                child: FutureBuilder<Profile>(
+                  future: active.fetchOwnProfile(),
+                  builder: (context, snapshot) {
+                    final name =
+                        snapshot.data?.displayName ??
+                        active.userID?.localpart ??
+                        '';
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                      child: Row(
+                        children: [
+                          Avatar(
+                            mxContent: snapshot.data?.avatarUrl,
+                            name: name,
+                            toneSeed: active.userID,
+                            presenceUserId: active.userID,
+                            presenceBackgroundColor: scheme.surfaceContainer,
+                            size: 56,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: .start,
+                              children: [
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: D0b0Type.subtitle.copyWith(
+                                    color: scheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  active.userID ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: D0b0Type.monoStyle.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              active.userID ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: D0b0Type.monoStyle.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.share,
+                            icon: const Icon(Symbols.qr_code_rounded),
+                            onPressed: () {
+                              final userId = active.userID;
+                              if (userId != null) {
+                                showQrCodeViewer(context, userId);
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            D0b0SheetRow(
-              icon: Symbols.edit_rounded,
-              title: l10n.setStatus,
-              onTap: onSetStatus,
-            ),
-            D0b0SheetRow(
-              icon: Symbols.tune_rounded,
-              title: l10n.settings,
-              onTap: onSettings,
-            ),
-            if (accounts.length > 1) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Divider(),
+                    );
+                  },
+                ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: onSetStatus,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    foregroundColor: scheme.onSurfaceVariant,
+                  ),
+                  icon: const Icon(Symbols.edit_rounded, size: 18),
+                  label: Text(l10n.setAStatus),
+                ),
+              ),
+            ),
+            if (accounts.length > 1)
               for (final (client, bundle) in accounts)
                 FutureBuilder<Profile>(
                   future: client.fetchOwnProfile(),
@@ -206,20 +236,20 @@ class _AccountSheet extends StatelessWidget {
                     final isActive = client == active;
                     return D0b0SheetRow(
                       key: ValueKey('switch_account_$name'),
+                      plain: true,
                       leading: Avatar(
                         mxContent: snapshot.data?.avatarUrl,
                         name: name,
                         toneSeed: client.userID,
-                        size: 40,
+                        size: 32,
                       ),
                       title: name,
-                      description: client.userID,
                       onTap: () => onSwitch(client),
                       trailing: isActive
                           ? Icon(
                               Symbols.check_circle_rounded,
                               fill: 1,
-                              color: theme.colorScheme.primary,
+                              color: scheme.primary,
                             )
                           : IconButton(
                               tooltip: l10n.editBundlesForAccount,
@@ -229,11 +259,23 @@ class _AccountSheet extends StatelessWidget {
                     );
                   },
                 ),
-            ],
             D0b0SheetRow(
+              plain: true,
+              icon: Symbols.archive_rounded,
+              title: l10n.archive,
+              onTap: onArchive,
+            ),
+            D0b0SheetRow(
+              plain: true,
               icon: Symbols.person_add_rounded,
-              title: l10n.addAccount,
+              title: l10n.addAnotherAccount,
               onTap: onAddAccount,
+            ),
+            D0b0SheetRow(
+              plain: true,
+              icon: Symbols.settings_rounded,
+              title: l10n.settings,
+              onTap: onSettings,
             ),
             const SizedBox(height: 8),
           ],

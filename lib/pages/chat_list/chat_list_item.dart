@@ -71,7 +71,9 @@ class ChatListItem extends StatelessWidget {
       color: isUnread && !isMuted ? theme.colorScheme.primary : colors.text3,
     );
     final previewStyle = D0b0Type.bodyS.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
+      color: isUnread
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.onSurfaceVariant,
     );
 
     return FutureBuilder(

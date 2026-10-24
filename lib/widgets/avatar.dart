@@ -161,7 +161,7 @@ class Avatar extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: isOnline
                           ? null
-                          : Border.all(width: dot / 4, color: colors.away),
+                          : Border.all(width: dot * 0.18, color: colors.away),
                     ),
                   ),
                 ),

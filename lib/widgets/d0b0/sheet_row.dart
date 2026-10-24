@@ -5,7 +5,11 @@
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// A row in a sheet or settings group: 56 high, or 72 with a description.
+/// A row in a sheet.
+///
+/// Choices (the New sheet) are 64 high with a 40 icon tile, a subtitle and
+/// a description. Plain items (the account sheet) are 52 high with a bare
+/// icon in text-2.
 class D0b0SheetRow extends StatelessWidget {
   final IconData? icon;
   final Widget? leading;
@@ -14,11 +18,14 @@ class D0b0SheetRow extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
 
-  /// The one primary row of a sheet gets a Mint icon tile.
+  /// The one primary choice of a sheet gets a Mint icon tile.
   final bool primary;
 
   /// Destructive rows are Coral.
   final bool destructive;
+
+  /// A 52 high item with a bare icon instead of a 64 high choice.
+  final bool plain;
 
   const D0b0SheetRow({
     this.icon,
@@ -29,46 +36,57 @@ class D0b0SheetRow extends StatelessWidget {
     this.trailing,
     this.primary = false,
     this.destructive = false,
+    this.plain = false,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     final description = this.description;
     final foreground = destructive ? scheme.error : scheme.onSurface;
     final icon = this.icon;
-    final leading =
-        this.leading ??
-        (icon == null
-            ? null
-            : Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: primary
-                      ? scheme.primary
-                      : scheme.surfaceContainerHighest,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: primary
-                      ? scheme.onPrimary
-                      : destructive
-                      ? scheme.error
-                      : scheme.onSurface,
-                ),
-              ));
+    final Widget? leading;
+    if (this.leading != null) {
+      leading = this.leading;
+    } else if (icon == null) {
+      leading = null;
+    } else if (plain) {
+      leading = Icon(
+        icon,
+        size: 22,
+        color: destructive ? scheme.error : scheme.onSurfaceVariant,
+      );
+    } else {
+      leading = Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: primary ? scheme.primary : scheme.surfaceContainer,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: primary
+              ? scheme.onPrimary
+              : destructive
+              ? scheme.error
+              : scheme.onSurface,
+        ),
+      );
+    }
     return InkWell(
       onTap: onTap,
       hoverColor: scheme.surfaceContainerHighest,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: description == null ? 56 : 72),
+        constraints: BoxConstraints(minHeight: plain ? 52 : 64),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: plain ? 4 : 8,
+          ),
           child: Row(
             children: [
               if (leading != null) ...[leading, const SizedBox(width: 16)],
@@ -79,7 +97,8 @@ class D0b0SheetRow extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: D0b0Type.body.copyWith(color: foreground),
+                      style: (plain ? D0b0Type.body : D0b0Type.subtitle)
+                          .copyWith(color: foreground),
                     ),
                     if (description != null)
                       Text(

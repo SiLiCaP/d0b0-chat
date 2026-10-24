@@ -5,12 +5,14 @@
 
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_item.dart';
 import 'package:fluffychat/pages/chat_list/dummy_chat_list_item.dart';
 import 'package:fluffychat/pages/chat_list/space_view.dart';
-import 'package:fluffychat/utils/fluffy_share.dart';
+import 'package:fluffychat/utils/date_time_extension.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/stream_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/public_room_dialog.dart';
 import 'package:fluffychat/widgets/avatar.dart';
@@ -61,6 +63,7 @@ class ChatListViewBody extends StatelessWidget {
         .where((room) => room.roomType == 'm.space')
         .toList();
     final userSearchResult = controller.userSearchResult;
+    final messageHits = controller.messageSearchResult;
     const dummyChatCount = 4;
     final filter = controller.searchController.text.toLowerCase();
     return StreamBuilder(
@@ -122,11 +125,11 @@ class ChatListViewBody extends StatelessWidget {
                     !controller.isSearchMode &&
                     !spacesTab)
                   SizedBox(
-                    height: 36 + 16,
+                    height: 36 + 24,
                     child: ListView(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 8,
+                        vertical: 12,
                       ),
                       scrollDirection: Axis.horizontal,
                       children: [
@@ -152,13 +155,14 @@ class ChatListViewBody extends StatelessWidget {
                     ),
                   ),
                 if (controller.isSearchMode && rooms.isNotEmpty)
-                  _SearchSection(l10n.chats),
+                  _SearchSection(l10n.searchSectionRooms),
                 if (client.prevBatch != null &&
                     rooms.isEmpty &&
                     !controller.isSearchMode)
                   _EmptyChats(
                     firstRun: client.rooms.isEmpty && !spacesTab,
                     spaces: spacesTab,
+                    onBrowseSpaces: controller.startSearch,
                     message: spacesTab
                         ? l10n.emptySpacesTitle
                         : l10n.noMoreChatsFound,
@@ -209,12 +213,31 @@ class ChatListViewBody extends StatelessWidget {
                 top: false,
                 sliver: SliverList.list(
                   children: [
+                    if (messageHits != null && messageHits.isNotEmpty) ...[
+                      _SearchSection(l10n.searchSectionMessages),
+                      for (final event in messageHits)
+                        _MessageHitRow(
+                          event: event,
+                          query: controller.searchController.text.trim(),
+                        ),
+                    ],
                     for (final (title, chunks) in [
                       (l10n.publicRooms, publicRooms),
                       (l10n.publicSpaces, publicSpaces),
                     ])
                       if (chunks != null && chunks.isNotEmpty) ...[
-                        _SearchSection(title),
+                        _SearchSection(
+                          title,
+                          trailing: TextButton.icon(
+                            onPressed: controller.setServer,
+                            icon: const Icon(Symbols.dns_rounded, size: 16),
+                            label: Text(
+                              controller.searchServer ??
+                                  client.homeserver!.host,
+                              style: D0b0Type.monoS,
+                            ),
+                          ),
+                        ),
                         for (final chunk in chunks)
                           _SearchResultRow(
                             avatar: chunk.avatarUrl,
@@ -248,19 +271,133 @@ class ChatListViewBody extends StatelessWidget {
 /// Section label in search results.
 class _SearchSection extends StatelessWidget {
   final String title;
+  final Widget? trailing;
 
-  const _SearchSection(this.title);
+  const _SearchSection(this.title, {this.trailing});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-    child: Text(
-      title.toUpperCase(),
-      style: D0b0Type.overline.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget build(BuildContext context) => SizedBox(
+    height: 40,
+    child: Padding(
+      padding: const EdgeInsets.only(left: 16, right: 8, top: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title.toUpperCase(),
+              style: D0b0Type.overline.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          ?trailing,
+        ],
       ),
     ),
   );
+}
+
+/// A message hit: room and sender, the line with the match in Mint, time.
+class _MessageHitRow extends StatelessWidget {
+  final MatrixEvent event;
+  final String query;
+
+  const _MessageHitRow({required this.event, required this.query});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).d0b0;
+    final l10n = L10n.of(context);
+    final room = Matrix.of(context).client.getRoomById(event.roomId ?? '');
+    if (room == null) return const SizedBox.shrink();
+    final sender = event.senderId == room.client.userID
+        ? l10n.you
+        : room
+              .unsafeGetUserFromMemoryOrFallback(event.senderId)
+              .calcDisplayname();
+    final roomName = room.getLocalizedDisplayname(MatrixLocals(l10n));
+    final body = (event.content.tryGet<String>('body') ?? '').replaceAll(
+      '\n',
+      ' ',
+    );
+    final snippet = _snippet(body, query);
+    final match = query.toLowerCase();
+    final spans = <TextSpan>[];
+    if (match.isNotEmpty) {
+      final lower = snippet.toLowerCase();
+      var start = 0;
+      while (true) {
+        final index = lower.indexOf(match, start);
+        if (index < 0) break;
+        spans.add(TextSpan(text: snippet.substring(start, index)));
+        spans.add(
+          TextSpan(
+            text: snippet.substring(index, index + match.length),
+            style: TextStyle(
+              color: scheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        );
+        start = index + match.length;
+      }
+      spans.add(TextSpan(text: snippet.substring(start)));
+    } else {
+      spans.add(TextSpan(text: snippet));
+    }
+    return InkWell(
+      onTap: () => context.go('/rooms/${room.id}?event=${event.eventId}'),
+      hoverColor: scheme.surfaceContainer,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 76),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisSize: .min,
+            crossAxisAlignment: .start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$roomName · $sender',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: D0b0Type.label.copyWith(
+                        fontSize: 13,
+                        letterSpacing: 0,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    event.originServerTs.localizedTimeShort(context),
+                    style: D0b0Type.monoS.copyWith(color: colors.text3),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text.rich(
+                TextSpan(children: spans),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: D0b0Type.body.copyWith(color: scheme.onSurface),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Starts the line shortly before the first match so it stays visible.
+  static String _snippet(String body, String query) {
+    final index = body.toLowerCase().indexOf(query.toLowerCase());
+    if (index <= 24) return body;
+    return '…${body.substring(index - 16)}';
+  }
 }
 
 /// A person or public room in search results; Matrix IDs are mono.
@@ -491,9 +628,11 @@ class _EmptyChats extends StatelessWidget {
   final bool firstRun;
   final bool spaces;
   final String? message;
+  final VoidCallback onBrowseSpaces;
 
   const _EmptyChats({
     required this.firstRun,
+    required this.onBrowseSpaces,
     this.spaces = false,
     this.message,
   });
@@ -507,7 +646,11 @@ class _EmptyChats extends StatelessWidget {
       child: Column(
         mainAxisSize: .min,
         children: [
-          D0b0Mark(height: 104, dColor: scheme.outline, color: scheme.primary),
+          D0b0Mark(
+            height: 120,
+            dColor: Theme.of(context).d0b0.text3,
+            color: scheme.primary,
+          ),
           const SizedBox(height: 32),
           Text(
             firstRun ? l10n.emptyChatsTitle : message ?? '',
@@ -524,22 +667,25 @@ class _EmptyChats extends StatelessWidget {
           ],
           if (firstRun) ...[
             const SizedBox(height: 8),
-            Text(
-              l10n.emptyChatsBody,
-              textAlign: TextAlign.center,
-              style: D0b0Type.body.copyWith(color: scheme.onSurfaceVariant),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                l10n.emptyChatsBody,
+                textAlign: TextAlign.center,
+                style: D0b0Type.bodyS.copyWith(color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
               onPressed: () => context.go('/rooms/newprivatechat'),
-              icon: const Icon(Symbols.edit_rounded),
+              icon: const Icon(Symbols.edit_rounded, size: 20),
               label: Text(l10n.newChat),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => FluffyShare.shareInviteLink(context),
-              icon: const Icon(Symbols.share_rounded),
-              label: Text(l10n.inviteContact),
+              onPressed: onBrowseSpaces,
+              icon: const Icon(Symbols.workspaces_rounded, size: 20),
+              label: Text(l10n.browseSpaces),
             ),
           ],
         ],

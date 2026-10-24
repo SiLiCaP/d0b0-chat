@@ -13,7 +13,9 @@ import 'package:material_ui/material_ui.dart';
 /// down and expands again on scroll up.
 class StartChatFab extends StatelessWidget {
   final bool extended;
-  const StartChatFab({this.extended = false, super.key});
+  final VoidCallback? onJoinSpace;
+
+  const StartChatFab({this.onJoinSpace, this.extended = false, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class StartChatFab extends StatelessWidget {
     return FloatingActionButton.extended(
       heroTag: 'start_chat_fab',
       tooltip: l10n.newChat,
-      onPressed: () => showNewSheet(context),
+      onPressed: () => showNewSheet(context, onJoinSpace: onJoinSpace),
       extendedIconLabelSpacing: extended ? 8 : 0,
       extendedPadding: EdgeInsets.symmetric(horizontal: extended ? 20 : 16),
       label: AnimatedSize(
@@ -30,7 +32,7 @@ class StartChatFab extends StatelessWidget {
         curve: D0b0Motion.standard,
         child: extended ? Text(l10n.newChat) : const SizedBox.shrink(),
       ),
-      icon: const Icon(Symbols.edit_rounded),
+      icon: const Icon(Symbols.edit_rounded, size: 22),
     );
   }
 }
