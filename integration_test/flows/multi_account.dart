@@ -20,7 +20,7 @@ extension on FluffyChatTester {
 
     // Login user 2
     await tapOn(Key('accounts_and_settings_buttons'));
-    await tapOn('Add account');
+    await tapOn('Add another account');
     await login(username: user2Name, password: user2Pw);
     await initCryptoIdentity(username: user2Name);
 

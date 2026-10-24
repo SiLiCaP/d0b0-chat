@@ -3,18 +3,68 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
 import 'package:fluffychat/utils/sync_status_localization.dart';
+import 'package:fluffychat/widgets/d0b0/d0b0_mark.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import '../../widgets/matrix.dart';
 
+/// Screen title row: the mark and 'Chats' in display, the account avatar on
+/// the right. Scrolls away with the list.
+class ChatListTitle extends StatelessWidget {
+  final ChatListController controller;
+  final String title;
+
+  const ChatListTitle({
+    required this.controller,
+    required this.title,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SliverToBoxAdapter(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 12, 0),
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              children: [
+                D0b0Mark(height: 26, color: theme.colorScheme.primary),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: D0b0Type.display.copyWith(
+                      fontSize: 30,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                ClientChooserButton(controller),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The search pill. Floats back in when the list scrolls up; tapping it
+/// opens the full-screen search in place.
 class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
   final ChatListController controller;
   final bool globalSearch;
@@ -29,118 +79,98 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final client = Matrix.of(context).client;
+    final l10n = L10n.of(context);
     final isColumnMode = FluffyThemes.isColumnMode(context);
+    final iconColor = theme.colorScheme.onSurfaceVariant;
 
     return SliverAppBar(
       floating: true,
-      toolbarHeight: 72,
-      pinned: isColumnMode,
-      scrolledUnderElevation: 0,
-      shape: isColumnMode
-          ? Border(bottom: BorderSide(color: theme.dividerColor, width: 1))
+      pinned: isColumnMode || controller.isSearchMode,
+      toolbarHeight: 64,
+      titleSpacing: controller.isSearchMode ? 0 : 16,
+      leadingWidth: 56,
+      leading: controller.isSearchMode
+          ? Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: IconButton(
+                tooltip: l10n.cancel,
+                icon: const Icon(Symbols.arrow_back_rounded),
+                onPressed: controller.cancelSearch,
+              ),
+            )
           : null,
-      backgroundColor: isColumnMode
-          ? theme.colorScheme.surface.withAlpha(240)
-          : Colors.transparent,
+      primary: controller.isSearchMode,
+      scrolledUnderElevation: 0,
+      backgroundColor: theme.colorScheme.surface,
       automaticallyImplyLeading: false,
+      actions: controller.isSearchMode ? const [SizedBox(width: 12)] : null,
       title: StreamBuilder(
         stream: client.onSyncStatus.stream,
         builder: (context, snapshot) {
           final status =
               client.onSyncStatus.value ??
               const SyncStatusUpdate(SyncStatus.waitingForResponse);
-          final hide =
+          final synced =
               client.onSync.value != null &&
               status.status != SyncStatus.error &&
               client.prevBatch != null;
-          return TextField(
-            controller: controller.searchController,
-            focusNode: controller.searchFocusNode,
-            textInputAction: TextInputAction.search,
-            onChanged: (text) =>
-                controller.onSearchEnter(text, globalSearch: globalSearch),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: theme.colorScheme.secondaryContainer,
-              border: OutlineInputBorder(
-                borderSide: BorderSide.none,
-                borderRadius: BorderRadius.circular(99),
-              ),
-              hintText: hide
-                  ? L10n.of(context).searchChatsRooms
-                  : status.calcLocalizedString(context),
-              hintStyle: TextStyle(
-                color: theme.colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.normal,
-              ),
-
-              prefixIcon: hide
-                  ? controller.isSearchMode
-                        ? IconButton(
-                            tooltip: L10n.of(context).cancel,
-                            icon: const Icon(Symbols.close_rounded),
-                            onPressed: controller.cancelSearch,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          )
-                        : isColumnMode ||
-                              (controller.spaces.isEmpty &&
-                                  !AppSettings.displayNavigationRail.value)
-                        ? IconButton(
-                            tooltip: L10n.of(context).search,
-                            onPressed: controller.startSearch,
-                            icon: Icon(
-                              Symbols.search_rounded,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                          )
-                        : IconButton(
-                            tooltip: L10n.of(context).displayNavigationRail,
-                            onPressed: controller.openNavrail,
-                            icon: Icon(
-                              Symbols.menu_rounded,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                          )
-                  : SizedBox(
-                      width: 8,
-                      height: 8,
-                      child: Center(
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2,
-                          value: status.progress,
+          return SizedBox(
+            height: 48,
+            child: TextField(
+              controller: controller.searchController,
+              focusNode: controller.searchFocusNode,
+              textInputAction: TextInputAction.search,
+              onTap: controller.isSearchMode ? null : controller.startSearch,
+              onChanged: (text) =>
+                  controller.onSearchEnter(text, globalSearch: globalSearch),
+              style: D0b0Type.body.copyWith(color: theme.colorScheme.onSurface),
+              decoration: InputDecoration(
+                fillColor: theme.colorScheme.surfaceContainerHigh,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                hintText: synced
+                    ? l10n.searchRoomsAndPeople
+                    : status.calcLocalizedString(context),
+                hintStyle: D0b0Type.body.copyWith(color: iconColor),
+                prefixIcon: !synced
+                    ? Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            value: status.progress,
+                          ),
                         ),
-                      ),
-                    ),
-              suffixIcon: controller.isSearchMode && globalSearch
-                  ? controller.isSearching
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 12,
-                            ),
-                            child: SizedBox.square(
-                              dimension: 24,
-                              child: CircularProgressIndicator.adaptive(
-                                strokeWidth: 2,
+                      )
+                    : controller.isSearchMode
+                    ? null
+                    : Icon(Symbols.search_rounded, size: 20, color: iconColor),
+                suffixIcon: controller.isSearchMode
+                    ? controller.isSearching
+                          ? const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
-                            ),
-                          )
-                        : TextButton.icon(
-                            onPressed: controller.setServer,
-                            style: TextButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                              textStyle: const TextStyle(fontSize: 12),
-                            ),
-                            icon: const Icon(Symbols.edit_rounded, size: 16),
-                            label: Text(
-                              controller.searchServer ??
-                                  Matrix.of(context).client.homeserver!.host,
-                              maxLines: 2,
-                            ),
-                          )
-                  : SizedBox(width: 0, child: ClientChooserButton(controller)),
+                            )
+                          : IconButton(
+                              tooltip: l10n.clear,
+                              icon: const Icon(Symbols.close_rounded),
+                              color: iconColor,
+                              onPressed: () {
+                                controller.searchController.clear();
+                                controller.onSearchEnter(
+                                  '',
+                                  globalSearch: globalSearch,
+                                );
+                                controller.startSearch();
+                              },
+                            )
+                    : null,
+              ),
             ),
           );
         },
@@ -149,5 +179,5 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(64);
 }

@@ -229,18 +229,15 @@ abstract class FluffyThemes {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         indicatorShape: stadium,
-        indicatorColor: colorScheme.primaryContainer,
+        indicatorColor: d0b0Colors.brand,
         labelTextStyle: WidgetStatePropertyAll(textTheme.labelLarge),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colorScheme.surface,
         elevation: 0,
         indicatorShape: stadium,
-        indicatorColor: colorScheme.primaryContainer,
-        selectedIconTheme: IconThemeData(
-          color: colorScheme.onPrimaryContainer,
-          fill: 1,
-        ),
+        indicatorColor: d0b0Colors.brand,
+        selectedIconTheme: IconThemeData(color: d0b0Colors.onBrand, fill: 1),
         unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
         selectedLabelTextStyle: textTheme.labelMedium,
         unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(

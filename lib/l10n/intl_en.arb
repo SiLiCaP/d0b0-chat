@@ -3131,5 +3131,164 @@
         "placeholders": {
             "time": {"type": "String"}
         }
+    },
+    "previewPhoto": "Photo",
+    "@previewPhoto": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewVideo": "Video",
+    "@previewVideo": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewVoice": "Voice · {duration}",
+    "@previewVoice": {
+        "type": "String",
+        "placeholders": {
+            "duration": {"type": "String"}
+        }
+    },
+    "previewAudio": "Audio",
+    "@previewAudio": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewFile": "File",
+    "@previewFile": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewSticker": "Sticker",
+    "@previewSticker": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewLocation": "Location",
+    "@previewLocation": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewPoll": "Poll",
+    "@previewPoll": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "previewSender": "{name}:",
+    "@previewSender": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "draftPrefix": "Draft:",
+    "@draftPrefix": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "people": "People",
+    "@people": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "searchRoomsAndPeople": "Search rooms and people",
+    "@searchRoomsAndPeople": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navChats": "Chats",
+    "@navChats": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navSpaces": "Spaces",
+    "@navSpaces": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "navYou": "You",
+    "@navYou": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newChatDescription": "Message someone by name or @id",
+    "@newChatDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newSheetTitle": "Start something",
+    "@newSheetTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptyChatsTitle": "No chats yet",
+    "@emptyChatsTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptyChatsBody": "Start one with someone on d0b0.lv, or join a space your friends are in.",
+    "@emptyChatsBody": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "emptySpacesTitle": "No spaces yet",
+    "@emptySpacesTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newGroupTitle": "New group",
+    "@newGroupTitle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "newGroupDescription": "Pick people, then name it",
+    "@newGroupDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "joinASpace": "Join a space",
+    "@joinASpace": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "joinSpaceDescription": "Paste a link or browse d0b0.lv",
+    "@joinSpaceDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "inviteFriend": "Invite a friend",
+    "@inviteFriend": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "inviteFriendDescription": "Share a link to d0b0 chat",
+    "@inviteFriendDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "setAStatus": "Set a status",
+    "@setAStatus": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "addAnotherAccount": "Add another account",
+    "@addAnotherAccount": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "browseSpaces": "Browse spaces",
+    "@browseSpaces": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "searchSectionRooms": "Rooms",
+    "@searchSectionRooms": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "searchSectionMessages": "Messages",
+    "@searchSectionMessages": {
+        "type": "String",
+        "placeholders": {}
     }
 }
