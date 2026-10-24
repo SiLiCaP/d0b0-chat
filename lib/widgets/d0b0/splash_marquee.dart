@@ -6,6 +6,8 @@ import 'dart:ui' as ui;
 
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/widgets/d0b0/d0b0_mark.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 /// The splash: the O3 mark tiles into an endless chain (each stem meets
@@ -18,9 +20,13 @@ class D0b0SplashMarquee extends StatefulWidget {
   final Color background;
   final Color color;
 
+  /// When the app is ready the chain speeds up and rises away.
+  final bool exiting;
+
   const D0b0SplashMarquee({
     this.background = D0b0Palette.deep,
     this.color = D0b0Palette.mint,
+    this.exiting = false,
     super.key,
   });
 
@@ -42,24 +48,62 @@ class D0b0SplashMarquee extends StatefulWidget {
 
 class _D0b0SplashMarqueeState extends State<D0b0SplashMarquee>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _phase = AnimationController(
-    vsync: this,
-    duration: D0b0SplashMarquee.periodDuration,
-  );
+  /// Cruising speed in periods per second.
+  static final double _cruise =
+      1000 / D0b0SplashMarquee.periodDuration.inMilliseconds;
+
+  /// The static first frame comes to life: from rest to cruising speed.
+  static const Duration _rampUp = Duration(milliseconds: 700);
+
+  /// Leaving, the chain picks up to this many times its cruising speed.
+  static const double _exitBoost = 5;
+  static const Duration _exitRamp = Duration(milliseconds: 500);
+
+  /// Position in periods; 0 is the first frame the native splash shows.
+  final ValueNotifier<double> _phase = ValueNotifier(0);
+  late final Ticker _ticker = createTicker(_tick);
+  Duration _last = Duration.zero;
+  Duration? _exitStart;
+
+  void _tick(Duration elapsed) {
+    final dt = (elapsed - _last).inMicroseconds / 1e6;
+    _last = elapsed;
+    var speed =
+        _cruise *
+        Curves.easeInOutCubic.transform(
+          (elapsed.inMicroseconds / _rampUp.inMicroseconds).clamp(0.0, 1.0),
+        );
+    final exitStart = _exitStart;
+    if (exitStart != null) {
+      final t =
+          ((elapsed - exitStart).inMicroseconds / _exitRamp.inMicroseconds)
+              .clamp(0.0, 1.0);
+      speed += _cruise * (_exitBoost - 1) * Curves.easeInCubic.transform(t);
+    }
+    _phase.value = (_phase.value + speed * dt) % 1;
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (reduceMotion) {
-      _phase.stop();
-    } else if (!_phase.isAnimating) {
-      _phase.repeat();
+      if (_ticker.isActive) _ticker.stop();
+    } else if (!_ticker.isActive) {
+      _last = Duration.zero;
+      _ticker.start();
     }
   }
 
   @override
+  void didUpdateWidget(D0b0SplashMarquee oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.exiting && !oldWidget.exiting) _exitStart = _last;
+  }
+
+  @override
   void dispose() {
+    _ticker.dispose();
     _phase.dispose();
     super.dispose();
   }
@@ -76,7 +120,7 @@ class _D0b0SplashMarqueeState extends State<D0b0SplashMarquee>
 /// The chain at its fixed size with its faded, blurred ends, on a
 /// transparent background. [phase] 0 is the first frame.
 class SplashBand extends StatelessWidget {
-  final Animation<double> phase;
+  final ValueListenable<double> phase;
   final Color color;
 
   const SplashBand({
@@ -150,7 +194,7 @@ class SplashBand extends StatelessWidget {
 }
 
 class _ChainPainter extends CustomPainter {
-  final Animation<double> phase;
+  final ValueListenable<double> phase;
   final Color color;
 
   _ChainPainter({required this.phase, required this.color})

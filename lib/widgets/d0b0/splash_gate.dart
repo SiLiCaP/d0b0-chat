@@ -36,29 +36,93 @@ class SplashGate extends StatefulWidget {
   State<SplashGate> createState() => _SplashGateState();
 }
 
-class _SplashGateState extends State<SplashGate> {
+class _SplashGateState extends State<SplashGate>
+    with SingleTickerProviderStateMixin {
+  /// The hand-over: the chain speeds up and rises away while the app
+  /// settles in underneath, slightly larger first, like dropping into place.
+  late final AnimationController _exit = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  );
   bool _splashGone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SplashGate._app.addListener(_onApp);
+    _exit.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _splashGone = true);
+      }
+    });
+  }
+
+  void _onApp() {
+    if (SplashGate._app.value == null) return;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _exit.duration = reduceMotion
+        ? D0b0Motion.state
+        : const Duration(milliseconds: 600);
+    _exit.forward();
+  }
+
+  @override
+  void dispose() {
+    SplashGate._app.removeListener(_onApp);
+    _exit.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<Widget?>(
     valueListenable: SplashGate._app,
-    builder: (context, app, _) => Stack(
-      fit: StackFit.expand,
-      textDirection: TextDirection.ltr,
-      children: [
-        ?app,
-        if (!_splashGone)
-          IgnorePointer(
-            ignoring: app != null,
-            child: AnimatedOpacity(
-              opacity: app == null ? 1 : 0,
-              duration: D0b0Motion.brand,
-              curve: D0b0Motion.exit,
-              onEnd: () => setState(() => _splashGone = true),
-              child: const D0b0SplashMarquee(),
+    builder: (context, app, _) {
+      final reduceMotion =
+          MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      return Stack(
+        fit: StackFit.expand,
+        textDirection: TextDirection.ltr,
+        children: [
+          // Deep underneath, so the splash fades into the app over the
+          // splash colour rather than over nothing.
+          if (!_splashGone) const ColoredBox(color: D0b0Palette.deep),
+          if (app != null)
+            AnimatedBuilder(
+              animation: _exit,
+              child: app,
+              builder: (context, app) {
+                final t = _exit.value;
+                return Opacity(
+                  opacity: Curves.easeOut.transform(
+                    ((t - 0.15) / 0.85).clamp(0.0, 1.0),
+                  ),
+                  child: reduceMotion
+                      ? app
+                      : Transform.scale(
+                          scale: 1.03 - 0.03 * Curves.easeOutCubic.transform(t),
+                          child: app,
+                        ),
+                );
+              },
             ),
-          ),
-      ],
-    ),
+          if (!_splashGone)
+            IgnorePointer(
+              ignoring: app != null,
+              child: AnimatedBuilder(
+                animation: _exit,
+                child: D0b0SplashMarquee(exiting: app != null),
+                builder: (context, splash) => Opacity(
+                  opacity:
+                      1 -
+                      Curves.easeIn.transform(
+                        (_exit.value / 0.75).clamp(0.0, 1.0),
+                      ),
+                  child: splash,
+                ),
+              ),
+            ),
+        ],
+      );
+    },
   );
 }
