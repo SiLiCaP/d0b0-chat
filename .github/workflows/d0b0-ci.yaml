@@ -11,7 +11,8 @@
 #         d0b0-chat-web             the static web app (serve the folder as-is)
 #         d0b0-chat-linux-x64       Linux desktop bundle (run ./fluffychat inside it)
 #         d0b0-chat-ios-unsigned    Runner.app compiled for iOS, unsigned (proof of build only)
-#   * Tagged release (git tag v1.2.3 && git push --tags):
+#   * Tagged release (Actions → "Release" → Run workflow, see release.yaml;
+#     or git tag v1.2.3 && git push --tags):
 #       GitHub → Releases → the same files attached to the release page.
 #
 # SIGNED ANDROID RELEASE (optional, turns on automatically): add these repo secrets

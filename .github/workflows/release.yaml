@@ -1,0 +1,78 @@
+# SPDX-FileCopyrightText: 2026-Present d0b0 chat contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# The release button: GitHub → Actions → "Release" → Run workflow, type the
+# version (e.g. 0.3 or 0.3.1).
+#
+# It sets that version in pubspec.yaml (build number + 1), commits it to
+# main, tags it v<version> and starts the d0b0 chat CI on the tag, which
+# builds the signed APK, web and Linux files and publishes the release.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 0.3 or 0.3.1 (the tag becomes v<version>)'
+        required: true
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Bump version, tag and start the release build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Work out version and tag
+        id: version
+        env:
+          INPUT: ${{ inputs.version }}
+        run: |
+          input="${INPUT#v}"
+          if ! [[ "$input" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "::error::'$INPUT' is not a version like 0.3 or 0.3.1"
+            exit 1
+          fi
+          name="$input"
+          [[ "$name" =~ ^[0-9]+\.[0-9]+$ ]] && name="$name.0"
+          tag="v$input"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "::error::$tag already exists"
+            exit 1
+          fi
+          build=$(sed -n 's/^version: .*+\([0-9]\+\)$/\1/p' pubspec.yaml)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "build=$((build + 1))" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Commit the version and tag it
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          BUILD: ${{ steps.version.outputs.build }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          sed -i "s/^version: .*/version: $NAME+$BUILD/" pubspec.yaml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -am "chore: version $NAME"
+          git tag "$TAG"
+          git push origin main "$TAG"
+      # Pushes made with this workflow's token don't start other workflows,
+      # so start the CI on the tag here.
+      - name: Start the release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh workflow run d0b0-ci.yaml --repo "$GITHUB_REPOSITORY" --ref "$TAG"
+          echo "Release build started for $TAG: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/d0b0-ci.yaml" >> "$GITHUB_STEP_SUMMARY"
