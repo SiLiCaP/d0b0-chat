@@ -11,6 +11,7 @@ import 'package:fluffychat/pages/chat_search/chat_search_message_tab.dart';
 import 'package:fluffychat/pages/chat_search/chat_search_page.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ChatSearchView extends StatelessWidget {
@@ -60,7 +61,7 @@ class ChatSearchView extends StatelessWidget {
                 enabled: controller.tabController.index == 0,
                 decoration: InputDecoration(
                   hintText: L10n.of(context).search,
-                  prefixIcon: const Icon(Icons.search_outlined),
+                  prefixIcon: const Icon(Symbols.search_rounded),
                   filled: true,
                   fillColor: theme.colorScheme.secondaryContainer,
                   border: OutlineInputBorder(

@@ -1,9 +1,12 @@
 import 'dart:math';
 
 import 'package:camera/camera.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/size_string.dart';
+import 'package:fluffychat/widgets/d0b0/glass.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:video_player/video_player.dart';
 
@@ -15,9 +18,11 @@ class VideoMessageRecorderView extends StatelessWidget {
   final VideoMessageRecorderController controller;
 
   static const double _cardRadius = 28;
-  static const double _borderWidth = 4;
-  static const double _controlsHeight = 96;
-  static const double _trimAreaHeight = VideoTrimBar.height + 48;
+  static const double _borderWidth = 3;
+  static const double _controlsHeight = 104;
+
+  /// Size label, trim strip and caption field below the preview in review.
+  static const double _trimAreaHeight = VideoTrimBar.height + 48 + 64;
 
   const VideoMessageRecorderView(this.controller, {super.key});
 
@@ -78,20 +83,6 @@ class VideoMessageRecorderView extends StatelessWidget {
 
               return Stack(
                 children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: IconButton(
-                        tooltip: L10n.of(context).close,
-                        color: Colors.white,
-                        onPressed: phase == VideoMessageRecorderPhase.rendering
-                            ? null
-                            : controller.discard,
-                        icon: const Icon(Icons.close),
-                      ),
-                    ),
-                  ),
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -176,17 +167,41 @@ class _RecorderCard extends StatelessWidget {
                 progress: controller.recordingProgress,
                 radius: radius,
                 strokeWidth: borderWidth,
-                trackColor: theme.colorScheme.surfaceContainerHighest,
-                progressColor: controller.isTimeRunningOut
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary,
+                trackColor: theme.colorScheme.outline,
+                // The only Coral while recording is the live dot.
+                progressColor: theme.colorScheme.primary,
               ),
             ),
           ),
         ),
+        if (phase != VideoMessageRecorderPhase.rendering)
+          Positioned(
+            top: 12,
+            left: 12,
+            child: GlassIconButton(
+              icon: Symbols.close_rounded,
+              tooltip: L10n.of(context).close,
+              onPressed: controller.discard,
+            ),
+          ),
         if (phase == VideoMessageRecorderPhase.recording ||
             phase == VideoMessageRecorderPhase.stopping)
           Positioned(top: 16, right: 16, child: _TimerChip(controller)),
+        // Review: play and pause sit on the preview itself.
+        if (phase == VideoMessageRecorderPhase.editing)
+          Center(
+            child: GlassIconButton(
+              icon: controller.isPlaying
+                  ? Symbols.pause_rounded
+                  : Symbols.play_arrow_rounded,
+              filledIcon: true,
+              size: 56,
+              tooltip: controller.isPlaying
+                  ? L10n.of(context).pause
+                  : L10n.of(context).play,
+              onPressed: controller.togglePlayback,
+            ),
+          ),
         if (phase == VideoMessageRecorderPhase.recording &&
             controller.maxZoom > controller.minZoom)
           Positioned(
@@ -200,17 +215,9 @@ class _RecorderCard extends StatelessWidget {
             top: 16,
             right: 16,
             child: IgnorePointer(
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainer.withAlpha(204),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.volume_off_outlined,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
-                ),
+              child: const GlassPill(
+                height: 32,
+                child: Icon(Symbols.volume_off_rounded, size: 18),
               ),
             ),
           ),
@@ -252,7 +259,7 @@ class _RecorderCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons.videocam_off_outlined,
+                  Symbols.videocam_off_rounded,
                   color: Colors.white,
                   size: 48,
                 ),
@@ -343,18 +350,15 @@ class _TimerChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final warning = controller.isTimeRunningOut;
-    // Pulse the recording dot, faster when the time is running out.
-    final period = warning ? 500 : 1000;
+    const period = 1000;
     final t = (controller.elapsed.inMilliseconds % period) / period;
     final dotOpacity = 0.4 + 0.6 * (0.5 + 0.5 * cos(t * 2 * pi));
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withAlpha(204),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    // Elapsed time only; the outline shows what is left. The live dot
+    // pulses at 1 Hz, opacity only.
+    return GlassPill(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -363,21 +367,16 @@ class _TimerChip extends StatelessWidget {
             child: Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error,
                 shape: BoxShape.circle,
               ),
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            '${_format(controller.elapsed)} / ${_format(controller.maxDuration)}',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: warning
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.onSurface,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+            _format(controller.elapsed),
+            style: D0b0Type.monoStyle.copyWith(color: D0b0Palette.green100),
           ),
         ],
       ),
@@ -398,7 +397,7 @@ class _TrimArea extends StatelessWidget {
     final d = controller.trimmedDuration;
     final label =
         '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}'
-        ' • ${controller.estimatedTrimmedSize.toDouble().sizeString}';
+        ' · ${controller.estimatedTrimmedSize.toDouble().sizeString}';
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -407,9 +406,8 @@ class _TrimArea extends StatelessWidget {
         children: [
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: Colors.white,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            style: D0b0Type.monoStyle.copyWith(
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -424,6 +422,24 @@ class _TrimArea extends StatelessWidget {
               onChanged: controller.onTrimChanged,
               onChangeEnd: controller.onTrimChangeEnd,
               onSeek: controller.onSeek,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // An optional caption; it goes out with the video as one message.
+          TextField(
+            controller: controller.captionController,
+            enabled: controller.phase != VideoMessageRecorderPhase.rendering,
+            minLines: 1,
+            maxLines: 1,
+            textInputAction: TextInputAction.done,
+            style: D0b0Type.body.copyWith(color: theme.colorScheme.onSurface),
+            decoration: InputDecoration(
+              hintText: L10n.of(context).addCaption,
+              fillColor: theme.colorScheme.surfaceContainerHigh,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 13,
+              ),
             ),
           ),
         ],
@@ -446,71 +462,99 @@ class _Controls extends StatelessWidget {
         phase == VideoMessageRecorderPhase.rendering ||
         phase == VideoMessageRecorderPhase.stopping;
 
-    final discardButton = IconButton.filledTonal(
+    Widget tonal({
+      required IconData icon,
+      required String tooltip,
+      required VoidCallback? onPressed,
+      IconData? selectedIcon,
+      bool? isSelected,
+    }) => IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      isSelected: isSelected,
+      iconSize: 26,
+      style: IconButton.styleFrom(
+        backgroundColor: theme.colorScheme.surfaceContainerHigh,
+        foregroundColor: theme.colorScheme.onSurface,
+        fixedSize: const Size.square(56),
+      ),
+      icon: Icon(icon),
+      selectedIcon: selectedIcon == null ? null : Icon(selectedIcon),
+    );
+
+    final discardButton = tonal(
+      icon: Symbols.delete_rounded,
       tooltip: l10n.delete,
-      iconSize: 28,
-      padding: const EdgeInsets.all(12),
       onPressed: busy ? null : controller.discard,
-      icon: const Icon(Icons.delete_outline),
     );
 
     final List<Widget> children;
     if (phase == VideoMessageRecorderPhase.editing ||
         phase == VideoMessageRecorderPhase.rendering) {
-      final isPlaying = controller.isPlaying;
+      // Send is the only filled button.
       children = [
         discardButton,
-        IconButton.filledTonal(
-          tooltip: controller.muted ? l10n.unmute : l10n.mute,
-          iconSize: 28,
-          padding: const EdgeInsets.all(12),
+        tonal(
+          icon: Symbols.volume_up_rounded,
+          selectedIcon: Symbols.volume_off_rounded,
           isSelected: controller.muted,
+          tooltip: controller.muted ? l10n.unmute : l10n.mute,
           onPressed: busy ? null : controller.toggleMute,
-          icon: const Icon(Icons.volume_up_outlined),
-          selectedIcon: const Icon(Icons.volume_off_outlined),
         ),
-        IconButton.filledTonal(
-          tooltip: isPlaying ? l10n.pause : l10n.play,
-          iconSize: 28,
-          padding: const EdgeInsets.all(12),
-          onPressed: busy ? null : controller.togglePlayback,
-          icon: Icon(
-            isPlaying ? Icons.pause_outlined : Icons.play_arrow_outlined,
-          ),
-        ),
-        IconButton.filled(
+        IconButton(
           tooltip: l10n.send,
-          iconSize: 28,
-          padding: const EdgeInsets.all(12),
           onPressed: busy ? null : controller.send,
-          icon: const Icon(Icons.send_outlined),
+          iconSize: 26,
+          style: IconButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            fixedSize: const Size.square(56),
+          ),
+          icon: const Icon(Symbols.arrow_upward_rounded),
         ),
       ];
     } else {
       final flipIcon = PlatformInfos.isIOS
-          ? Icons.flip_camera_ios_outlined
-          : Icons.flip_camera_android_outlined;
+          ? Symbols.flip_camera_ios_rounded
+          : Symbols.flip_camera_android_rounded;
       children = [
         discardButton,
-        FloatingActionButton.large(
-          heroTag: null,
-          tooltip: l10n.stopRecording,
-          onPressed: phase == VideoMessageRecorderPhase.recording
-              ? controller.stopRecording
-              : null,
-          backgroundColor: theme.colorScheme.error,
-          foregroundColor: theme.colorScheme.onError,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.stop_rounded, size: 40),
+        // Stop is Mint, 72: going is Mint, Coral is only the live dot.
+        Semantics(
+          button: true,
+          label: l10n.stopRecording,
+          child: Material(
+            color: phase == VideoMessageRecorderPhase.recording
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: phase == VideoMessageRecorderPhase.recording
+                  ? controller.stopRecording
+                  : null,
+              child: SizedBox.square(
+                dimension: 72,
+                child: Center(
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onPrimary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        IconButton.filledTonal(
+        tonal(
+          icon: flipIcon,
           tooltip: l10n.switchCamera,
-          iconSize: 28,
-          padding: const EdgeInsets.all(12),
           onPressed: controller.canSwitchCamera
               ? controller.switchCamera
               : null,
-          icon: Icon(flipIcon),
         ),
       ];
     }
@@ -525,7 +569,12 @@ class _Controls extends StatelessWidget {
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing:
+          phase == VideoMessageRecorderPhase.editing ||
+              phase == VideoMessageRecorderPhase.rendering
+          ? 28
+          : 40,
       children: children,
     );
   }
@@ -538,26 +587,21 @@ class _ZoomChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final zoomed = controller.zoom > controller.minZoom + 0.05;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: controller.isZooming || zoomed ? 1 : 0.6,
-      child: Material(
-        color: theme.colorScheme.surfaceContainer.withAlpha(204),
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          // Tap resets the zoom.
-          onTap: zoomed ? () => controller.setZoom(controller.minZoom) : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Text(
-              '${controller.zoom.toStringAsFixed(1)}×',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+      child: GestureDetector(
+        // Tap resets the zoom.
+        onTap: zoomed ? () => controller.setZoom(controller.minZoom) : null,
+        child: GlassPill(
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            '${controller.zoom.toStringAsFixed(1)}×',
+            style: D0b0Type.monoS.copyWith(
+              fontSize: 12,
+              color: D0b0Palette.green100,
             ),
           ),
         ),

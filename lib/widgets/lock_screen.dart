@@ -9,6 +9,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/app_lock.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class LockScreen extends StatefulWidget {
@@ -151,9 +152,9 @@ class _LockScreenState extends State<LockScreen> {
                                   if (availableBiometrics.contains(
                                     BiometricType.face,
                                   )) {
-                                    return Icon(Icons.face_unlock_outlined);
+                                    return Icon(Symbols.face_unlock_rounded);
                                   }
-                                  return Icon(Icons.fingerprint_outlined);
+                                  return Icon(Symbols.fingerprint_rounded);
                                 },
                               ),
                               onPressed: _inputBlocked
@@ -162,14 +163,14 @@ class _LockScreenState extends State<LockScreen> {
                             )
                           : IconButton(
                               tooltip: L10n.of(context).reset,
-                              icon: Icon(Icons.cancel_outlined),
+                              icon: Icon(Symbols.cancel_rounded),
                               onPressed: _inputBlocked
                                   ? null
                                   : _textEditingController.clear,
                             ),
                       suffix: IconButton(
                         tooltip: L10n.of(context).unlock,
-                        icon: Icon(Icons.send_outlined),
+                        icon: Icon(Symbols.send_rounded),
                         onPressed: _inputBlocked
                             ? null
                             : () => tryUnlock(_textEditingController.text),

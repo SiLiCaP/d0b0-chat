@@ -8,6 +8,7 @@ import 'package:fluffychat/pages/invitation_selection/invitation_selection.dart'
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -73,7 +74,7 @@ class InvitationSelectionView extends StatelessWidget {
                             ),
                           ),
                         )
-                      : const Icon(Icons.search_outlined),
+                      : const Icon(Symbols.search_rounded),
                 ),
                 onChanged: controller.searchUserWithCoolDown,
               ),

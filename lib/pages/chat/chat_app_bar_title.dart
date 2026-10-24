@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -13,6 +14,7 @@ import 'package:fluffychat/utils/verified_room_extension.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -22,15 +24,16 @@ class ChatAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = L10n.of(context);
     final room = controller.room;
     if (controller.selectedEvents.isNotEmpty) {
       return Text(
         controller.selectedEvents.length.toString(),
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onTertiaryContainer,
-        ),
+        style: D0b0Type.title.copyWith(color: theme.d0b0.onBrand),
       );
     }
+    final statusStyle = D0b0Type.monoS.copyWith(color: theme.d0b0.text3);
     return InkWell(
       hoverColor: Colors.transparent,
       splashColor: Colors.transparent,
@@ -46,13 +49,14 @@ class ChatAppBarTitle extends StatelessWidget {
             tag: 'content_banner',
             child: Avatar(
               mxContent: room.avatar,
-              name: room.getLocalizedDisplayname(
-                MatrixLocals(L10n.of(context)),
-              ),
-              size: 32,
+              name: room.getLocalizedDisplayname(MatrixLocals(l10n)),
+              toneSeed: room.id,
+              isRoom: !room.isDirectChat,
+              presenceUserId: room.directChatMatrixID,
+              size: 40,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               mainAxisSize: .min,
@@ -63,18 +67,19 @@ class ChatAppBarTitle extends StatelessWidget {
                   children: [
                     if (room.allUsersVerified)
                       Icon(
-                        Icons.verified,
-                        color: Theme.of(context).colorScheme.primary,
+                        Symbols.verified_rounded,
+                        fill: 1,
+                        color: theme.colorScheme.primary,
                         size: 16,
                       ),
                     Expanded(
                       child: Text(
-                        room.getLocalizedDisplayname(
-                          MatrixLocals(L10n.of(context)),
-                        ),
+                        room.getLocalizedDisplayname(MatrixLocals(l10n)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 16),
+                        style: D0b0Type.subtitle.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ],
@@ -85,89 +90,53 @@ class ChatAppBarTitle extends StatelessWidget {
                     final status =
                         room.client.onSyncStatus.value ??
                         const SyncStatusUpdate(SyncStatus.waitingForResponse);
-                    final hide =
-                        FluffyThemes.isColumnMode(context) ||
-                        (room.client.onSync.value != null &&
-                            status.status != SyncStatus.error &&
-                            room.client.prevBatch != null);
-                    final style = TextStyle(fontSize: 11);
-                    return AnimatedSize(
-                      duration: FluffyThemes.animationDuration,
-                      child: hide
-                          ? room.isDirectChat
-                                ? PresenceBuilder(
-                                    userId: room.directChatMatrixID,
-                                    builder: (context, presence) {
-                                      final statusMessage = presence?.statusMsg
-                                          ?.trim();
-
-                                      final lastActiveTimestamp =
-                                          presence?.lastActiveTimestamp;
-
-                                      final texts = [
-                                        if (presence?.currentlyActive == true)
-                                          L10n.of(context).currentlyActive
-                                        else if (lastActiveTimestamp != null)
-                                          L10n.of(context).lastActiveAgo(
-                                            lastActiveTimestamp
-                                                .localizedTimeShort(context),
-                                          ),
-                                        ?statusMessage,
-                                      ];
-                                      final text = texts.join(' ◦ ');
-                                      if (text.isEmpty) {
-                                        return const SizedBox.shrink();
-                                      }
-
-                                      return Text(text, style: style);
-                                    },
-                                  )
-                                : Row(
-                                    children: [
-                                      if (room.summary.mJoinedMemberCount !=
-                                          null)
-                                        Text(
-                                          L10n.of(context).countParticipants(
-                                            (room.summary.mJoinedMemberCount ??
-                                                    1) +
-                                                (room
-                                                        .summary
-                                                        .mInvitedMemberCount ??
-                                                    0),
-                                          ),
-                                          maxLines: 1,
-                                          style: style,
-                                        ),
-                                      if (room.topic.isNotEmpty) ...[
-                                        Text(' ◦ ', style: style),
-                                        Expanded(
-                                          child: Text(
-                                            room.topic,
-                                            style: style,
-                                            maxLines: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  )
-                          : Row(
-                              children: [
-                                SizedBox.square(
-                                  dimension: 10,
-                                  child: CircularProgressIndicator.adaptive(
-                                    strokeWidth: 1,
-                                    value: status.progress,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    status.calcLocalizedString(context),
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              ],
+                    final synced =
+                        room.client.onSync.value != null &&
+                        status.status != SyncStatus.error &&
+                        room.client.prevBatch != null;
+                    if (!synced && !FluffyThemes.isColumnMode(context)) {
+                      return Text(
+                        status.calcLocalizedString(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: statusStyle,
+                      );
+                    }
+                    if (room.isDirectChat) {
+                      // Presence in words: Mint when online, otherwise
+                      // when they were last seen.
+                      return PresenceBuilder(
+                        userId: room.directChatMatrixID,
+                        builder: (context, presence) {
+                          final lastActive = presence?.lastActiveTimestamp;
+                          if (presence?.presence.isOnline == true ||
+                              presence?.currentlyActive == true) {
+                            return Text(
+                              l10n.presenceOnline,
+                              style: statusStyle.copyWith(
+                                color: theme.colorScheme.primary,
+                              ),
+                            );
+                          }
+                          if (lastActive == null) {
+                            return const SizedBox.shrink();
+                          }
+                          return Text(
+                            l10n.presenceLastSeen(
+                              lastActive.localizedTimeShort(context),
                             ),
+                            style: statusStyle,
+                          );
+                        },
+                      );
+                    }
+                    final members =
+                        (room.summary.mJoinedMemberCount ?? 1) +
+                        (room.summary.mInvitedMemberCount ?? 0);
+                    return Text(
+                      l10n.countMembers(members),
+                      maxLines: 1,
+                      style: statusStyle,
                     );
                   },
                 ),

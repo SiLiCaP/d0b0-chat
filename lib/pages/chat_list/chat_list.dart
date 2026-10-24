@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
@@ -23,14 +24,17 @@ import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/share_scaffold_dialog.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_shortcuts_new/flutter_shortcuts_new.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' as sdk;
 import 'package:matrix/matrix.dart';
@@ -49,7 +53,7 @@ extension LocalizedActiveFilter on ActiveFilter {
       case ActiveFilter.allChats:
         return L10n.of(context).all;
       case ActiveFilter.messages:
-        return L10n.of(context).messages;
+        return L10n.of(context).people;
       case ActiveFilter.unread:
         return L10n.of(context).unread;
       case ActiveFilter.groups:
@@ -65,11 +69,15 @@ class ChatList extends StatefulWidget {
   final String? activeSpace;
   final bool displayNavigationRail;
 
+  /// `spaces` opens the Spaces tab, e.g. when coming from the You tab.
+  final String? initialTab;
+
   const ChatList({
     super.key,
     required this.activeChat,
     this.activeSpace,
     this.displayNavigationRail = false,
+    this.initialTab,
   });
 
   @override
@@ -176,6 +184,10 @@ class ChatListController extends State<ChatList>
   SearchUserDirectoryResponse? userSearchResult;
   QueryPublicRoomsResponse? roomSearchResult;
 
+  /// Message hits from the server's search. Encrypted rooms are not
+  /// searchable there, so these come from unencrypted rooms only.
+  List<MatrixEvent>? messageSearchResult;
+
   bool isSearching = false;
   static const String _serverStoreNamespace = 'im.fluffychat.search.server';
 
@@ -259,11 +271,34 @@ class ChatListController extends State<ChatList>
         SnackBar(content: Text(e.toLocalizedString(context))),
       );
     }
+    List<MatrixEvent>? messageSearchResult;
+    if (searchQuery.length >= 2) {
+      try {
+        final response = await client.search(
+          Categories(
+            roomEvents: RoomEventsCriteria(
+              searchTerm: searchQuery,
+              orderBy: SearchOrder.recent,
+            ),
+          ),
+        );
+        messageSearchResult = response.searchCategories.roomEvents?.results
+            ?.map((result) => result.result)
+            .whereType<MatrixEvent>()
+            .where((event) => client.getRoomById(event.roomId ?? '') != null)
+            .take(20)
+            .toList();
+      } catch (e, s) {
+        // Not every server implements search; the other sections still work.
+        Logs().w('Message search failed', e, s);
+      }
+    }
     if (!isSearchMode) return;
     setState(() {
       isSearching = false;
       this.roomSearchResult = roomSearchResult;
       this.userSearchResult = userSearchResult;
+      this.messageSearchResult = messageSearchResult;
     });
   }
 
@@ -304,6 +339,7 @@ class ChatListController extends State<ChatList>
       searchController.clear();
       isSearchMode = false;
       roomSearchResult = userSearchResult = null;
+      messageSearchResult = null;
       isSearching = false;
     });
     if (unfocus) searchFocusNode.unfocus();
@@ -320,10 +356,64 @@ class ChatListController extends State<ChatList>
 
   void addAccountAction() => context.go('/rooms/settings/account');
 
+  /// The FAB collapses to a circle when the list scrolls down and expands
+  /// again on scroll up.
+  final ValueNotifier<bool> fabExtended = ValueNotifier(true);
+
   void _onScroll() {
-    final newScrolledToTop = scrollController.position.pixels <= 0;
+    final position = scrollController.position;
+    final newScrolledToTop = position.pixels <= 0;
     if (newScrolledToTop != scrolledToTop.value) {
       scrolledToTop.value = newScrolledToTop;
+    }
+    switch (position.userScrollDirection) {
+      case ScrollDirection.reverse:
+        fabExtended.value = false;
+      case ScrollDirection.forward:
+        fabExtended.value = true;
+      case ScrollDirection.idle:
+        if (newScrolledToTop) fabExtended.value = true;
+    }
+  }
+
+  /// Ctrl/⌘K opens search from anywhere in the app.
+  bool _onKey(KeyEvent event) {
+    if (event is! KeyDownEvent || event.logicalKey != LogicalKeyboardKey.keyK) {
+      return false;
+    }
+    final keyboard = HardwareKeyboard.instance;
+    if (!keyboard.isControlPressed && !keyboard.isMetaPressed) return false;
+    if (homeTab != HomeTab.chats) setHomeTab(HomeTab.chats);
+    startSearch();
+    return true;
+  }
+
+  HomeTab homeTab = HomeTab.chats;
+
+  void setHomeTab(HomeTab tab) {
+    switch (tab) {
+      case HomeTab.you:
+        context.go('/rooms/settings');
+        return;
+      case HomeTab.chats:
+      case HomeTab.spaces:
+        if (isSearchMode) cancelSearch();
+        if (tab == homeTab) {
+          if (scrollController.hasClients) {
+            scrollController.animateTo(
+              0,
+              duration: D0b0Motion.move,
+              curve: D0b0Motion.standard,
+            );
+          }
+          if (activeSpaceId != null) clearActiveSpace();
+          return;
+        }
+        setState(() {
+          homeTab = tab;
+          _activeSpaceId = null;
+        });
+        fabExtended.value = true;
     }
   }
 
@@ -406,10 +496,18 @@ class ChatListController extends State<ChatList>
         widget.activeSpace != oldWidget.activeSpace) {
       setActiveSpace(widget.activeSpace!);
     }
+    if (widget.initialTab != oldWidget.initialTab) {
+      homeTab = _tabFromQuery(widget.initialTab);
+    }
   }
+
+  static HomeTab _tabFromQuery(String? tab) =>
+      tab == 'spaces' ? HomeTab.spaces : HomeTab.chats;
 
   @override
   void initState() {
+    homeTab = _tabFromQuery(widget.initialTab);
+    HardwareKeyboard.instance.addHandler(_onKey);
     _initReceiveSharingIntent();
 
     scrollController.addListener(_onScroll);
@@ -481,6 +579,7 @@ class ChatListController extends State<ChatList>
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
     _intentDataStreamSubscription?.cancel();
     _intentFileStreamSubscription?.cancel();
     _callEventSubscription?.cancel();
@@ -566,8 +665,8 @@ class ChatListController extends State<ChatList>
               children: [
                 Icon(
                   room.pushRuleState == PushRuleState.notify
-                      ? Icons.notifications_off_outlined
-                      : Icons.notifications_off,
+                      ? Symbols.notifications_off_rounded
+                      : Symbols.notifications_off_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -585,8 +684,8 @@ class ChatListController extends State<ChatList>
               children: [
                 Icon(
                   room.markedUnread
-                      ? Icons.mark_as_unread
-                      : Icons.mark_as_unread_outlined,
+                      ? Symbols.mark_as_unread_rounded
+                      : Symbols.mark_as_unread_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -604,7 +703,9 @@ class ChatListController extends State<ChatList>
                 mainAxisSize: .min,
                 children: [
                   Icon(
-                    room.isFavourite ? Icons.push_pin : Icons.push_pin_outlined,
+                    room.isFavourite
+                        ? Symbols.push_pin_rounded
+                        : Symbols.push_pin_rounded,
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -622,7 +723,7 @@ class ChatListController extends State<ChatList>
             mainAxisSize: .min,
             children: [
               Icon(
-                Icons.delete_outlined,
+                Symbols.delete_rounded,
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
               const SizedBox(width: 12),
@@ -644,7 +745,7 @@ class ChatListController extends State<ChatList>
               mainAxisSize: .min,
               children: [
                 Icon(
-                  Icons.block_outlined,
+                  Symbols.block_rounded,
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
                 const SizedBox(width: 12),
@@ -663,7 +764,7 @@ class ChatListController extends State<ChatList>
             child: Row(
               mainAxisSize: .min,
               children: [
-                Icon(Icons.adaptive.more_outlined),
+                Icon(Symbols.more_vert_rounded),
                 const SizedBox(width: 12),
                 Text(L10n.of(context).more),
               ],
@@ -685,8 +786,8 @@ class ChatListController extends State<ChatList>
                 children: [
                   Icon(
                     room.isLowPriority
-                        ? Icons.low_priority
-                        : Icons.low_priority_outlined,
+                        ? Symbols.low_priority_rounded
+                        : Symbols.low_priority_rounded,
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -703,7 +804,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  Icon(Icons.bookmark_add_outlined),
+                  Icon(Symbols.bookmark_add_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).addTag),
                 ],
@@ -715,7 +816,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  Icon(Icons.bookmark_remove_outlined),
+                  Icon(Symbols.bookmark_remove_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).removeTag),
                 ],
@@ -727,7 +828,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  const Icon(Icons.group_work_outlined),
+                  const Icon(Symbols.group_work_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).addToSpace),
                 ],
@@ -774,19 +875,7 @@ class ChatListController extends State<ChatList>
           extra: inviteEvent?.senderId,
         );
       case ChatContextAction.leave:
-        final confirmed = await showOkCancelAlertDialog(
-          context: context,
-          title: L10n.of(context).areYouSure,
-          message: L10n.of(context).archiveRoomDescription,
-          okLabel: L10n.of(context).leave,
-          cancelLabel: L10n.of(context).cancel,
-          isDestructive: true,
-        );
-        if (confirmed == OkCancelResult.cancel) return;
-        if (!mounted) return;
-
-        await showFutureLoadingDialog(context: context, future: room.leave);
-
+        await archiveRoom(room);
         return;
       case ChatContextAction.addToSpace:
         final space = await showModalActionPopup(
@@ -863,6 +952,35 @@ class ChatListController extends State<ChatList>
   }
 
   Map<String, int> roomTags = {};
+
+  /// Swipe right on a row: mark read when unread, unread otherwise.
+  Future<void> toggleRead(Room room) async {
+    if (!room.isUnreadOrInvited) {
+      await room.markUnread(true);
+      return;
+    }
+    if (room.markedUnread) await room.markUnread(false);
+    final lastEvent = room.lastEvent;
+    if (room.notificationCount > 0 && lastEvent != null) {
+      await room.setReadMarker(lastEvent.eventId, mRead: lastEvent.eventId);
+    }
+  }
+
+  /// Swipe left on a row: leaving moves the room to the archive. Needs a
+  /// second step like every destructive action.
+  Future<void> archiveRoom(Room room) async {
+    final confirmed = await showOkCancelAlertDialog(
+      context: context,
+      title: L10n.of(context).areYouSure,
+      message: L10n.of(context).archiveRoomDescription,
+      okLabel: L10n.of(context).leave,
+      cancelLabel: L10n.of(context).cancel,
+      isDestructive: true,
+    );
+    if (confirmed == OkCancelResult.cancel) return;
+    if (!mounted) return;
+    await showFutureLoadingDialog(context: context, future: room.leave);
+  }
 
   void _updateRoomTags([_]) {
     roomTags.clear();

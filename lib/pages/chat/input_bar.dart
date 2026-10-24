@@ -236,7 +236,7 @@ class InputBar extends StatelessWidget {
           onTap: () => onSelected(suggestion),
           title: Text(
             commandExample(command),
-            style: const TextStyle(fontFamily: 'RobotoMono'),
+            style: const TextStyle(fontFamily: 'JetBrains Mono'),
           ),
           subtitle: Text(
             hint,

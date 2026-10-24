@@ -9,7 +9,12 @@ import 'package:flutter/widgets.dart';
 
 class StartTime extends StatefulWidget {
   final DateTime startTime;
-  const StartTime({required this.startTime, super.key});
+  final TextStyle? style;
+
+  /// Wraps the elapsed time, e.g. '4 in call · 12:04'.
+  final String Function(String elapsed)? label;
+
+  const StartTime({required this.startTime, this.style, this.label, super.key});
 
   @override
   State<StartTime> createState() => _StartTimeState();
@@ -33,11 +38,12 @@ class _StartTimeState extends State<StartTime> {
   @override
   Widget build(BuildContext context) {
     final duration = DateTime.now().difference(widget.startTime);
-    return Center(
-      child: Text(
-        '${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
-        style: TextStyle(fontSize: 11),
-      ),
+    final elapsed =
+        '${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+    return Text(
+      widget.label?.call(elapsed) ?? elapsed,
+      maxLines: 1,
+      style: widget.style ?? const TextStyle(fontSize: 11),
     );
   }
 }

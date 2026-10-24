@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/widgets/d0b0/settings_group.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SettingsSwitchListTile extends StatefulWidget {
@@ -13,6 +14,10 @@ class SettingsSwitchListTile extends StatefulWidget {
   final Function(bool)? onChanged;
   final bool? defaultValue;
 
+  /// Shows the switch on when the stored setting is off, so a negative
+  /// setting ('Hide deleted') can read positively ('Show deleted').
+  final bool invert;
+
   const SettingsSwitchListTile.adaptive({
     super.key,
     required this.setting,
@@ -20,6 +25,7 @@ class SettingsSwitchListTile extends StatefulWidget {
     this.subtitle,
     this.onChanged,
     this.defaultValue,
+    this.invert = false,
   });
 
   @override
@@ -29,14 +35,15 @@ class SettingsSwitchListTile extends StatefulWidget {
 class SettingsSwitchListTileState extends State<SettingsSwitchListTile> {
   @override
   Widget build(BuildContext context) {
-    final subtitle = widget.subtitle;
-    return SwitchListTile.adaptive(
-      value: widget.setting.value ?? widget.defaultValue ?? false,
-      title: Text(widget.title),
-      subtitle: subtitle == null ? null : Text(subtitle),
+    final stored = widget.setting.value ?? widget.defaultValue ?? false;
+    return D0b0SwitchTile(
+      title: widget.title,
+      subtitle: widget.subtitle,
+      value: widget.invert ? !stored : stored,
       onChanged: (bool newValue) async {
-        widget.onChanged?.call(newValue);
-        await widget.setting.setItem(newValue);
+        final value = widget.invert ? !newValue : newValue;
+        widget.onChanged?.call(value);
+        await widget.setting.setItem(value);
         setState(() {});
       },
     );

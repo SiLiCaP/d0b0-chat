@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SearchFooter extends StatelessWidget {
@@ -61,7 +62,7 @@ class SearchFooter extends StatelessWidget {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Icon(Icons.arrow_downward_outlined),
+                  : const Icon(Symbols.arrow_downward_rounded),
               label: Text(L10n.of(context).searchMore),
             ),
           ],

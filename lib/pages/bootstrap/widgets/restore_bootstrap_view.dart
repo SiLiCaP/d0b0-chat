@@ -11,6 +11,7 @@ import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/device_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/encryption/utils/key_verification.dart';
 import 'package:matrix/matrix.dart';
@@ -56,7 +57,7 @@ class RestoreBootstrapView extends StatelessWidget {
                         ? null
                         : viewModel.retryKeyVerification,
                     tooltip: L10n.of(context).tryAgain,
-                    icon: Icon(Icons.refresh_outlined),
+                    icon: Icon(Symbols.refresh_rounded),
                   )
                 : Padding(
                     padding: const EdgeInsets.all(10.0),
@@ -140,8 +141,8 @@ class RestoreBootstrapView extends StatelessWidget {
             prefixIcon: IconButton(
               icon: Icon(
                 viewModel.value.obscureText
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
+                    ? Symbols.visibility_rounded
+                    : Symbols.visibility_off_rounded,
               ),
               onPressed: viewModel.toggleObscureText,
             ),

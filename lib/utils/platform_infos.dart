@@ -9,6 +9,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -66,8 +67,13 @@ abstract class PlatformInfos {
         Text(l10n.versionWithNumber(version)),
         TextButton.icon(
           onPressed: () => launchUrlString(AppConfig.sourceCodeUrl),
-          icon: const Icon(Icons.source_outlined),
+          icon: const Icon(Symbols.source_rounded),
           label: Text(l10n.sourceCode),
+        ),
+        TextButton.icon(
+          onPressed: () => launchUrlString(AppSettings.privacyPolicy.value),
+          icon: const Icon(Symbols.privacy_tip_rounded),
+          label: Text(l10n.privacy),
         ),
         Builder(
           builder: (innerContext) {
@@ -76,7 +82,7 @@ abstract class PlatformInfos {
                 context.go('/logs');
                 Navigator.of(innerContext).pop();
               },
-              icon: const Icon(Icons.list_outlined),
+              icon: const Icon(Symbols.list_rounded),
               label: Text(l10n.logs),
             );
           },
@@ -88,7 +94,7 @@ abstract class PlatformInfos {
                 context.go('/configs');
                 Navigator.of(innerContext).pop();
               },
-              icon: const Icon(Icons.settings_applications_outlined),
+              icon: const Icon(Symbols.settings_applications_rounded),
               label: Text(l10n.advancedConfigs),
             );
           },

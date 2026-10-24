@@ -11,6 +11,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/adaptive_dialog_action.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,7 +67,7 @@ abstract class UpdateNotifier {
 
     scaffoldMessenger.showMaterialBanner(
       MaterialBanner(
-        leading: const Icon(Icons.system_update_outlined),
+        leading: const Icon(Symbols.system_update_rounded),
         content: Text(l10n.updateAvailable(latestVersion)),
         actions: [
           TextButton(

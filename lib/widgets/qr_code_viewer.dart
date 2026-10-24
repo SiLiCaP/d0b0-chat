@@ -10,6 +10,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dar
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:particles_network/particles_network.dart';
@@ -62,7 +63,7 @@ class QrCodeViewer extends StatelessWidget {
           style: IconButton.styleFrom(
             backgroundColor: Colors.black.withAlpha(128),
           ),
-          icon: const Icon(Icons.close),
+          icon: const Icon(Symbols.close_rounded),
           onPressed: Navigator.of(context).pop,
           color: Colors.white,
           tooltip: L10n.of(context).close,
@@ -73,7 +74,7 @@ class QrCodeViewer extends StatelessWidget {
             style: IconButton.styleFrom(
               backgroundColor: Colors.black.withAlpha(128),
             ),
-            icon: Icon(Icons.adaptive.share_outlined),
+            icon: Icon(Symbols.share_rounded),
             onPressed: () => FluffyShare.share(inviteLink, context),
             color: Colors.white,
             tooltip: L10n.of(context).share,
@@ -83,7 +84,7 @@ class QrCodeViewer extends StatelessWidget {
             style: IconButton.styleFrom(
               backgroundColor: Colors.black.withAlpha(128),
             ),
-            icon: const Icon(Icons.download_outlined),
+            icon: const Icon(Symbols.download_rounded),
             onPressed: () => _save(context),
             color: Colors.white,
             tooltip: L10n.of(context).downloadFile,

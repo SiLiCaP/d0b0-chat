@@ -9,6 +9,7 @@ import 'package:async/async.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/adaptive_dialog_action.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix_api_lite/utils/logs.dart';
 
@@ -121,7 +122,7 @@ class LoadingDialogState<T> extends State<LoadingDialog> {
       title: exception == null
           ? null
           : Icon(
-              Icons.error_outline_outlined,
+              Symbols.error_outline_rounded,
               color: Theme.of(context).colorScheme.error,
               size: 48,
             ),

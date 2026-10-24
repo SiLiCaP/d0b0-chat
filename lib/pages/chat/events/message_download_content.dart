@@ -10,6 +10,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -83,8 +84,8 @@ class MessageDownloadContent extends StatelessWidget {
                               ),
                             Icon(
                               download.isDownloaded
-                                  ? Icons.download_done_outlined
-                                  : Icons.file_download_outlined,
+                                  ? Symbols.download_done_rounded
+                                  : Symbols.file_download_rounded,
                               color: textColor,
                             ),
                           ],
