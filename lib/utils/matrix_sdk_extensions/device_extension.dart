@@ -3,17 +3,17 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
-
 import 'package:matrix/matrix.dart';
 
 IconData _getIconFromName(String displayname) {
   final name = displayname.toLowerCase();
   if ({'android'}.any(name.contains)) {
-    return Icons.phone_android_outlined;
+    return Symbols.phone_android_rounded;
   }
   if ({'ios', 'ipad', 'iphone', 'ipod'}.any(name.contains)) {
-    return Icons.phone_iphone_outlined;
+    return Symbols.phone_iphone_rounded;
   }
   if ({
     'web',
@@ -25,12 +25,12 @@ IconData _getIconFromName(String displayname) {
     'safari',
     'opera',
   }.any(name.contains)) {
-    return Icons.web_outlined;
+    return Symbols.web_rounded;
   }
   if ({'desktop', 'windows', 'macos', 'linux', 'ubuntu'}.any(name.contains)) {
-    return Icons.desktop_mac_outlined;
+    return Symbols.desktop_mac_rounded;
   }
-  return Icons.device_unknown_outlined;
+  return Symbols.device_unknown_rounded;
 }
 
 extension DeviceExtension on Device {

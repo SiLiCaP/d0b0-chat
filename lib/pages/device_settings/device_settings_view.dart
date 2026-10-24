@@ -7,6 +7,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/device_settings/device_settings.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'user_device_list_item.dart';
@@ -34,7 +35,7 @@ class DevicesSettingsView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: .min,
                   children: <Widget>[
-                    const Icon(Icons.error_outlined),
+                    const Icon(Symbols.error_rounded),
                     Text(snapshot.error.toString()),
                   ],
                 ),
@@ -59,7 +60,7 @@ class DevicesSettingsView extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: ListTile(
                             leading: const CircleAvatar(
-                              child: Icon(Icons.info_outlined),
+                              child: Icon(Symbols.info_rounded),
                             ),
                             subtitle: Text(
                               L10n.of(
@@ -112,7 +113,7 @@ class DevicesSettingsView extends StatelessWidget {
                                 backgroundColor:
                                     theme.colorScheme.errorContainer,
                               ),
-                              icon: const Icon(Icons.delete_outline),
+                              icon: const Icon(Symbols.delete_rounded),
                               onPressed: () => controller.removeDevicesAction(
                                 controller.notThisDevice,
                               ),

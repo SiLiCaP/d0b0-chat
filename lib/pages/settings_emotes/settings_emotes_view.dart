@@ -10,6 +10,7 @@ import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/mxc_image_viewer.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -115,7 +116,7 @@ class EmotesSettingsView extends StatelessWidget {
                               horizontal: 4.0,
                             ),
                             child: FilterChip(
-                              label: const Icon(Icons.add_outlined, size: 20),
+                              label: const Icon(Symbols.add_rounded, size: 20),
                               onSelected: controller.showSave
                                   ? null
                                   : (_) => controller.createImagePack(),
@@ -190,7 +191,7 @@ class EmotesSettingsView extends StatelessWidget {
                     suffixIcon: attributionUrl == null
                         ? null
                         : IconButton(
-                            icon: const Icon(Icons.link_outlined),
+                            icon: const Icon(Symbols.link_rounded),
                             onPressed: () => UrlLauncher(
                               context,
                               attributionUrl.toString(),
@@ -205,7 +206,7 @@ class EmotesSettingsView extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton.icon(
                   onPressed: controller.createStickers,
-                  icon: const Icon(Icons.upload_outlined),
+                  icon: const Icon(Symbols.upload_rounded),
                   label: Text(L10n.of(context).createSticker),
                 ),
               ),
@@ -310,7 +311,7 @@ class EmotesSettingsView extends StatelessWidget {
                                               ImagePackUsage.sticker,
                                             ) ??
                                             true)
-                                          const Icon(Icons.check_outlined),
+                                          const Icon(Symbols.check_rounded),
                                         const SizedBox(width: 12),
                                         Text(L10n.of(context).useAsSticker),
                                       ],
@@ -325,14 +326,14 @@ class EmotesSettingsView extends StatelessWidget {
                                               ImagePackUsage.emoticon,
                                             ) ??
                                             true)
-                                          const Icon(Icons.check_outlined),
+                                          const Icon(Symbols.check_rounded),
                                         const SizedBox(width: 12),
                                         Text(L10n.of(context).useAsEmoji),
                                       ],
                                     ),
                                   ),
                                 ],
-                                icon: const Icon(Icons.edit_outlined),
+                                icon: const Icon(Symbols.edit_rounded),
                               ),
                           ],
                         ),
@@ -343,7 +344,7 @@ class EmotesSettingsView extends StatelessWidget {
                                 tooltip: L10n.of(context).delete,
                                 onPressed: () =>
                                     controller.removeImageAction(imageCode),
-                                icon: const Icon(Icons.delete_outlined),
+                                icon: const Icon(Symbols.delete_rounded),
                               ),
                       );
                     },

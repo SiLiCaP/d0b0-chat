@@ -13,6 +13,7 @@ import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -63,7 +64,7 @@ class NewPrivateChatView extends StatelessWidget {
                     fontWeight: FontWeight.normal,
                   ),
                   prefixIcon: searchResponse == null
-                      ? const Icon(Icons.search_outlined)
+                      ? const Icon(Symbols.search_rounded)
                       : FutureBuilder(
                           future: searchResponse,
                           builder: (context, snapshot) {
@@ -79,13 +80,13 @@ class NewPrivateChatView extends StatelessWidget {
                                 ),
                               );
                             }
-                            return const Icon(Icons.search_outlined);
+                            return const Icon(Symbols.search_rounded);
                           },
                         ),
                   suffixIcon: controller.controller.text.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear_outlined),
+                          icon: const Icon(Symbols.clear_rounded),
                           onPressed: () {
                             controller.controller.clear();
                             controller.searchUsers();
@@ -131,7 +132,7 @@ class NewPrivateChatView extends StatelessWidget {
                                   theme.colorScheme.secondaryContainer,
                               foregroundColor:
                                   theme.colorScheme.onSecondaryContainer,
-                              child: Icon(Icons.adaptive.share_outlined),
+                              child: Icon(Symbols.share_rounded),
                             ),
                             title: Text(L10n.of(context).shareInviteLink),
                             onTap: controller.inviteAction,
@@ -142,7 +143,7 @@ class NewPrivateChatView extends StatelessWidget {
                                   theme.colorScheme.tertiaryContainer,
                               foregroundColor:
                                   theme.colorScheme.onTertiaryContainer,
-                              child: const Icon(Icons.group_add_outlined),
+                              child: const Icon(Symbols.group_add_rounded),
                             ),
                             title: Text(L10n.of(context).createGroup),
                             onTap: () => context.go('/rooms/newgroup'),
@@ -155,7 +156,7 @@ class NewPrivateChatView extends StatelessWidget {
                                 foregroundColor:
                                     theme.colorScheme.onPrimaryContainer,
                                 child: const Icon(
-                                  Icons.qr_code_scanner_outlined,
+                                  Symbols.qr_code_scanner_rounded,
                                 ),
                               ),
                               title: Text(L10n.of(context).scanQrCode),
@@ -227,7 +228,7 @@ class NewPrivateChatView extends StatelessWidget {
                                 const SizedBox(height: 12),
                                 OutlinedButton.icon(
                                   onPressed: controller.searchUsers,
-                                  icon: const Icon(Icons.refresh_outlined),
+                                  icon: const Icon(Symbols.refresh_rounded),
                                   label: Text(L10n.of(context).tryAgain),
                                 ),
                               ],
@@ -242,7 +243,7 @@ class NewPrivateChatView extends StatelessWidget {
                             return Column(
                               mainAxisAlignment: .center,
                               children: [
-                                const Icon(Icons.search_outlined, size: 86),
+                                const Icon(Symbols.search_rounded, size: 86),
                                 Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Text(

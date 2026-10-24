@@ -12,6 +12,7 @@ import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/encryption.dart';
 import 'package:matrix/matrix.dart';
@@ -303,7 +304,7 @@ class KeyVerificationPageState extends State<KeyVerificationDialog> {
         body = const Padding(
           padding: EdgeInsets.all(16.0),
           child: Icon(
-            Icons.verified_outlined,
+            Symbols.verified_rounded,
             color: Colors.green,
             size: 128.0,
           ),
@@ -322,7 +323,11 @@ class KeyVerificationPageState extends State<KeyVerificationDialog> {
           mainAxisSize: .min,
           children: <Widget>[
             const SizedBox(height: 16),
-            Icon(Icons.cancel, color: theme.colorScheme.error, size: 64.0),
+            Icon(
+              Symbols.cancel_rounded,
+              color: theme.colorScheme.error,
+              size: 64.0,
+            ),
             const SizedBox(height: 16),
             // TODO: Add better error UI to user
             Text(

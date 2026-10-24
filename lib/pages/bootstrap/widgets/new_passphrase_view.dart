@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/bootstrap/view_model/bootstrap_view_model.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class NewPassphraseView extends StatelessWidget {
@@ -35,8 +36,8 @@ class NewPassphraseView extends StatelessWidget {
             suffixIcon: IconButton(
               icon: Icon(
                 viewModel.value.obscureText
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
+                    ? Symbols.visibility_off_rounded
+                    : Symbols.visibility_rounded,
               ),
               onPressed: viewModel.toggleObscureText,
             ),
@@ -114,7 +115,7 @@ class _PassphraseCheckListTile extends StatelessWidget {
       spacing: 8.0,
       children: [
         Icon(
-          checked ? Icons.check_circle_outlined : Icons.circle_outlined,
+          checked ? Symbols.check_circle_rounded : Symbols.circle_rounded,
           color: checked
               ? theme.brightness == Brightness.light
                     ? Colors.green.shade800

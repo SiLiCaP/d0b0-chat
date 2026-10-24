@@ -21,6 +21,7 @@ import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/view_model_builder.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class CallPage extends StatelessWidget {
@@ -82,7 +83,7 @@ class CallPage extends StatelessWidget {
                 centerTitle: true,
                 actions: [
                   IconButton(
-                    icon: Icon(Icons.fullscreen_outlined),
+                    icon: Icon(Symbols.fullscreen_rounded),
                     onPressed: () {
                       Matrix.of(context).callPosition.value = mini
                           ? .fullScreen
@@ -98,7 +99,7 @@ class CallPage extends StatelessWidget {
                             mainAxisSize: .min,
                             spacing: 12,
                             children: [
-                              const Icon(Icons.camera_outlined),
+                              const Icon(Symbols.camera_rounded),
                               Text(L10n.of(context).selectCamera),
                             ],
                           ),
@@ -109,7 +110,7 @@ class CallPage extends StatelessWidget {
                             mainAxisSize: .min,
                             spacing: 12,
                             children: [
-                              const Icon(Icons.mic_outlined),
+                              const Icon(Symbols.mic_rounded),
                               Text(L10n.of(context).selectMicrophone),
                             ],
                           ),
@@ -120,7 +121,7 @@ class CallPage extends StatelessWidget {
                             mainAxisSize: .min,
                             spacing: 12,
                             children: [
-                              const Icon(Icons.speaker_phone_outlined),
+                              const Icon(Symbols.speaker_phone_rounded),
                               Text(L10n.of(context).selectSpeaker),
                             ],
                           ),
@@ -400,8 +401,8 @@ class CallPage extends StatelessWidget {
                       ),
                       icon: Icon(
                         localParticipant.isMicrophoneEnabled()
-                            ? Icons.mic_outlined
-                            : Icons.mic_off_outlined,
+                            ? Symbols.mic_rounded
+                            : Symbols.mic_off_rounded,
                       ),
                     ),
                     IconButton(
@@ -412,8 +413,8 @@ class CallPage extends StatelessWidget {
                       ),
                       icon: Icon(
                         localParticipant.isCameraEnabled()
-                            ? Icons.videocam_outlined
-                            : Icons.videocam_off_outlined,
+                            ? Symbols.videocam_rounded
+                            : Symbols.videocam_off_rounded,
                       ),
                     ),
                     if (!PlatformInfos.isMobile) // TODO: Fix on mobile?
@@ -429,8 +430,8 @@ class CallPage extends StatelessWidget {
                         ),
                         icon: Icon(
                           userIsScreensharing
-                              ? Icons.stop_screen_share
-                              : Icons.screen_share_outlined,
+                              ? Symbols.stop_screen_share_rounded
+                              : Symbols.screen_share_rounded,
                         ),
                       ),
                     IconButton(
@@ -448,8 +449,8 @@ class CallPage extends StatelessWidget {
                       ),
                       icon: Icon(
                         ownHandRaised
-                            ? Icons.front_hand
-                            : Icons.front_hand_outlined,
+                            ? Symbols.front_hand_rounded
+                            : Symbols.front_hand_rounded,
                       ),
                     ),
                   ] else ...[
@@ -477,7 +478,7 @@ class CallPage extends StatelessWidget {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : Icon(Icons.call_outlined),
+                                : Icon(Symbols.call_rounded),
                             label: Text(
                               viewModel.value.isLoading
                                   ? L10n.of(context).loadingPleaseWait
@@ -497,8 +498,8 @@ class CallPage extends StatelessWidget {
                           : viewModel.togglePreviewMic,
                       icon: Icon(
                         (viewModel.value.startWithAudio)
-                            ? Icons.mic_outlined
-                            : Icons.mic_off_outlined,
+                            ? Symbols.mic_rounded
+                            : Symbols.mic_off_rounded,
                       ),
                     ),
                     IconButton(
@@ -511,8 +512,8 @@ class CallPage extends StatelessWidget {
                           : null,
                       icon: Icon(
                         !(localVideoTrack?.muted ?? true)
-                            ? Icons.videocam_outlined
-                            : Icons.videocam_off_outlined,
+                            ? Symbols.videocam_rounded
+                            : Symbols.videocam_off_rounded,
                       ),
                     ),
                   ],
@@ -524,7 +525,7 @@ class CallPage extends StatelessWidget {
                     ).merge(iconButtonStyle),
 
                     onPressed: () => viewModel.close(context),
-                    icon: Icon(Icons.call_end_outlined),
+                    icon: Icon(Symbols.call_end_rounded),
                   ),
                 ],
               ),

@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -35,7 +36,7 @@ class ReplyDisplay extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: IconButton(
                         tooltip: L10n.of(context).close,
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Symbols.close_rounded),
                         onPressed: controller.cancelReplyEventAction,
                       ),
                     ),
@@ -74,7 +75,7 @@ class _EditContent extends StatelessWidget {
     }
     return Row(
       children: <Widget>[
-        Icon(Icons.edit, color: theme.colorScheme.primary),
+        Icon(Symbols.edit_rounded, color: theme.colorScheme.primary),
         Container(width: 15.0),
         Text(
           event

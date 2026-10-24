@@ -13,6 +13,7 @@ import 'package:fluffychat/utils/verified_room_extension.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -63,7 +64,7 @@ class ChatAppBarTitle extends StatelessWidget {
                   children: [
                     if (room.allUsersVerified)
                       Icon(
-                        Icons.verified,
+                        Symbols.verified_rounded,
                         color: Theme.of(context).colorScheme.primary,
                         size: 16,
                       ),

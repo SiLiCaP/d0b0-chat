@@ -3,6 +3,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 enum RecordMode { voice, video }
@@ -88,7 +89,7 @@ class _RecordModeButtonState extends State<RecordModeButton> {
             onPressed: widget.onVideoMessage,
             onLongPress: widget.onVideoMessage,
             style: style,
-            icon: const Icon(Icons.videocam_outlined),
+            icon: const Icon(Symbols.videocam_rounded),
           )
         : HoverBuilder(
             key: const ValueKey(RecordMode.voice),
@@ -99,7 +100,9 @@ class _RecordModeButtonState extends State<RecordModeButton> {
               onPressed: hovered ? widget.onVoiceMessage : _showHint,
               onLongPress: widget.onVoiceMessage,
               style: style,
-              icon: Icon(hovered ? Icons.mic : Icons.mic_none_outlined),
+              icon: Icon(
+                hovered ? Symbols.mic_rounded : Symbols.mic_none_rounded,
+              ),
             ),
           );
 

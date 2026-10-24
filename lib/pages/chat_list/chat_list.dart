@@ -31,6 +31,7 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_shortcuts_new/flutter_shortcuts_new.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' as sdk;
 import 'package:matrix/matrix.dart';
@@ -566,8 +567,8 @@ class ChatListController extends State<ChatList>
               children: [
                 Icon(
                   room.pushRuleState == PushRuleState.notify
-                      ? Icons.notifications_off_outlined
-                      : Icons.notifications_off,
+                      ? Symbols.notifications_off_rounded
+                      : Symbols.notifications_off_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -585,8 +586,8 @@ class ChatListController extends State<ChatList>
               children: [
                 Icon(
                   room.markedUnread
-                      ? Icons.mark_as_unread
-                      : Icons.mark_as_unread_outlined,
+                      ? Symbols.mark_as_unread_rounded
+                      : Symbols.mark_as_unread_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -604,7 +605,9 @@ class ChatListController extends State<ChatList>
                 mainAxisSize: .min,
                 children: [
                   Icon(
-                    room.isFavourite ? Icons.push_pin : Icons.push_pin_outlined,
+                    room.isFavourite
+                        ? Symbols.push_pin_rounded
+                        : Symbols.push_pin_rounded,
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -622,7 +625,7 @@ class ChatListController extends State<ChatList>
             mainAxisSize: .min,
             children: [
               Icon(
-                Icons.delete_outlined,
+                Symbols.delete_rounded,
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
               const SizedBox(width: 12),
@@ -644,7 +647,7 @@ class ChatListController extends State<ChatList>
               mainAxisSize: .min,
               children: [
                 Icon(
-                  Icons.block_outlined,
+                  Symbols.block_rounded,
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
                 const SizedBox(width: 12),
@@ -663,7 +666,7 @@ class ChatListController extends State<ChatList>
             child: Row(
               mainAxisSize: .min,
               children: [
-                Icon(Icons.adaptive.more_outlined),
+                Icon(Symbols.more_vert_rounded),
                 const SizedBox(width: 12),
                 Text(L10n.of(context).more),
               ],
@@ -685,8 +688,8 @@ class ChatListController extends State<ChatList>
                 children: [
                   Icon(
                     room.isLowPriority
-                        ? Icons.low_priority
-                        : Icons.low_priority_outlined,
+                        ? Symbols.low_priority_rounded
+                        : Symbols.low_priority_rounded,
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -703,7 +706,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  Icon(Icons.bookmark_add_outlined),
+                  Icon(Symbols.bookmark_add_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).addTag),
                 ],
@@ -715,7 +718,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  Icon(Icons.bookmark_remove_outlined),
+                  Icon(Symbols.bookmark_remove_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).removeTag),
                 ],
@@ -727,7 +730,7 @@ class ChatListController extends State<ChatList>
               child: Row(
                 mainAxisSize: .min,
                 children: [
-                  const Icon(Icons.group_work_outlined),
+                  const Icon(Symbols.group_work_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).addToSpace),
                 ],

@@ -8,6 +8,7 @@ import 'package:fluffychat/pages/chat_access_settings/chat_access_settings_contr
 import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart' hide Visibility;
 import 'package:matrix/matrix.dart';
 
@@ -150,7 +151,7 @@ class ChatAccessSettingsPageView extends StatelessWidget {
                       ),
                     ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.add_outlined),
+                      icon: const Icon(Symbols.add_rounded),
                       tooltip: L10n.of(context).createNewAddress,
                       onPressed: controller.addAlias,
                     ),
@@ -217,7 +218,7 @@ class ChatAccessSettingsPageView extends StatelessWidget {
                   title: Text(L10n.of(context).globalChatId),
                   subtitle: SelectableText(room.id),
                   trailing: IconButton(
-                    icon: const Icon(Icons.copy_outlined),
+                    icon: const Icon(Symbols.content_copy_rounded),
                     onPressed: () => FluffyShare.share(room.id, context),
                   ),
                 ),
@@ -232,7 +233,7 @@ class ChatAccessSettingsPageView extends StatelessWidget {
                   ),
                   trailing: room.canSendEvent(EventTypes.RoomTombstone)
                       ? IconButton(
-                          icon: const Icon(Icons.upgrade_outlined),
+                          icon: const Icon(Symbols.upgrade_rounded),
                           onPressed: controller.updateRoomAction,
                         )
                       : null,
@@ -265,8 +266,8 @@ class _AliasListTile extends StatelessWidget {
 
     return ListTile(
       leading: isCanonicalAlias
-          ? const Icon(Icons.star)
-          : const Icon(Icons.link_outlined),
+          ? const Icon(Symbols.star_rounded)
+          : const Icon(Symbols.link_rounded),
       title: InkWell(
         onTap: () => FluffyShare.share('https://matrix.to/#/$alias', context),
         child: SelectableText(
@@ -282,7 +283,7 @@ class _AliasListTile extends StatelessWidget {
       trailing: onDelete != null
           ? IconButton(
               color: theme.colorScheme.error,
-              icon: const Icon(Icons.delete_outlined),
+              icon: const Icon(Symbols.delete_rounded),
               onPressed: onDelete,
             )
           : null,

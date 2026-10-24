@@ -12,6 +12,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/room_status_extension.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/typing_animation.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -169,7 +170,7 @@ class ChatListItem extends StatelessWidget {
                                 color: backgroundColor,
                                 borderRadius: BorderRadius.circular(16),
                                 child: const Icon(
-                                  Icons.arrow_drop_down_circle_outlined,
+                                  Symbols.arrow_drop_down_circle_rounded,
                                   size: 18,
                                 ),
                               ),
@@ -194,7 +195,7 @@ class ChatListItem extends StatelessWidget {
                   if (isMuted)
                     const Padding(
                       padding: EdgeInsets.only(left: 4.0),
-                      child: Icon(Icons.notifications_off_outlined, size: 16),
+                      child: Icon(Symbols.notifications_off_rounded, size: 16),
                     ),
                   if (room.isLowPriority)
                     Padding(
@@ -202,7 +203,7 @@ class ChatListItem extends StatelessWidget {
                         right: hasNotifications ? 4.0 : 0.0,
                       ),
                       child: Icon(
-                        Icons.low_priority,
+                        Symbols.low_priority_rounded,
                         size: 16,
                         color: theme.colorScheme.primary,
                       ),
@@ -213,7 +214,7 @@ class ChatListItem extends StatelessWidget {
                         right: hasNotifications ? 4.0 : 0.0,
                       ),
                       child: Icon(
-                        Icons.push_pin,
+                        Symbols.push_pin_rounded,
                         size: 16,
                         color: theme.colorScheme.primary,
                       ),
@@ -285,7 +286,7 @@ class ChatListItem extends StatelessWidget {
                               mainAxisSize: .min,
                               children: [
                                 Icon(
-                                  Icons.message_outlined,
+                                  Symbols.message_rounded,
                                   size: 12,
                                   color: theme.colorScheme.outline,
                                 ),
@@ -377,7 +378,7 @@ class ChatListItem extends StatelessWidget {
               trailing: onForget == null
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.delete_outlined),
+                      icon: const Icon(Symbols.delete_rounded),
                       onPressed: onForget,
                     ),
             ),

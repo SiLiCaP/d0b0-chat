@@ -6,6 +6,7 @@
 import 'package:fluffychat/utils/string_color.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -97,7 +98,7 @@ class Avatar extends StatelessWidget {
                         fallbackLetters,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'RobotoMono',
+                          fontFamily: 'JetBrains Mono',
                           color:
                               textColor ??
                               fallbackLetters.colorScheme.onPrimaryContainer,
@@ -108,7 +109,7 @@ class Avatar extends StatelessWidget {
                     )
                   : Center(
                       child: Icon(
-                        Icons.person_2,
+                        Symbols.person_2_rounded,
                         color: theme.colorScheme.tertiary,
                         size: size / 1.5,
                       ),

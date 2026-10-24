@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
@@ -37,7 +38,7 @@ class QrScannerModalState extends State<QrScannerModal> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close_outlined),
+          icon: const Icon(Symbols.close_rounded),
           onPressed: Navigator.of(context).pop,
           tooltip: L10n.of(context).close,
         ),

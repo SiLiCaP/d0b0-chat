@@ -10,6 +10,7 @@ import 'package:fluffychat/utils/beautify_string_extension.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -30,7 +31,7 @@ class ChatEncryptionSettingsView extends StatelessWidget {
       builder: (context, _) => Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.close_outlined),
+            icon: const Icon(Symbols.close_rounded),
             onPressed: () => context.go('/rooms/${controller.roomId!}'),
           ),
           title: Text(L10n.of(context).encryption),
@@ -79,7 +80,7 @@ class ChatEncryptionSettingsView extends StatelessWidget {
                         ),
                       ),
                       onPressed: controller.startVerification,
-                      icon: const Icon(Icons.verified_outlined),
+                      icon: const Icon(Symbols.verified_rounded),
                       label: Text(L10n.of(context).verifyStart),
                     ),
                   ),
@@ -164,8 +165,8 @@ class ChatEncryptionSettingsView extends StatelessWidget {
                                       controller.uncollapse(user.id),
                                   icon: Icon(
                                     controller.uncollapsedUserId == user.id
-                                        ? Icons.keyboard_arrow_up_outlined
-                                        : Icons.keyboard_arrow_down_outlined,
+                                        ? Symbols.keyboard_arrow_up_rounded
+                                        : Symbols.keyboard_arrow_down_rounded,
                                   ),
                                 ),
                               ),
@@ -203,7 +204,7 @@ class ChatEncryptionSettingsView extends StatelessWidget {
                                           L10n.of(context).noCurve25519KeyFound,
                                     ),
                                     trailing: IconButton(
-                                      icon: Icon(Icons.block_outlined),
+                                      icon: Icon(Symbols.block_rounded),
                                       style: IconButton.styleFrom(
                                         foregroundColor: device.blocked
                                             ? theme.colorScheme.error

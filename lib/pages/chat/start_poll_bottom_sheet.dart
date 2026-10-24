@@ -6,6 +6,7 @@
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -119,7 +120,7 @@ class _StartPollBottomSheetState extends State<StartPollBottomSheet> {
                   suffixIcon: _answers.length == 2
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.cancel_outlined),
+                          icon: const Icon(Symbols.cancel_rounded),
                           onPressed: () => setState(() {
                             _answers.remove(answerController..dispose());
                           }),
@@ -131,7 +132,7 @@ class _StartPollBottomSheetState extends State<StartPollBottomSheet> {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              icon: const Icon(Icons.add_outlined),
+              icon: const Icon(Symbols.add_rounded),
               onPressed: _answers.length < maxAnswers
                   ? () => setState(() {
                       _answers.add(TextEditingController());

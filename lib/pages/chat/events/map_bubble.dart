@@ -6,6 +6,7 @@
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../config/app_config.dart';
@@ -68,7 +69,7 @@ class MapBubble extends StatelessWidget {
                         // Might have to do with psychological perception of where the tip exactly is
                         offset: const Offset(0, -12.5),
                         child: const Icon(
-                          Icons.location_pin,
+                          Symbols.location_pin_rounded,
                           color: Colors.red,
                           size: 30,
                         ),

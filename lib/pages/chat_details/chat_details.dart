@@ -16,6 +16,7 @@ import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart'
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -103,19 +104,19 @@ class ChatDetailsController extends State<ChatDetails> {
           value: AvatarAction.camera,
           label: l10n.openCamera,
           isDefaultAction: true,
-          icon: const Icon(Icons.camera_alt_outlined),
+          icon: const Icon(Symbols.camera_alt_rounded),
         ),
       AdaptiveModalAction(
         value: AvatarAction.file,
         label: l10n.openGallery,
-        icon: const Icon(Icons.photo_outlined),
+        icon: const Icon(Symbols.photo_rounded),
       ),
       if (room?.avatar != null)
         AdaptiveModalAction(
           value: AvatarAction.remove,
           label: l10n.delete,
           isDestructive: true,
-          icon: const Icon(Icons.delete_outlined),
+          icon: const Icon(Symbols.delete_rounded),
         ),
     ];
     final action = actions.length == 1

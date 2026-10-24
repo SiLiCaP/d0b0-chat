@@ -19,6 +19,7 @@ import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/member_actions_popup_menu_button.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:swipe_to_action/swipe_to_action.dart';
@@ -234,7 +235,7 @@ class Message extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
-                  Icons.reply_outlined,
+                  Symbols.reply_rounded,
                   color: theme.colorScheme.onPrimaryContainer,
                 ),
               ),
@@ -301,8 +302,8 @@ class Message extends StatelessWidget {
                             tooltip: L10n.of(context).select,
                             icon: Icon(
                               selected
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined,
+                                  ? Symbols.check_circle_rounded
+                                  : Symbols.circle_rounded,
                             ),
                             onPressed: () => onSelect(event),
                           ),
@@ -352,8 +353,9 @@ class Message extends StatelessWidget {
                                       child: Icon(
                                         sender.powerLevel.role ==
                                                 PowerLevelRole.moderator
-                                            ? Icons.add_moderator_outlined
-                                            : Icons.admin_panel_settings,
+                                            ? Symbols.add_moderator_rounded
+                                            : Symbols
+                                                  .admin_panel_settings_rounded,
                                         size: 14,
                                         color: theme
                                             .colorScheme
@@ -624,7 +626,7 @@ class Message extends StatelessWidget {
                                   ),
                                   Text(' ', style: TextStyle(fontSize: 11)),
                                   Icon(
-                                    Icons.error_outlined,
+                                    Symbols.error_rounded,
                                     size: 14,
                                     color: theme.colorScheme.error,
                                     shadows: wallpaperTextShadow,
@@ -719,7 +721,8 @@ class Message extends StatelessWidget {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
-                                                    Icons.add_reaction_outlined,
+                                                    Symbols
+                                                        .add_reaction_rounded,
                                                   ),
                                                   tooltip: L10n.of(
                                                     context,
@@ -898,7 +901,7 @@ class Message extends StatelessWidget {
                                     theme.colorScheme.secondaryContainer,
                               ),
                               onPressed: () => enterThread(event.eventId),
-                              icon: const Icon(Icons.message),
+                              icon: const Icon(Symbols.message_rounded),
                               label: Text(
                                 '${L10n.of(context).countReplies(threadChildren.length)} | ${threadChildren.first.calcLocalizedBodyFallback(MatrixLocals(L10n.of(context)), withSenderNamePrefix: true)}',
                                 maxLines: 1,

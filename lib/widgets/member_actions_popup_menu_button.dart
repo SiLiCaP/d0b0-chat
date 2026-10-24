@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/permission_slider_dialog.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -68,7 +69,7 @@ Future<void> showMemberActionsPopupMenu({
           value: _MemberActions.mention,
           child: Row(
             children: [
-              const Icon(Icons.alternate_email_outlined),
+              const Icon(Symbols.alternate_email_rounded),
               const SizedBox(width: 18),
               Text(L10n.of(context).mention),
             ],
@@ -79,7 +80,7 @@ Future<void> showMemberActionsPopupMenu({
           value: _MemberActions.approve,
           child: Row(
             children: [
-              const Icon(Icons.how_to_reg_outlined),
+              const Icon(Symbols.how_to_reg_rounded),
               const SizedBox(width: 18),
               Text(L10n.of(context).approve),
             ],
@@ -91,7 +92,7 @@ Future<void> showMemberActionsPopupMenu({
             value: _MemberActions.makeAdmin,
             child: Row(
               children: [
-                const Icon(Icons.admin_panel_settings_outlined),
+                const Icon(Symbols.admin_panel_settings_rounded),
                 const SizedBox(width: 18),
                 Text(L10n.of(context).makeAdmin),
               ],
@@ -102,7 +103,7 @@ Future<void> showMemberActionsPopupMenu({
             value: _MemberActions.makeModerator,
             child: Row(
               children: [
-                const Icon(Icons.add_moderator_outlined),
+                const Icon(Symbols.add_moderator_rounded),
                 const SizedBox(width: 18),
                 Text(L10n.of(context).makeModerator),
               ],
@@ -113,7 +114,7 @@ Future<void> showMemberActionsPopupMenu({
             value: _MemberActions.removeAdmin,
             child: Row(
               children: [
-                const Icon(Icons.remove_moderator_outlined),
+                const Icon(Symbols.remove_moderator_rounded),
                 const SizedBox(width: 18),
                 Text(L10n.of(context).removeAdminRights),
               ],
@@ -124,7 +125,7 @@ Future<void> showMemberActionsPopupMenu({
             value: _MemberActions.removeModerator,
             child: Row(
               children: [
-                const Icon(Icons.remove_moderator_outlined),
+                const Icon(Symbols.remove_moderator_rounded),
                 const SizedBox(width: 18),
                 Text(L10n.of(context).removeModeratorRights),
               ],
@@ -138,7 +139,7 @@ Future<void> showMemberActionsPopupMenu({
           enabled: user.canChangeUserPowerLevel,
           child: Row(
             children: [
-              const Icon(Icons.manage_accounts_outlined),
+              const Icon(Symbols.manage_accounts_rounded),
               const SizedBox(width: 18),
               Text(
                 user.canChangeUserPowerLevel
@@ -156,7 +157,7 @@ Future<void> showMemberActionsPopupMenu({
           child: Row(
             children: [
               Icon(
-                Icons.person_remove_outlined,
+                Symbols.person_remove_rounded,
                 color: theme.colorScheme.onErrorContainer,
               ),
               const SizedBox(width: 18),
@@ -173,7 +174,7 @@ Future<void> showMemberActionsPopupMenu({
           child: Row(
             children: [
               Icon(
-                Icons.block_outlined,
+                Symbols.block_rounded,
                 color: theme.colorScheme.onErrorContainer,
               ),
               const SizedBox(width: 18),
@@ -189,7 +190,7 @@ Future<void> showMemberActionsPopupMenu({
           value: _MemberActions.unban,
           child: Row(
             children: [
-              const Icon(Icons.warning),
+              const Icon(Symbols.warning_rounded),
               const SizedBox(width: 18),
               Text(L10n.of(context).unbanFromChat),
             ],
@@ -201,7 +202,7 @@ Future<void> showMemberActionsPopupMenu({
           child: Row(
             children: [
               Icon(
-                Icons.gavel_outlined,
+                Symbols.gavel_rounded,
                 color: theme.colorScheme.onErrorContainer,
               ),
               const SizedBox(width: 18),

@@ -21,6 +21,7 @@ import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' as sdk;
 import 'package:matrix/matrix.dart';
@@ -243,8 +244,8 @@ class _SpaceViewState extends State<SpaceView> {
               children: [
                 Icon(
                   room.pushRuleState == PushRuleState.notify
-                      ? Icons.notifications_off_outlined
-                      : Icons.notifications_on_outlined,
+                      ? Symbols.notifications_off_rounded
+                      : Symbols.notifications_active_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -264,8 +265,8 @@ class _SpaceViewState extends State<SpaceView> {
               children: [
                 Icon(
                   room.markedUnread
-                      ? Icons.mark_as_unread
-                      : Icons.mark_as_unread_outlined,
+                      ? Symbols.mark_as_unread_rounded
+                      : Symbols.mark_as_unread_rounded,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -282,7 +283,7 @@ class _SpaceViewState extends State<SpaceView> {
               mainAxisSize: .min,
               children: [
                 Icon(
-                  Icons.delete_outlined,
+                  Symbols.delete_rounded,
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
                 const SizedBox(width: 12),
@@ -303,7 +304,7 @@ class _SpaceViewState extends State<SpaceView> {
               mainAxisSize: .min,
               children: [
                 Icon(
-                  Icons.remove,
+                  Symbols.remove_rounded,
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
                 const SizedBox(width: 12),
@@ -376,7 +377,7 @@ class _SpaceViewState extends State<SpaceView> {
     final isAdmin = room?.canChangeStateEvent(EventTypes.SpaceChild) == true;
     return Scaffold(
       body: room == null
-          ? const Center(child: Icon(Icons.search_outlined, size: 80))
+          ? const Center(child: Icon(Symbols.search_rounded, size: 80))
           : StreamBuilder(
               stream: room.client.onSync.stream
                   .where((s) => s.hasRoomUpdate)
@@ -412,7 +413,7 @@ class _SpaceViewState extends State<SpaceView> {
                           prefixIcon: IconButton(
                             onPressed: () {},
                             icon: Icon(
-                              Icons.search_outlined,
+                              Symbols.search_rounded,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
@@ -441,7 +442,7 @@ class _SpaceViewState extends State<SpaceView> {
                                 PopupMenuItem(
                                   value: SpaceActions.addChild,
                                   child: ListTile(
-                                    leading: Icon(Icons.edit_square),
+                                    leading: Icon(Symbols.edit_square_rounded),
                                     title: Text(
                                       L10n.of(context).addChatOrSubSpace,
                                     ),
@@ -450,14 +451,14 @@ class _SpaceViewState extends State<SpaceView> {
                               PopupMenuItem(
                                 value: SpaceActions.settings,
                                 child: ListTile(
-                                  leading: Icon(Icons.settings_outlined),
+                                  leading: Icon(Symbols.settings_rounded),
                                   title: Text(L10n.of(context).settings),
                                 ),
                               ),
                               PopupMenuItem(
                                 value: SpaceActions.leave,
                                 child: ListTile(
-                                  leading: Icon(Icons.delete_outlined),
+                                  leading: Icon(Symbols.delete_rounded),
                                   title: Text(L10n.of(context).leave),
                                 ),
                               ),
@@ -554,7 +555,9 @@ class _SpaceViewState extends State<SpaceView> {
                                                 context,
                                                 item.roomId,
                                               ),
-                                          icon: const Icon(Icons.edit_outlined),
+                                          icon: const Icon(
+                                            Symbols.edit_rounded,
+                                          ),
                                         ),
                                       )
                                     : Avatar(
@@ -615,7 +618,7 @@ class _SpaceViewState extends State<SpaceView> {
                                       const Padding(
                                         padding: EdgeInsets.only(left: 4.0),
                                         child: Icon(
-                                          Icons.notifications_off_outlined,
+                                          Symbols.notifications_off_rounded,
                                           size: 16,
                                         ),
                                       ),

@@ -9,6 +9,7 @@ import 'package:fluffychat/pages/new_group/new_group.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class NewGroupView extends StatelessWidget {
@@ -63,7 +64,7 @@ class NewGroupView extends StatelessWidget {
               child: CircleAvatar(
                 radius: Avatar.defaultSize,
                 child: avatar == null
-                    ? const Icon(Icons.add_a_photo_outlined)
+                    ? const Icon(Symbols.add_a_photo_rounded)
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(90),
                         child: Image.memory(
@@ -84,7 +85,7 @@ class NewGroupView extends StatelessWidget {
                 autocorrect: false,
                 readOnly: controller.loading,
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.people_outlined),
+                  prefixIcon: const Icon(Symbols.people_rounded),
                   labelText: controller.createGroupType == CreateGroupType.space
                       ? L10n.of(context).spaceName
                       : L10n.of(context).groupName,
@@ -94,7 +95,7 @@ class NewGroupView extends StatelessWidget {
             const SizedBox(height: 16),
             SwitchListTile.adaptive(
               contentPadding: const EdgeInsets.symmetric(horizontal: 32),
-              secondary: const Icon(Icons.public_outlined),
+              secondary: const Icon(Symbols.public_rounded),
               title: Text(
                 controller.createGroupType == CreateGroupType.space
                     ? L10n.of(context).spaceIsPublic
@@ -111,7 +112,7 @@ class NewGroupView extends StatelessWidget {
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 32,
                       ),
-                      secondary: const Icon(Icons.search_outlined),
+                      secondary: const Icon(Symbols.search_rounded),
                       title: Text(L10n.of(context).groupCanBeFoundViaSearch),
                       value: controller.groupCanBeFound,
                       onChanged: controller.loading
@@ -130,7 +131,7 @@ class NewGroupView extends StatelessWidget {
                         horizontal: 32,
                       ),
                       secondary: Icon(
-                        Icons.lock_outlined,
+                        Symbols.lock_rounded,
                         color: theme.colorScheme.onSurface,
                       ),
                       title: Text(
@@ -151,7 +152,7 @@ class NewGroupView extends StatelessWidget {
                       ),
                       trailing: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Icon(Icons.info_outlined),
+                        child: Icon(Symbols.info_rounded),
                       ),
                       subtitle: Text(L10n.of(context).newSpaceDescription),
                     )
@@ -182,7 +183,7 @@ class NewGroupView extends StatelessWidget {
                   ? const SizedBox.shrink()
                   : ListTile(
                       leading: Icon(
-                        Icons.warning_outlined,
+                        Symbols.warning_rounded,
                         color: theme.colorScheme.error,
                       ),
                       title: Text(

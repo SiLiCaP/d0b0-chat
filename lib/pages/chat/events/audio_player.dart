@@ -16,6 +16,7 @@ import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:ogg_caf_converter/ogg_caf_converter.dart';
@@ -82,8 +83,8 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                     }
                   },
                   icon: audioPlayer.playing && !audioPlayer.isAtEndPosition
-                      ? const Icon(Icons.pause_outlined)
-                      : const Icon(Icons.play_arrow_outlined),
+                      ? const Icon(Symbols.pause_rounded)
+                      : const Icon(Symbols.play_arrow_rounded),
                 ),
               ),
               content: StreamBuilder(
@@ -113,7 +114,7 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                       ).clearMaterialBanners();
                     });
                   },
-                  icon: const Icon(Icons.close_outlined),
+                  icon: const Icon(Symbols.close_rounded),
                 ),
               ],
             ),
@@ -371,8 +372,8 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                                       audioPlayer?.playing == true &&
                                               audioPlayer?.isAtEndPosition ==
                                                   false
-                                          ? Icons.pause_outlined
-                                          : Icons.play_arrow_outlined,
+                                          ? Symbols.pause_rounded
+                                          : Symbols.play_arrow_rounded,
                                       color: widget.color,
                                     ),
                                   ),
@@ -462,7 +463,7 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                           firstChild: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Icon(
-                              Icons.mic_none_outlined,
+                              Symbols.mic_none_rounded,
                               color: widget.color,
                             ),
                           ),

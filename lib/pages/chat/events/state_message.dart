@@ -9,6 +9,7 @@ import 'package:fluffychat/pages/chat/utd_dialog.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:flutter/gestures.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -84,7 +85,7 @@ class StateMessage extends StatelessWidget {
                                       onTap: () =>
                                           UtdDialog.show(context, event),
                                       child: Icon(
-                                        Icons.info_outlined,
+                                        Symbols.info_rounded,
                                         size: 14,
                                       ),
                                     ),

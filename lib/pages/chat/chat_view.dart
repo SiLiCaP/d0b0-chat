@@ -20,6 +20,7 @@ import 'package:fluffychat/widgets/chat_settings_popup_menu.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/pulsating_widget.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -100,14 +101,14 @@ class ChatView extends StatelessWidget {
                 automaticallyImplyLeading: false,
                 leading: controller.selectMode
                     ? IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Symbols.close_rounded),
                         onPressed: controller.clearSelectedEvents,
                         tooltip: L10n.of(context).close,
                         color: theme.colorScheme.onTertiaryContainer,
                       )
                     : activeThreadId != null
                     ? IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Symbols.close_rounded),
                         onPressed: controller.closeThread,
                         tooltip: L10n.of(context).backToMainChat,
                         color: theme.colorScheme.onSecondaryContainer,
@@ -121,7 +122,7 @@ class ChatView extends StatelessWidget {
                   if (controller.selectMode) ...[
                     if (controller.canEditSelectedEvents)
                       IconButton(
-                        icon: const Icon(Icons.edit_outlined),
+                        icon: const Icon(Symbols.edit_rounded),
                         tooltip: L10n.of(context).edit,
                         onPressed: controller.editSelectedEventAction,
                       ),
@@ -129,20 +130,20 @@ class ChatView extends StatelessWidget {
                         controller.activeThreadId == null &&
                         controller.room.canSendDefaultMessages)
                       IconButton(
-                        icon: const Icon(Icons.message_outlined),
+                        icon: const Icon(Symbols.message_rounded),
                         tooltip: L10n.of(context).replyInThread,
                         onPressed: () => controller.enterThread(
                           controller.selectedEvents.single.eventId,
                         ),
                       ),
                     IconButton(
-                      icon: const Icon(Icons.copy_outlined),
+                      icon: const Icon(Symbols.content_copy_rounded),
                       tooltip: L10n.of(context).copyToClipboard,
                       onPressed: controller.copyEventsAction,
                     ),
                     if (controller.canRedactSelectedEvents)
                       IconButton(
-                        icon: const Icon(Icons.delete_outlined),
+                        icon: const Icon(Symbols.delete_rounded),
                         tooltip: L10n.of(context).redactMessage,
                         onPressed: controller.redactEventsAction,
                       ),
@@ -168,7 +169,7 @@ class ChatView extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: .min,
                                 children: [
-                                  const Icon(Icons.push_pin_outlined),
+                                  const Icon(Symbols.push_pin_rounded),
                                   const SizedBox(width: 12),
                                   Text(L10n.of(context).pinMessage),
                                 ],
@@ -182,7 +183,7 @@ class ChatView extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: .min,
                                 children: [
-                                  const Icon(Icons.download_outlined),
+                                  const Icon(Symbols.download_rounded),
                                   const SizedBox(width: 12),
                                   Text(L10n.of(context).downloadFile),
                                   if (controller.selectedEventSizeString
@@ -196,7 +197,7 @@ class ChatView extends StatelessWidget {
                             child: Row(
                               mainAxisSize: .min,
                               children: [
-                                const Icon(Icons.info_outlined),
+                                const Icon(Symbols.info_rounded),
                                 const SizedBox(width: 12),
                                 Text(L10n.of(context).messageInfo),
                               ],
@@ -209,7 +210,7 @@ class ChatView extends StatelessWidget {
                                 mainAxisSize: .min,
                                 children: [
                                   const Icon(
-                                    Icons.shield_outlined,
+                                    Symbols.shield_rounded,
                                     color: Colors.red,
                                   ),
                                   const SizedBox(width: 12),
@@ -229,8 +230,8 @@ class ChatView extends StatelessWidget {
                             icon: Icon(switch (controller
                                 .room
                                 .activeMatrixRtcCallIntent) {
-                              .voice => Icons.video_call_outlined,
-                              _ => Icons.mic_outlined,
+                              .voice => Symbols.video_call_rounded,
+                              _ => Symbols.mic_rounded,
                             }),
                             label: Text(
                               controller.room
@@ -252,7 +253,7 @@ class ChatView extends StatelessWidget {
                     else if (controller.room.hasPermissionForMatrixRtcCall &&
                         controller.supportLiveKitCalls)
                       IconButton(
-                        icon: Icon(Icons.call_outlined),
+                        icon: Icon(Symbols.call_rounded),
                         onPressed: controller.startOrJoinVideoCall,
                       ),
                     ChatSettingsPopupMenu(controller.room, true),
@@ -271,7 +272,7 @@ class ChatView extends StatelessWidget {
                             child: TextButton.icon(
                               onPressed: () =>
                                   controller.scrollToEventId(activeThreadId),
-                              icon: const Icon(Icons.message),
+                              icon: const Icon(Symbols.message_rounded),
                               label: Text(L10n.of(context).replyInThread),
                               style: TextButton.styleFrom(
                                 foregroundColor:
@@ -288,7 +289,7 @@ class ChatView extends StatelessWidget {
                         ChatAppBarListTile(
                           leading: IconButton(
                             color: theme.colorScheme.onSurfaceVariant,
-                            icon: const Icon(Icons.close),
+                            icon: const Icon(Symbols.close_rounded),
                             tooltip: L10n.of(context).close,
                             onPressed: () {
                               controller.discardScrollUpBannerEventId();
@@ -321,7 +322,7 @@ class ChatView extends StatelessWidget {
                         mini: true,
                         backgroundColor: theme.colorScheme.surface,
                         foregroundColor: theme.colorScheme.onSurface,
-                        child: const Icon(Icons.arrow_downward_outlined),
+                        child: const Icon(Symbols.arrow_downward_rounded),
                       ),
                     )
                   : null,
@@ -389,7 +390,9 @@ class ChatView extends StatelessWidget {
                                 ),
                                 child: controller.room.isExtinct
                                     ? ElevatedButton.icon(
-                                        icon: const Icon(Icons.chevron_right),
+                                        icon: const Icon(
+                                          Symbols.chevron_right_rounded,
+                                        ),
                                         label: Text(
                                           L10n.of(context).enterNewChat,
                                         ),
@@ -427,7 +430,7 @@ class ChatView extends StatelessWidget {
                                                             .error,
                                                       ),
                                                       icon: const Icon(
-                                                        Icons.cancel_outlined,
+                                                        Symbols.cancel_rounded,
                                                       ),
                                                       onPressed:
                                                           controller.leaveChat,
@@ -447,7 +450,7 @@ class ChatView extends StatelessWidget {
                                                             ),
                                                       ),
                                                       icon: const Icon(
-                                                        Icons.check_outlined,
+                                                        Symbols.check_rounded,
                                                       ),
                                                       onPressed:
                                                           controller.joinChat,
@@ -476,7 +479,7 @@ class ChatView extends StatelessWidget {
                                                             .error,
                                                       ),
                                                       icon: const Icon(
-                                                        Icons.archive_outlined,
+                                                        Symbols.archive_rounded,
                                                       ),
                                                       onPressed:
                                                           controller.leaveChat,
@@ -494,7 +497,7 @@ class ChatView extends StatelessWidget {
                                                             ),
                                                       ),
                                                       icon: const Icon(
-                                                        Icons.forum_outlined,
+                                                        Symbols.forum_rounded,
                                                       ),
                                                       onPressed: controller
                                                           .recreateChat,
@@ -524,7 +527,10 @@ class ChatView extends StatelessWidget {
                           Container(
                             color: theme.scaffoldBackgroundColor.withAlpha(230),
                             alignment: Alignment.center,
-                            child: const Icon(Icons.upload_outlined, size: 100),
+                            child: const Icon(
+                              Symbols.upload_rounded,
+                              size: 100,
+                            ),
                           ),
                       ],
                     ),

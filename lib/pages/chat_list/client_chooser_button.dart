@@ -8,6 +8,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' hide Result;
 
@@ -34,7 +35,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.newGroup,
         child: Row(
           children: [
-            const Icon(Icons.group_add_outlined),
+            const Icon(Symbols.group_add_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).createGroup),
           ],
@@ -44,7 +45,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.setStatus,
         child: Row(
           children: [
-            const Icon(Icons.edit_outlined),
+            const Icon(Symbols.edit_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).setStatus),
           ],
@@ -54,7 +55,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.invite,
         child: Row(
           children: [
-            Icon(Icons.adaptive.share_outlined),
+            Icon(Symbols.share_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).inviteContact),
           ],
@@ -64,7 +65,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.archive,
         child: Row(
           children: [
-            const Icon(Icons.archive_outlined),
+            const Icon(Symbols.archive_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).archive),
           ],
@@ -74,7 +75,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.settings,
         child: Row(
           children: [
-            const Icon(Icons.settings_outlined),
+            const Icon(Symbols.settings_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).settings),
           ],
@@ -129,7 +130,7 @@ class ClientChooserButton extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined),
+                          icon: const Icon(Symbols.edit_rounded),
                           onPressed: () => controller.editBundlesForAccount(
                             client.userID,
                             bundle,
@@ -146,7 +147,7 @@ class ClientChooserButton extends StatelessWidget {
         value: SettingsAction.addAccount,
         child: Row(
           children: [
-            const Icon(Icons.person_add_outlined),
+            const Icon(Symbols.person_add_rounded),
             const SizedBox(width: 18),
             Text(L10n.of(context).addAccount),
           ],

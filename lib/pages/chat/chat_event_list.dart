@@ -18,6 +18,7 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extensi
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/mxc_image_viewer.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
@@ -146,7 +147,7 @@ class ChatEventList extends StatelessWidget {
                           : controller.requestFuture,
                       icon: timeline.isRequestingFuture
                           ? CircularProgressIndicator.adaptive(strokeWidth: 2)
-                          : const Icon(Icons.arrow_downward_outlined),
+                          : const Icon(Symbols.arrow_downward_rounded),
                       label: Text(L10n.of(context).loadMore),
                     ),
                   );
@@ -185,7 +186,7 @@ class ChatEventList extends StatelessWidget {
                             : controller.requestHistory,
                         icon: timeline.isRequestingHistory
                             ? CircularProgressIndicator.adaptive(strokeWidth: 2)
-                            : const Icon(Icons.arrow_upward_outlined),
+                            : const Icon(Symbols.arrow_upward_rounded),
                         label: Text(L10n.of(context).loadMore),
                       ),
                     );

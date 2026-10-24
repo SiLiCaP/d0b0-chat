@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/member_actions_popup_menu_button.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -48,7 +49,7 @@ class ParticipantListItem extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 2.0),
               child: Icon(
-                Icons.verified,
+                Symbols.verified_rounded,
                 color: Theme.of(context).colorScheme.primary,
                 size: 16,
               ),

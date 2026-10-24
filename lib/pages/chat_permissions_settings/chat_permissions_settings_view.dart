@@ -9,6 +9,7 @@ import 'package:fluffychat/pages/chat_permissions_settings/permission_list_tile.
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -50,7 +51,7 @@ class ChatPermissionsSettingsView extends StatelessWidget {
             return Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.info_outlined),
+                  leading: const Icon(Symbols.info_rounded),
                   subtitle: Text(L10n.of(context).chatPermissionsDescription),
                 ),
                 Divider(color: theme.dividerColor),

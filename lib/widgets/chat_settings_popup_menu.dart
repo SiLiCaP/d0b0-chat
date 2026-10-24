@@ -9,6 +9,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -93,7 +94,7 @@ class ChatSettingsPopupMenuState extends State<ChatSettingsPopupMenu> {
                 value: ChatPopupMenuActions.details,
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded),
+                    const Icon(Symbols.info_rounded),
                     const SizedBox(width: 12),
                     Text(L10n.of(context).chatDetails),
                   ],
@@ -104,7 +105,7 @@ class ChatSettingsPopupMenuState extends State<ChatSettingsPopupMenu> {
                 value: ChatPopupMenuActions.search,
                 child: Row(
                   children: [
-                    const Icon(Icons.search_outlined),
+                    const Icon(Symbols.search_rounded),
                     const SizedBox(width: 12),
                     Text(L10n.of(context).search),
                   ],
@@ -115,7 +116,7 @@ class ChatSettingsPopupMenuState extends State<ChatSettingsPopupMenu> {
                 value: ChatPopupMenuActions.encryption,
                 child: Row(
                   children: [
-                    const Icon(Icons.lock_outlined),
+                    const Icon(Symbols.lock_rounded),
                     const SizedBox(width: 12),
                     Text(L10n.of(context).encryption),
                   ],
@@ -125,7 +126,7 @@ class ChatSettingsPopupMenuState extends State<ChatSettingsPopupMenu> {
               value: ChatPopupMenuActions.leave,
               child: Row(
                 children: [
-                  const Icon(Icons.delete_outlined),
+                  const Icon(Symbols.delete_rounded),
                   const SizedBox(width: 12),
                   Text(L10n.of(context).leave),
                 ],

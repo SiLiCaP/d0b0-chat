@@ -63,6 +63,7 @@ dependencies:
   local_auth: ^3.0.2
   lottie: ^3.6.1
   managed_configurations: ^1.2.0
+  material_symbols_icons: ^4.2960.0
   material_ui: 1.6.0
   matrix: ^14.1.0
   media_kit_libs_linux: ^1.2.1
@@ -118,6 +119,23 @@ flutter:
     - assets/logo/mini/
     - assets/sounds/
     - assets/vodozemac/0.8.1/
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
 
 hooks:
   user_defines:

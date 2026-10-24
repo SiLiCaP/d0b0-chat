@@ -11,6 +11,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -61,7 +62,7 @@ class SettingsHomeserverView extends StatelessWidget {
                   final data = snapshot.data;
                   if (error != null) {
                     return ListTile(
-                      leading: const Icon(Icons.error_outlined),
+                      leading: const Icon(Symbols.error_rounded),
                       title: Text(
                         error.toLocalizedString(
                           context,
@@ -80,7 +81,7 @@ class SettingsHomeserverView extends StatelessWidget {
                   final contacts = data.contacts;
                   if (supportPage == null && contacts == null) {
                     return ListTile(
-                      leading: const Icon(Icons.error_outlined),
+                      leading: const Icon(Symbols.error_rounded),
                       title: Text(
                         L10n.of(context).noContactInformationProvided,
                         style: const TextStyle(fontSize: 14),
@@ -131,7 +132,7 @@ class SettingsHomeserverView extends StatelessWidget {
                       mainAxisAlignment: .center,
                       children: [
                         Icon(
-                          Icons.error_outlined,
+                          Symbols.error_rounded,
                           color: theme.colorScheme.error,
                         ),
                         const SizedBox(height: 12),
@@ -190,7 +191,7 @@ class SettingsHomeserverView extends StatelessWidget {
                       mainAxisAlignment: .center,
                       children: [
                         Icon(
-                          Icons.error_outlined,
+                          Symbols.error_rounded,
                           color: theme.colorScheme.error,
                         ),
                         const SizedBox(height: 12),
