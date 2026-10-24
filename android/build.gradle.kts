@@ -14,6 +14,10 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    // Several plugins still compile with Java 8 source/target; hide javac's "obsolete option" noise.
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:-options")
+    }
 }
 
 tasks.register<Delete>("clean") {
