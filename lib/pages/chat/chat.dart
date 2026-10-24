@@ -1920,7 +1920,7 @@ class ChatController extends State<ChatPageWithRoom>
                     !displayChatDetailsColumn
                 ? const SizedBox(height: double.infinity, width: 0)
                 : Container(
-                    width: FluffyThemes.columnWidth,
+                    width: FluffyThemes.detailsPaneWidth,
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
                       border: Border(

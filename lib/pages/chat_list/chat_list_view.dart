@@ -5,10 +5,12 @@
 
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
-import 'package:fluffychat/pages/chat_list/navigation_rail.dart';
+import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
+import 'package:fluffychat/pages/chat_list/new_sheet.dart';
 import 'package:fluffychat/pages/chat_list/start_chat_fab.dart';
 import 'package:fluffychat/utils/stream_extension.dart';
 import 'package:fluffychat/widgets/d0b0/nav_pill.dart';
+import 'package:fluffychat/widgets/d0b0/nav_rail.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -22,8 +24,7 @@ class ChatListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isColumnMode = FluffyThemes.isColumnMode(context);
-    final theme = Theme.of(context);
+    final hasRail = FluffyThemes.hasNavRail(context);
     return PopScope(
       canPop:
           !controller.isSearchMode &&
@@ -45,18 +46,23 @@ class ChatListView extends StatelessWidget {
       },
       child: Row(
         children: [
-          // Wide windows keep the rail; on phones Spaces is a tab.
-          if (isColumnMode) ...[
-            Material(
-              color: theme.colorScheme.surface,
-              child: SpacesNavigationRail(
-                activeSpaceId: controller.activeSpaceId,
-                onGoToChats: controller.clearActiveSpace,
-                onGoToSpaceId: controller.setActiveSpace,
+          // From medium windows up the rail replaces the nav pill.
+          if (hasRail)
+            StreamBuilder(
+              stream: Matrix.of(context).client.onSync.stream
+                  .where((s) => s.hasRoomUpdate)
+                  .rateLimit(const Duration(seconds: 1)),
+              builder: (context, _) => D0b0NavRail(
+                current: controller.homeTab,
+                onSelect: controller.setHomeTab,
+                spacesUnread: _HomeNavPill._anySpaceUnread(
+                  Matrix.of(context).client,
+                ),
+                onNewChat: () =>
+                    showNewSheet(context, onJoinSpace: controller.startSearch),
+                account: ClientChooserButton(controller),
               ),
             ),
-            Container(width: 1, color: theme.dividerColor),
-          ],
           Expanded(
             child: GestureDetector(
               onTap: FocusManager.instance.primaryFocus?.unfocus,
@@ -64,7 +70,7 @@ class ChatListView extends StatelessWidget {
               behavior: HitTestBehavior.translucent,
               child: Scaffold(
                 extendBody: true,
-                body: isColumnMode || controller.isSearchMode
+                body: hasRail || controller.isSearchMode
                     ? ChatListViewBody(controller)
                     : Stack(
                         children: [
@@ -72,14 +78,14 @@ class ChatListView extends StatelessWidget {
                           const D0b0NavFade(),
                         ],
                       ),
-                bottomNavigationBar: isColumnMode || controller.isSearchMode
+                bottomNavigationBar: hasRail || controller.isSearchMode
                     ? null
                     : _HomeNavPill(controller),
                 floatingActionButton:
                     !controller.isSearchMode &&
                         controller.activeSpaceId == null &&
                         controller.homeTab == HomeTab.chats &&
-                        !isColumnMode
+                        !hasRail
                     ? ValueListenableBuilder(
                         valueListenable: controller.fabExtended,
                         builder: (context, extended, _) => StartChatFab(

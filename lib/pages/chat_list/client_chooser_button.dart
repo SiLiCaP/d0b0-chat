@@ -7,6 +7,7 @@ import 'package:async/async.dart';
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/qr_code_viewer.dart';
@@ -59,15 +60,9 @@ class ClientChooserButton extends StatelessWidget {
 
   Future<void> _showAccountSheet(BuildContext context) {
     final router = GoRouter.of(context);
-    return showModalBottomSheet<void>(
+    return showD0b0Sheet<void>(
       context: context,
       isScrollControlled: true,
-      sheetAnimationStyle: const AnimationStyle(
-        duration: D0b0Motion.move,
-        curve: D0b0Motion.overshoot,
-        reverseDuration: D0b0Motion.state,
-        reverseCurve: D0b0Motion.exit,
-      ),
       builder: (sheetContext) {
         void close() => Navigator.of(sheetContext).pop();
         return _AccountSheet(

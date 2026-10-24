@@ -3597,5 +3597,22 @@
     "@appearance": {
         "type": "String",
         "placeholders": {}
+    },
+    "searchShortcutHint": "Search · Ctrl K",
+    "@searchShortcutHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "composerDesktopHint": "Message {name} · Enter to send, Shift+Enter for a new line",
+    "@composerDesktopHint": {
+        "type": "String",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "detailsPane": "Details",
+    "@detailsPane": {
+        "type": "String",
+        "placeholders": {}
     }
 }

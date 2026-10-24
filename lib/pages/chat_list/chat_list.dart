@@ -376,6 +376,18 @@ class ChatListController extends State<ChatList>
     }
   }
 
+  /// Ctrl/⌘K opens search from anywhere in the app.
+  bool _onKey(KeyEvent event) {
+    if (event is! KeyDownEvent || event.logicalKey != LogicalKeyboardKey.keyK) {
+      return false;
+    }
+    final keyboard = HardwareKeyboard.instance;
+    if (!keyboard.isControlPressed && !keyboard.isMetaPressed) return false;
+    if (homeTab != HomeTab.chats) setHomeTab(HomeTab.chats);
+    startSearch();
+    return true;
+  }
+
   HomeTab homeTab = HomeTab.chats;
 
   void setHomeTab(HomeTab tab) {
@@ -495,6 +507,7 @@ class ChatListController extends State<ChatList>
   @override
   void initState() {
     homeTab = _tabFromQuery(widget.initialTab);
+    HardwareKeyboard.instance.addHandler(_onKey);
     _initReceiveSharingIntent();
 
     scrollController.addListener(_onScroll);
@@ -566,6 +579,7 @@ class ChatListController extends State<ChatList>
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
     _intentDataStreamSubscription?.cancel();
     _intentFileStreamSubscription?.cancel();
     _callEventSubscription?.cancel();

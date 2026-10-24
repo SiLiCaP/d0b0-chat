@@ -95,9 +95,14 @@ class ChatDetailsView extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            leading:
-                controller.widget.embeddedCloseButton ??
-                const Center(child: BackButton()),
+            // As a pane the title leads and the close button ends the bar.
+            automaticallyImplyLeading: false,
+            leading: controller.widget.embeddedCloseButton == null
+                ? const Center(child: BackButton())
+                : null,
+            titleSpacing: controller.widget.embeddedCloseButton == null
+                ? null
+                : 24,
             actions: <Widget>[
               if (subtitleId.isNotEmpty)
                 IconButton(
@@ -107,9 +112,14 @@ class ChatDetailsView extends StatelessWidget {
                 ),
               if (controller.widget.embeddedCloseButton == null)
                 ChatSettingsPopupMenu(room, false),
+              ?controller.widget.embeddedCloseButton,
               const SizedBox(width: 4),
             ],
-            title: Text(l10n.chatDetails),
+            title: Text(
+              controller.widget.embeddedCloseButton != null
+                  ? l10n.detailsPane
+                  : l10n.chatDetails,
+            ),
           ),
           body: MaxWidthBody(
             child: ListView(
@@ -133,7 +143,9 @@ class ChatDetailsView extends StatelessWidget {
                           toneSeed: room.id,
                           isRoom: !isDirect,
                           presenceUserId: directChatMatrixID,
-                          size: 96,
+                          size: controller.widget.embeddedCloseButton != null
+                              ? 80
+                              : 96,
                           onTap: roomAvatar != null
                               ? () => showDialog(
                                   context: context,
