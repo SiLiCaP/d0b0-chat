@@ -23,10 +23,14 @@ class VideoMessageRecording {
   final Duration duration;
   final Size? size;
 
+  /// Sent as the video's body, so other clients show it as text (MSC2530).
+  final String? caption;
+
   const VideoMessageRecording({
     required this.path,
     required this.duration,
     this.size,
+    this.caption,
   });
 }
 
@@ -170,6 +174,7 @@ class VideoMessageRecorderController extends State<VideoMessageRecorder>
 
   @override
   void dispose() {
+    captionController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _ticker.dispose();
     _renderProgressSub?.cancel();
@@ -566,6 +571,7 @@ class VideoMessageRecorderController extends State<VideoMessageRecorder>
           path: path,
           duration: videoDuration,
           size: videoSize,
+          caption: _caption,
         ),
       );
       return;
@@ -618,8 +624,16 @@ class VideoMessageRecorderController extends State<VideoMessageRecorder>
         path: outputPath,
         duration: trimmedDuration,
         size: videoSize,
+        caption: _caption,
       ),
     );
+  }
+
+  final TextEditingController captionController = TextEditingController();
+
+  String? get _caption {
+    final text = captionController.text.trim();
+    return text.isEmpty ? null : text;
   }
 
   @override

@@ -1044,9 +1044,15 @@ class ChatController extends State<ChatPageWithRoom>
       }
       try {
         try {
+          final caption = recording.caption;
           final eventId = await room.sendFileEvent(
             file,
             thumbnail: thumbnail,
+            // With a caption the body carries it and the filename the name,
+            // so other clients show an ordinary video with text.
+            extraContent: caption == null
+                ? null
+                : {'body': caption, 'filename': file.name},
             inReplyTo: inReplyTo,
             threadRootEventId: threadRootEventId,
             threadLastEventId: threadLastEventId,

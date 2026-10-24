@@ -46,7 +46,7 @@ abstract class D0b0Palette {
   static const scrim = Color(0xB80F1A12);
 
   /// Glass pills over footage: Night at 62 %.
-  static const glass = Color(0x9E0F1A12);
+  static const glass = Color(0x9E0A130D);
 }
 
 abstract class D0b0Theme {

@@ -3614,5 +3614,10 @@
     "@detailsPane": {
         "type": "String",
         "placeholders": {}
+    },
+    "addCaption": "Add a caption",
+    "@addCaption": {
+        "type": "String",
+        "placeholders": {}
     }
 }
