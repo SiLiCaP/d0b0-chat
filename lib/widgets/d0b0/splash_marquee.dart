@@ -14,19 +14,23 @@ import 'package:flutter/widgets.dart';
 /// the next bowl), drawn as one column that rises slowly up the screen
 /// while the app loads. It fades and blurs out at the top and bottom.
 ///
+/// It starts as the single mark the native splash shows; copies then grow
+/// out above and below it, and the chain eases into motion. On [exit] the
+/// background goes first, leaving the chain over the app, then the chain.
+///
 /// Works without a MaterialApp above it, so it can run before the app
 /// itself is built.
 class D0b0SplashMarquee extends StatefulWidget {
   final Color background;
   final Color color;
 
-  /// When the app is ready the chain speeds up and rises away.
-  final bool exiting;
+  /// Runs from 0 to 1 while the splash hands over to the app.
+  final Animation<double>? exit;
 
   const D0b0SplashMarquee({
     this.background = D0b0Palette.deep,
     this.color = D0b0Palette.mint,
-    this.exiting = false,
+    this.exit,
     super.key,
   });
 
@@ -42,6 +46,20 @@ class D0b0SplashMarquee extends StatefulWidget {
   /// side of the column.
   static const Size bandSize = Size(240, 760);
 
+  /// The single mark the splash starts from: the size of the mark in
+  /// Android 12+'s system splash icon (measured on a Pixel 6 Pro), so the
+  /// system splash hands over without a jump. It grows to [columnWidth]
+  /// while the copies appear.
+  static const double startWidth = 110;
+
+  /// Android 12+ fades its icon splash out after Flutter's first frame;
+  /// the intro waits for it so it is never played unseen.
+  static const Duration systemSplashExit = Duration(milliseconds: 300);
+
+  /// During the exit the background fades over the first part, the chain
+  /// over the rest.
+  static const double exitBackgroundShare = 0.45;
+
   @override
   State<D0b0SplashMarquee> createState() => _D0b0SplashMarqueeState();
 }
@@ -52,79 +70,140 @@ class _D0b0SplashMarqueeState extends State<D0b0SplashMarquee>
   static final double _cruise =
       1000 / D0b0SplashMarquee.periodDuration.inMilliseconds;
 
-  /// The static first frame comes to life: from rest to cruising speed.
+  /// The single mark holds for a beat before the copies appear.
+  static const Duration _hold = Duration(milliseconds: 200);
+
+  /// The mark grows to chain size while copies grow out above and below.
+  static const Duration _grow = Duration(milliseconds: 1100);
+
+  /// Then the chain eases from rest to cruising speed.
   static const Duration _rampUp = Duration(milliseconds: 700);
 
   /// Leaving, the chain picks up to this many times its cruising speed.
-  static const double _exitBoost = 5;
-  static const Duration _exitRamp = Duration(milliseconds: 500);
+  static const double _exitBoost = 4;
 
   /// Position in periods; 0 is the first frame the native splash shows.
   final ValueNotifier<double> _phase = ValueNotifier(0);
+
+  /// 0: only the centre mark; 1: the whole chain.
+  final ValueNotifier<double> _intro = ValueNotifier(0);
+
   late final Ticker _ticker = createTicker(_tick);
   Duration _last = Duration.zero;
-  Duration? _exitStart;
 
   void _tick(Duration elapsed) {
     final dt = (elapsed - _last).inMicroseconds / 1e6;
     _last = elapsed;
+
+    final growing = elapsed - _hold;
+    _intro.value = (growing.inMicroseconds / _grow.inMicroseconds).clamp(
+      0.0,
+      1.0,
+    );
+
+    final moving = growing - _grow;
     var speed =
         _cruise *
         Curves.easeInOutCubic.transform(
-          (elapsed.inMicroseconds / _rampUp.inMicroseconds).clamp(0.0, 1.0),
+          (moving.inMicroseconds / _rampUp.inMicroseconds).clamp(0.0, 1.0),
         );
-    final exitStart = _exitStart;
-    if (exitStart != null) {
-      final t =
-          ((elapsed - exitStart).inMicroseconds / _exitRamp.inMicroseconds)
-              .clamp(0.0, 1.0);
-      speed += _cruise * (_exitBoost - 1) * Curves.easeInCubic.transform(t);
+    final exit = widget.exit?.value ?? 0;
+    if (exit > 0) {
+      speed += _cruise * (_exitBoost - 1) * Curves.easeIn.transform(exit);
     }
     _phase.value = (_phase.value + speed * dt) % 1;
   }
 
+  /// Whether the first frame is on screen and the system splash is gone.
+  bool _visible = false;
+
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.waitUntilFirstFrameRasterized
+        .then((_) => Future.delayed(D0b0SplashMarquee.systemSplashExit))
+        .then((_) {
+          if (!mounted) return;
+          _visible = true;
+          _startIfAllowed();
+        });
+  }
+
+  void _startIfAllowed() {
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (reduceMotion) {
       if (_ticker.isActive) _ticker.stop();
-    } else if (!_ticker.isActive) {
+      _intro.value = 1;
+    } else if (_visible && !_ticker.isActive) {
       _last = Duration.zero;
       _ticker.start();
     }
   }
 
   @override
-  void didUpdateWidget(D0b0SplashMarquee oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.exiting && !oldWidget.exiting) _exitStart = _last;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _startIfAllowed();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     _phase.dispose();
+    _intro.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: widget.background,
-    child: Center(
-      child: SplashBand(phase: _phase, color: widget.color),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final band = Center(
+      child: SplashBand(phase: _phase, intro: _intro, color: widget.color),
+    );
+    final exit = widget.exit;
+    if (exit == null) {
+      return ColoredBox(color: widget.background, child: band);
+    }
+    const split = D0b0SplashMarquee.exitBackgroundShare;
+    return AnimatedBuilder(
+      animation: exit,
+      child: band,
+      builder: (context, band) {
+        final t = exit.value;
+        // The background goes first, then the chain.
+        final background =
+            1 - Curves.easeInOut.transform((t / split).clamp(0.0, 1.0));
+        final chain =
+            1 -
+            Curves.easeIn.transform(
+              ((t - split) / (1 - split)).clamp(0.0, 1.0),
+            );
+        return Stack(
+          fit: StackFit.expand,
+          textDirection: TextDirection.ltr,
+          children: [
+            Opacity(
+              opacity: background,
+              child: ColoredBox(color: widget.background),
+            ),
+            Opacity(opacity: chain, child: band),
+          ],
+        );
+      },
+    );
+  }
 }
 
 /// The chain at its fixed size with its faded, blurred ends, on a
-/// transparent background. [phase] 0 is the first frame.
+/// transparent background. [phase] 0 with [intro] 0 is the first frame:
+/// the single mark.
 class SplashBand extends StatelessWidget {
   final ValueListenable<double> phase;
+  final ValueListenable<double> intro;
   final Color color;
 
   const SplashBand({
     required this.phase,
+    this.intro = const AlwaysStoppedAnimation(1),
     this.color = D0b0Palette.mint,
     super.key,
   });
@@ -133,7 +212,7 @@ class SplashBand extends StatelessWidget {
   Widget build(BuildContext context) {
     final chain = RepaintBoundary(
       child: CustomPaint(
-        painter: _ChainPainter(phase: phase, color: color),
+        painter: _ChainPainter(phase: phase, intro: intro, color: color),
         size: D0b0SplashMarquee.bandSize,
       ),
     );
@@ -195,27 +274,61 @@ class SplashBand extends StatelessWidget {
 
 class _ChainPainter extends CustomPainter {
   final ValueListenable<double> phase;
+  final ValueListenable<double> intro;
   final Color color;
 
-  _ChainPainter({required this.phase, required this.color})
-    : super(repaint: phase);
+  _ChainPainter({required this.phase, required this.intro, required this.color})
+    : super(repaint: Listenable.merge([phase, intro]));
+
+  /// The single mark grows to chain size over this much of the intro.
+  static const double _zoomShare = 0.4;
+
+  /// The first copies start this far into the intro.
+  static const double _copiesStart = 0.2;
+
+  /// Each ring of copies starts this much of the intro after the previous.
+  static const double _stagger = 0.12;
+
+  /// How much of the intro one copy takes to grow in.
+  static const double _growShare = 0.45;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const width = D0b0SplashMarquee.columnWidth;
-    const scale = width / D0b0MarkPath.width;
-    const period = D0b0MarkPath.period * scale;
+    final zoom = Curves.easeInOutCubic.transform(
+      (intro.value / _zoomShare).clamp(0.0, 1.0),
+    );
+    final width = ui.lerpDouble(
+      D0b0SplashMarquee.startWidth,
+      D0b0SplashMarquee.columnWidth,
+      zoom,
+    )!;
+    final scale = width / D0b0MarkPath.width;
+    final period = D0b0MarkPath.period * scale;
     final left = (size.width - width) / 2;
     // Rises steadily, one d + b period per cycle.
     final offset = -phase.value * period;
-    final paint = Paint()..color = color;
-    canvas.clipRect(Offset.zero & size);
-    final first = -((size.height / 2) / period).ceil() - 2;
-    final last = ((size.height / 2) / period).ceil() + 2;
     final centre = size.height / 2 - D0b0MarkPath.height * scale / 2;
-    for (var i = first; i <= last; i++) {
+    canvas.clipRect(Offset.zero & size);
+    final reach = ((size.height / 2) / period).ceil() + 2;
+    for (var i = -reach; i <= reach; i++) {
+      final distance = i.abs();
+      // The centre mark is there from the start; copies grow out from
+      // their inner neighbour, nearest first, with a little overshoot.
+      final grow = distance == 0
+          ? 1.0
+          : ((intro.value - _copiesStart - (distance - 1) * _stagger) /
+                    _growShare)
+                .clamp(0.0, 1.0);
+      if (grow == 0) continue;
+      final travel = D0b0Motion.overshoot.transform(grow);
+      final from = (i - i.sign) * period;
+      final y = centre + from + (i * period - from) * travel + offset;
+      final paint = Paint()
+        ..color = color.withValues(
+          alpha: color.a * Curves.easeOut.transform(grow),
+        );
       canvas.save();
-      canvas.translate(left, centre + i * period + offset);
+      canvas.translate(left, y);
       canvas.scale(scale);
       canvas.drawPath(D0b0MarkPath.d, paint);
       canvas.drawPath(D0b0MarkPath.b, paint);
@@ -224,5 +337,8 @@ class _ChainPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChainPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(_ChainPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.phase != phase ||
+      oldDelegate.intro != intro;
 }

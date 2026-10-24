@@ -42,7 +42,12 @@ void main() {
           key: key,
           child: const ColoredBox(
             color: D0b0Palette.deep,
-            child: SplashBand(phase: AlwaysStoppedAnimation(0)),
+            // The first frame: the single centre mark, before the copies
+            // grow out of it.
+            child: SplashBand(
+              phase: AlwaysStoppedAnimation(0),
+              intro: AlwaysStoppedAnimation(0),
+            ),
           ),
         ),
       ),
