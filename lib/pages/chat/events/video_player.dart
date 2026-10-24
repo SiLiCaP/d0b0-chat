@@ -20,6 +20,7 @@ import 'package:fluffychat/widgets/blur_hash.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/video_download_status.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -188,7 +189,7 @@ class _EventVideoPlayerState extends State<EventVideoPlayer> {
                             duration: FluffyThemes.animationDuration,
                             child: isDownloaded
                                 ? const CircleAvatar(
-                                    child: Icon(Icons.play_arrow_outlined),
+                                    child: Icon(Symbols.play_arrow_rounded),
                                   )
                                 : _VideoDownloadButton(
                                     download: _download,
@@ -322,7 +323,11 @@ class _VideoDownloadButton extends StatelessWidget {
                     backgroundColor: Colors.white.withAlpha(64),
                   ),
                 ),
-                const Icon(Icons.arrow_downward, color: Colors.white, size: 20),
+                const Icon(
+                  Symbols.arrow_downward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ],
             ),
           ),

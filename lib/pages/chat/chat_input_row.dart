@@ -13,6 +13,7 @@ import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -77,7 +78,7 @@ class ChatInputRow extends StatelessWidget {
                         onPressed: controller.deleteErrorEventsAction,
                         child: Row(
                           children: <Widget>[
-                            const Icon(Icons.delete_forever_outlined),
+                            const Icon(Symbols.delete_forever_rounded),
                             Text(L10n.of(context).delete),
                           ],
                         ),
@@ -91,7 +92,7 @@ class ChatInputRow extends StatelessWidget {
                         onPressed: controller.forwardEventsAction,
                         child: Row(
                           children: <Widget>[
-                            const Icon(Icons.keyboard_arrow_left_outlined),
+                            const Icon(Symbols.keyboard_arrow_left_rounded),
                             Text(L10n.of(context).forward),
                           ],
                         ),
@@ -110,7 +111,9 @@ class ChatInputRow extends StatelessWidget {
                                   child: Row(
                                     children: <Widget>[
                                       Text(L10n.of(context).reply),
-                                      const Icon(Icons.keyboard_arrow_right),
+                                      const Icon(
+                                        Symbols.keyboard_arrow_right_rounded,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -124,7 +127,10 @@ class ChatInputRow extends StatelessWidget {
                                     children: <Widget>[
                                       Text(L10n.of(context).tryToSendAgain),
                                       const SizedBox(width: 4),
-                                      const Icon(Icons.send_outlined, size: 16),
+                                      const Icon(
+                                        Symbols.send_rounded,
+                                        size: 16,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -143,7 +149,7 @@ class ChatInputRow extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     child: PopupMenuButton<AddPopupMenuActions>(
                       useRootNavigator: true,
-                      icon: const Icon(Icons.add_circle_outline),
+                      icon: const Icon(Symbols.add_circle_rounded),
                       iconColor: theme.colorScheme.onPrimaryContainer,
                       onSelected: controller.onAddPopupMenuButtonSelected,
                       itemBuilder: (BuildContext context) => [
@@ -156,7 +162,7 @@ class ChatInputRow extends StatelessWidget {
                                     theme.colorScheme.onPrimaryContainer,
                                 foregroundColor:
                                     theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.gps_fixed_outlined),
+                                child: const Icon(Symbols.gps_fixed_rounded),
                               ),
                               title: Text(L10n.of(context).shareLocation),
                               contentPadding: const EdgeInsets.all(0),
@@ -170,7 +176,7 @@ class ChatInputRow extends StatelessWidget {
                                   theme.colorScheme.onPrimaryContainer,
                               foregroundColor:
                                   theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.poll_outlined),
+                              child: const Icon(Symbols.poll_rounded),
                             ),
                             title: Text(L10n.of(context).startPoll),
                             contentPadding: const EdgeInsets.all(0),
@@ -186,7 +192,7 @@ class ChatInputRow extends StatelessWidget {
                                     theme.colorScheme.onPrimaryContainer,
                                 foregroundColor:
                                     theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.videocam_outlined),
+                                child: const Icon(Symbols.videocam_rounded),
                               ),
                               title: Text(L10n.of(context).recordAVideo),
                               contentPadding: const EdgeInsets.all(0),
@@ -200,7 +206,7 @@ class ChatInputRow extends StatelessWidget {
                                     theme.colorScheme.onPrimaryContainer,
                                 foregroundColor:
                                     theme.colorScheme.primaryContainer,
-                                child: const Icon(Icons.camera_alt_outlined),
+                                child: const Icon(Symbols.camera_alt_rounded),
                               ),
                               title: Text(L10n.of(context).takeAPhoto),
                               contentPadding: const EdgeInsets.all(0),
@@ -216,7 +222,7 @@ class ChatInputRow extends StatelessWidget {
                                   theme.colorScheme.onPrimaryContainer,
                               foregroundColor:
                                   theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.movie_outlined),
+                              child: const Icon(Symbols.movie_rounded),
                             ),
                             title: Text(L10n.of(context).sendVideo),
                             contentPadding: const EdgeInsets.all(0),
@@ -230,7 +236,7 @@ class ChatInputRow extends StatelessWidget {
                                   theme.colorScheme.onPrimaryContainer,
                               foregroundColor:
                                   theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.image_outlined),
+                              child: const Icon(Symbols.image_rounded),
                             ),
                             title: Text(L10n.of(context).sendImage),
                             contentPadding: const EdgeInsets.all(0),
@@ -244,7 +250,7 @@ class ChatInputRow extends StatelessWidget {
                                   theme.colorScheme.onPrimaryContainer,
                               foregroundColor:
                                   theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.attachment_outlined),
+                              child: const Icon(Symbols.attachment_rounded),
                             ),
                             title: Text(L10n.of(context).sendFile),
                             contentPadding: const EdgeInsets.all(0),
@@ -262,8 +268,8 @@ class ChatInputRow extends StatelessWidget {
                       color: theme.colorScheme.onPrimaryContainer,
                       icon: Icon(
                         controller.showEmojiPicker
-                            ? Icons.keyboard
-                            : Icons.add_reaction_outlined,
+                            ? Symbols.keyboard_rounded
+                            : Symbols.add_reaction_rounded,
                         key: ValueKey(controller.showEmojiPicker),
                       ),
                       onPressed: controller.emojiPickerAction,
@@ -352,7 +358,7 @@ class ChatInputRow extends StatelessWidget {
                               backgroundColor: theme.bubbleColor,
                               foregroundColor: theme.onBubbleColor,
                             ),
-                            icon: const Icon(Icons.send_outlined),
+                            icon: const Icon(Symbols.send_rounded),
                           ),
                   ),
                 ],

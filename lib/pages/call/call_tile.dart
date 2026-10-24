@@ -7,6 +7,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -87,7 +88,7 @@ class CallTile extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Icon(
-                        Icons.front_hand_outlined,
+                        Symbols.front_hand_rounded,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
@@ -114,18 +115,20 @@ class CallTile extends StatelessWidget {
                       children: [
                         if (audio != null)
                           Icon(
-                            audio?.muted == false ? Icons.mic : Icons.mic_off,
+                            audio?.muted == false
+                                ? Symbols.mic_rounded
+                                : Symbols.mic_off_rounded,
                             size: 12,
                           ),
                         if (this.video?.isScreenShare == true)
-                          Icon(Icons.screen_share_outlined, size: 12),
+                          Icon(Symbols.screen_share_rounded, size: 12),
                         Text(
                           user.calcDisplayname(),
                           maxLines: 1,
                           style: TextStyle(fontSize: 12),
                         ),
                         if (!connected)
-                          Icon(Icons.portable_wifi_off_outlined, size: 12),
+                          Icon(Symbols.portable_wifi_off_rounded, size: 12),
                       ],
                     ),
                   ),

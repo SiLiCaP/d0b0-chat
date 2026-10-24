@@ -44,6 +44,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:mime/mime.dart';
@@ -1846,7 +1847,7 @@ class ChatController extends State<ChatPageWithRoom>
                     child: ChatDetails(
                       roomId: roomId,
                       embeddedCloseButton: IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Symbols.close_rounded),
                         onPressed: toggleDisplayChatDetailsColumn,
                       ),
                     ),

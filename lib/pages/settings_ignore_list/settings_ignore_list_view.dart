@@ -6,6 +6,7 @@
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../widgets/matrix.dart';
@@ -60,7 +61,7 @@ class SettingsIgnoreListView extends StatelessWidget {
                           labelText: L10n.of(context).blockUsername,
                           suffixIcon: IconButton(
                             tooltip: L10n.of(context).block,
-                            icon: const Icon(Icons.add),
+                            icon: const Icon(Symbols.add_rounded),
                             onPressed: () => controller.ignoreUser(context),
                           ),
                         ),
@@ -81,7 +82,7 @@ class SettingsIgnoreListView extends StatelessWidget {
                       title: Text(client.ignoredUsers[i]),
                       trailing: IconButton(
                         tooltip: L10n.of(context).delete,
-                        icon: const Icon(Icons.delete_outlined),
+                        icon: const Icon(Symbols.delete_rounded),
                         onPressed: () => showFutureLoadingDialog(
                           context: context,
                           future: () =>

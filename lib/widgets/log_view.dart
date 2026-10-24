@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -29,11 +30,11 @@ class LogViewerState extends State<LogViewer> {
         leading: BackButton(onPressed: () => context.go('/')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.zoom_in_outlined),
+            icon: const Icon(Symbols.zoom_in_rounded),
             onPressed: () => setState(() => fontSize++),
           ),
           IconButton(
-            icon: const Icon(Icons.zoom_out_outlined),
+            icon: const Icon(Symbols.zoom_out_rounded),
             onPressed: () => setState(() => fontSize--),
           ),
           PopupMenuButton<Level>(

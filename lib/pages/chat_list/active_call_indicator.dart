@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/widgets/pulsating_widget.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -30,8 +31,8 @@ class ActiveCallIndicator extends StatelessWidget {
             children: [
               Icon(
                 switch (room.activeMatrixRtcCallIntent) {
-                  .voice => Icons.video_call_outlined,
-                  _ => Icons.mic_outlined,
+                  .voice => Symbols.video_call_rounded,
+                  _ => Symbols.mic_rounded,
                 },
                 size: 16,
                 color: theme.colorScheme.onError,

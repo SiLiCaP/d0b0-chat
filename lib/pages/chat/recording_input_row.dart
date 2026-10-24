@@ -7,6 +7,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_input_row.dart';
 import 'package:fluffychat/pages/chat/recording_view_model.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class RecordingInputRow extends StatelessWidget {
@@ -36,7 +37,7 @@ class RecordingInputRow extends StatelessWidget {
             width: 48,
             child: IconButton(
               tooltip: L10n.of(context).cancel,
-              icon: const Icon(Icons.delete_outlined),
+              icon: const Icon(Symbols.delete_rounded),
               color: theme.colorScheme.error,
               onPressed: state.cancel,
             ),
@@ -47,7 +48,7 @@ class RecordingInputRow extends StatelessWidget {
               width: 48,
               child: IconButton(
                 tooltip: L10n.of(context).resume,
-                icon: const Icon(Icons.play_circle_outline_outlined),
+                icon: const Icon(Symbols.play_circle_rounded),
                 onPressed: state.resume,
               ),
             )
@@ -57,7 +58,7 @@ class RecordingInputRow extends StatelessWidget {
               width: 48,
               child: IconButton(
                 tooltip: L10n.of(context).pause,
-                icon: const Icon(Icons.pause_circle_outline_outlined),
+                icon: const Icon(Symbols.pause_circle_outline_rounded),
                 onPressed: state.pause,
               ),
             ),
@@ -96,7 +97,7 @@ class RecordingInputRow extends StatelessWidget {
               foregroundColor: theme.onBubbleColor,
             ),
             tooltip: L10n.of(context).sendAudio,
-            icon: const Icon(Icons.send_outlined),
+            icon: const Icon(Symbols.send_rounded),
             onPressed: () => state.stopAndSend(onSend),
           ),
           const SizedBox(width: 4),

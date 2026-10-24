@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/size_string.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:video_player/video_player.dart';
 
@@ -88,7 +89,7 @@ class VideoMessageRecorderView extends StatelessWidget {
                         onPressed: phase == VideoMessageRecorderPhase.rendering
                             ? null
                             : controller.discard,
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Symbols.close_rounded),
                       ),
                     ),
                   ),
@@ -207,7 +208,7 @@ class _RecorderCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.volume_off_outlined,
+                  Symbols.volume_off_rounded,
                   size: 20,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -252,7 +253,7 @@ class _RecorderCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons.videocam_off_outlined,
+                  Symbols.videocam_off_rounded,
                   color: Colors.white,
                   size: 48,
                 ),
@@ -451,7 +452,7 @@ class _Controls extends StatelessWidget {
       iconSize: 28,
       padding: const EdgeInsets.all(12),
       onPressed: busy ? null : controller.discard,
-      icon: const Icon(Icons.delete_outline),
+      icon: const Icon(Symbols.delete_rounded),
     );
 
     final List<Widget> children;
@@ -466,8 +467,8 @@ class _Controls extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           isSelected: controller.muted,
           onPressed: busy ? null : controller.toggleMute,
-          icon: const Icon(Icons.volume_up_outlined),
-          selectedIcon: const Icon(Icons.volume_off_outlined),
+          icon: const Icon(Symbols.volume_up_rounded),
+          selectedIcon: const Icon(Symbols.volume_off_rounded),
         ),
         IconButton.filledTonal(
           tooltip: isPlaying ? l10n.pause : l10n.play,
@@ -475,7 +476,7 @@ class _Controls extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           onPressed: busy ? null : controller.togglePlayback,
           icon: Icon(
-            isPlaying ? Icons.pause_outlined : Icons.play_arrow_outlined,
+            isPlaying ? Symbols.pause_rounded : Symbols.play_arrow_rounded,
           ),
         ),
         IconButton.filled(
@@ -483,13 +484,13 @@ class _Controls extends StatelessWidget {
           iconSize: 28,
           padding: const EdgeInsets.all(12),
           onPressed: busy ? null : controller.send,
-          icon: const Icon(Icons.send_outlined),
+          icon: const Icon(Symbols.send_rounded),
         ),
       ];
     } else {
       final flipIcon = PlatformInfos.isIOS
-          ? Icons.flip_camera_ios_outlined
-          : Icons.flip_camera_android_outlined;
+          ? Symbols.flip_camera_ios_rounded
+          : Symbols.flip_camera_android_rounded;
       children = [
         discardButton,
         FloatingActionButton.large(
@@ -501,7 +502,7 @@ class _Controls extends StatelessWidget {
           backgroundColor: theme.colorScheme.error,
           foregroundColor: theme.colorScheme.onError,
           shape: const CircleBorder(),
-          child: const Icon(Icons.stop_rounded, size: 40),
+          child: const Icon(Symbols.stop_rounded, size: 40),
         ),
         IconButton.filledTonal(
           tooltip: l10n.switchCamera,

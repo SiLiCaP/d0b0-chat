@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 class StartChatFab extends StatelessWidget {
@@ -29,7 +30,7 @@ class StartChatFab extends StatelessWidget {
         curve: FluffyThemes.animationCurve,
         child: extended ? Text(L10n.of(context).newChat) : SizedBox.shrink(),
       ),
-      icon: const Icon(Icons.edit_square),
+      icon: const Icon(Symbols.edit_square_rounded),
     );
   }
 }

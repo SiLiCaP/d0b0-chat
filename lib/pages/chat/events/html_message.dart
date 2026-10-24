@@ -17,6 +17,7 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:highlight/highlight.dart' show highlight;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as parser;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -491,7 +492,9 @@ class HtmlMessage extends StatelessWidget {
                   children: [
                     WidgetSpan(
                       child: Icon(
-                        obscure ? Icons.arrow_right : Icons.arrow_drop_down,
+                        obscure
+                            ? Symbols.arrow_right_rounded
+                            : Symbols.arrow_drop_down_rounded,
                         size: fontSize * 1.2,
                         color: textColor,
                       ),
@@ -672,7 +675,11 @@ class _CollapsibleTextState extends State<_CollapsibleText> {
           child: TextButton.icon(
             onPressed: () => setState(() => _expanded = !_expanded),
             style: TextButton.styleFrom(foregroundColor: widget.linkColor),
-            icon: Icon(_expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+            icon: Icon(
+              _expanded
+                  ? Symbols.arrow_drop_up_rounded
+                  : Symbols.arrow_drop_down_rounded,
+            ),
             label: Text(_expanded ? l10n.showLess : l10n.showMore),
           ),
         ),

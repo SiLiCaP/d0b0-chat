@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -55,26 +56,26 @@ class UserDeviceListItem extends StatelessWidget {
               actions: [
                 AdaptiveModalAction(
                   value: UserDeviceListItemAction.rename,
-                  icon: const Icon(Icons.edit_outlined),
+                  icon: const Icon(Symbols.edit_rounded),
                   label: L10n.of(context).changeDeviceName,
                 ),
                 if (!isOwnDevice && keys != null) ...{
                   AdaptiveModalAction(
                     value: UserDeviceListItemAction.verify,
-                    icon: const Icon(Icons.verified_outlined),
+                    icon: const Icon(Symbols.verified_rounded),
                     label: L10n.of(context).verifyStart,
                   ),
                   if (!keys.blocked)
                     AdaptiveModalAction(
                       value: UserDeviceListItemAction.block,
-                      icon: const Icon(Icons.block_outlined),
+                      icon: const Icon(Symbols.block_rounded),
                       label: L10n.of(context).blockDevice,
                       isDestructive: true,
                     ),
                   if (keys.blocked)
                     AdaptiveModalAction(
                       value: UserDeviceListItemAction.unblock,
-                      icon: const Icon(Icons.block),
+                      icon: const Icon(Symbols.block_rounded),
                       label: L10n.of(context).unblockDevice,
                       isDestructive: true,
                     ),
@@ -82,7 +83,7 @@ class UserDeviceListItem extends StatelessWidget {
                 if (!isOwnDevice)
                   AdaptiveModalAction(
                     value: UserDeviceListItemAction.remove,
-                    icon: const Icon(Icons.delete_outlined),
+                    icon: const Icon(Symbols.delete_rounded),
                     label: L10n.of(context).delete,
                     isDestructive: true,
                   ),

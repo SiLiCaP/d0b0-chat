@@ -11,6 +11,7 @@ import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/pulsating_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -97,7 +98,7 @@ class _IncomingCallDialogState extends State<IncomingCallDialog> {
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
           ),
-          icon: Icon(Icons.call_end_outlined),
+          icon: Icon(Symbols.call_end_rounded),
           onPressed: () => context.pop(false),
         ),
         IconButton(
@@ -108,7 +109,7 @@ class _IncomingCallDialogState extends State<IncomingCallDialog> {
             backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
           ),
-          icon: Icon(Icons.call_outlined),
+          icon: Icon(Symbols.call_rounded),
           onPressed: () => context.pop(true),
         ),
       ],

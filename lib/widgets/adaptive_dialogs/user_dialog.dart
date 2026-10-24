@@ -14,6 +14,7 @@ import 'package:fluffychat/widgets/presence_builder.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -130,8 +131,9 @@ class UserDialog extends StatelessWidget {
                                                 : 1.0,
                                             child: Icon(
                                               copied
-                                                  ? Icons.check_circle
-                                                  : Icons.copy,
+                                                  ? Symbols.check_circle_rounded
+                                                  : Symbols
+                                                        .content_copy_rounded,
                                               size: 12,
                                               color: copied
                                                   ? Colors.green
@@ -199,7 +201,7 @@ class UserDialog extends StatelessWidget {
                 children: [
                   AdaptiveIconTextButton(
                     label: L10n.of(context).block,
-                    icon: Icons.block_outlined,
+                    icon: Symbols.block_rounded,
                     onTap: client.userID == profile.userId
                         ? null
                         : () {
@@ -213,7 +215,7 @@ class UserDialog extends StatelessWidget {
                   ),
                   AdaptiveIconTextButton(
                     label: L10n.of(context).report,
-                    icon: Icons.gavel_outlined,
+                    icon: Symbols.gavel_rounded,
                     onTap: client.userID == profile.userId
                         ? null
                         : () async {
@@ -237,7 +239,7 @@ class UserDialog extends StatelessWidget {
                   ),
                   AdaptiveIconTextButton(
                     label: L10n.of(context).share,
-                    icon: Icons.adaptive.share,
+                    icon: Symbols.share_rounded,
                     onTap: () => FluffyShare.share(
                       'https://matrix.to/#/${profile.userId}',
                       context,

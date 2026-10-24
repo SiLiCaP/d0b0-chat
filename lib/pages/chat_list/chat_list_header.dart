@@ -9,6 +9,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
 import 'package:fluffychat/utils/sync_status_localization.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -77,7 +78,7 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                   ? controller.isSearchMode
                         ? IconButton(
                             tooltip: L10n.of(context).cancel,
-                            icon: const Icon(Icons.close_outlined),
+                            icon: const Icon(Symbols.close_rounded),
                             onPressed: controller.cancelSearch,
                             color: theme.colorScheme.onPrimaryContainer,
                           )
@@ -88,7 +89,7 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                             tooltip: L10n.of(context).search,
                             onPressed: controller.startSearch,
                             icon: Icon(
-                              Icons.search_outlined,
+                              Symbols.search_rounded,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           )
@@ -96,7 +97,7 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                             tooltip: L10n.of(context).displayNavigationRail,
                             onPressed: controller.openNavrail,
                             icon: Icon(
-                              Icons.menu,
+                              Symbols.menu_rounded,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           )
@@ -132,7 +133,7 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                               ),
                               textStyle: const TextStyle(fontSize: 12),
                             ),
-                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            icon: const Icon(Symbols.edit_rounded, size: 16),
                             label: Text(
                               controller.searchServer ??
                                   Matrix.of(context).client.homeserver!.host,

@@ -15,6 +15,7 @@ import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/settings_switch_list_tile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -86,7 +87,7 @@ class SettingsSecurityView extends StatelessWidget {
                     defaultValue: false,
                   ),
                   ListTile(
-                    trailing: const Icon(Icons.chevron_right_outlined),
+                    trailing: const Icon(Symbols.chevron_right_rounded),
                     title: Text(L10n.of(context).blockedUsers),
                     subtitle: Text(
                       L10n.of(context).thereAreCountUsersBlocked(
@@ -128,7 +129,7 @@ class SettingsSecurityView extends StatelessWidget {
                         },
                       ),
                       ListTile(
-                        trailing: const Icon(Icons.lock_reset_outlined),
+                        trailing: const Icon(Symbols.lock_reset_rounded),
                         title: Text(L10n.of(context).resetPin),
                         onTap: controller.setAppLockAction,
                       ),
@@ -185,25 +186,25 @@ class SettingsSecurityView extends StatelessWidget {
                   if (publicMasterKey != null)
                     ListTile(
                       title: Text(L10n.of(context).yourPublicKey),
-                      leading: const Icon(Icons.verified_user_outlined),
+                      leading: const Icon(Symbols.verified_user_rounded),
                       subtitle: SelectableText(
                         publicMasterKey.beautified,
-                        style: const TextStyle(fontFamily: 'RobotoMono'),
+                        style: const TextStyle(fontFamily: 'JetBrains Mono'),
                       ),
                     ),
                   ListTile(
                     title: Text(L10n.of(context).deviceIdentityKey),
-                    leading: const Icon(Icons.mobile_friendly_outlined),
+                    leading: const Icon(Symbols.mobile_friendly_rounded),
                     subtitle: SelectableText(
                       Matrix.of(context).client.fingerprintKey.beautified,
-                      style: const TextStyle(fontFamily: 'RobotoMono'),
+                      style: const TextStyle(fontFamily: 'JetBrains Mono'),
                     ),
                   ),
                   if (capabilities?.mChangePassword?.enabled != false ||
                       error != null)
                     ListTile(
-                      leading: const Icon(Icons.password_outlined),
-                      trailing: const Icon(Icons.chevron_right_outlined),
+                      leading: const Icon(Symbols.password_rounded),
+                      trailing: const Icon(Symbols.chevron_right_rounded),
                       title: Text(L10n.of(context).changePassword),
                       onTap: () =>
                           context.go('/rooms/settings/security/password'),
@@ -211,7 +212,7 @@ class SettingsSecurityView extends StatelessWidget {
                   Divider(color: theme.dividerColor),
                   ListTile(
                     iconColor: Colors.orange,
-                    leading: const Icon(Icons.delete_sweep_outlined),
+                    leading: const Icon(Symbols.delete_sweep_rounded),
                     title: Text(
                       L10n.of(context).dehydrate,
                       style: const TextStyle(color: Colors.orange),
@@ -220,7 +221,7 @@ class SettingsSecurityView extends StatelessWidget {
                   ),
                   ListTile(
                     iconColor: Colors.red,
-                    leading: const Icon(Icons.delete_outlined),
+                    leading: const Icon(Symbols.delete_rounded),
                     title: Text(
                       L10n.of(context).deleteAccount,
                       style: const TextStyle(color: Colors.red),

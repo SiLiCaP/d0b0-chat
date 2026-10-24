@@ -9,6 +9,7 @@ import 'package:fluffychat/utils/beautify_string_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/adaptive_dialog_action.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/dialog_text_field.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -42,7 +43,7 @@ Future<bool> showTrustUserInRoomDialog(BuildContext context, Room room) async {
     builder: (context) => AlertDialog.adaptive(
       title: Center(
         child: Icon(
-          Icons.lock_outlined,
+          Symbols.lock_rounded,
           size: 32,
           color: theme.colorScheme.primary,
         ),

@@ -7,6 +7,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/media_download.dart';
 import 'package:fluffychat/utils/size_string.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Length, progress, size and time left of a [MediaDownload].
@@ -62,7 +63,7 @@ class VideoDownloadStatus extends StatelessWidget {
                   spacing: 4,
                   children: [
                     const Icon(
-                      Icons.videocam_outlined,
+                      Symbols.videocam_rounded,
                       color: Colors.white,
                       size: 16,
                     ),

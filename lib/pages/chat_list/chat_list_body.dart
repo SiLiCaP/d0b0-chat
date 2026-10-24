@@ -14,6 +14,7 @@ import 'package:fluffychat/pages/chat_list/space_view.dart';
 import 'package:fluffychat/utils/stream_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/public_room_dialog.dart';
 import 'package:fluffychat/widgets/avatar.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -84,17 +85,17 @@ class ChatListViewBody extends StatelessWidget {
                 if (controller.isSearchMode) ...[
                   SearchTitle(
                     title: L10n.of(context).publicRooms,
-                    icon: const Icon(Icons.explore_outlined),
+                    icon: const Icon(Symbols.explore_rounded),
                   ),
                   PublicRoomsHorizontalList(publicRooms: publicRooms),
                   SearchTitle(
                     title: L10n.of(context).publicSpaces,
-                    icon: const Icon(Icons.workspaces_outlined),
+                    icon: const Icon(Symbols.workspaces_rounded),
                   ),
                   PublicRoomsHorizontalList(publicRooms: publicSpaces),
                   SearchTitle(
                     title: L10n.of(context).users,
-                    icon: const Icon(Icons.group_outlined),
+                    icon: const Icon(Symbols.group_rounded),
                   ),
                   AnimatedContainer(
                     clipBehavior: Clip.hardEdge,
@@ -179,7 +180,7 @@ class ChatListViewBody extends StatelessWidget {
                 if (controller.isSearchMode)
                   SearchTitle(
                     title: L10n.of(context).chats,
-                    icon: const Icon(Icons.forum_outlined),
+                    icon: const Icon(Symbols.forum_rounded),
                   ),
                 if (client.prevBatch != null &&
                     rooms.isEmpty &&

@@ -17,6 +17,7 @@ import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/settings_switch_list_tile.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'settings_chat.dart';
@@ -155,7 +156,7 @@ class SettingsChatView extends StatelessWidget {
                 onTap: () => context.go('/rooms/settings/chat/emotes'),
                 trailing: const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Icon(Icons.chevron_right_outlined),
+                  child: Icon(Symbols.chevron_right_rounded),
                 ),
               ),
               if (PlatformInfos.isMobile) ...[

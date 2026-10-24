@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -18,12 +19,15 @@ class FileSendStatusIndicator extends StatelessWidget {
         children: [
           switch (fileSendingStatus) {
             FileSendingStatus.generatingThumbnail => Icon(
-              Icons.compress_outlined,
+              Symbols.compress_rounded,
               size: 18,
             ),
-            FileSendingStatus.encrypting => Icon(Icons.lock_outlined, size: 18),
+            FileSendingStatus.encrypting => Icon(
+              Symbols.lock_rounded,
+              size: 18,
+            ),
             FileSendingStatus.uploading => Icon(
-              Icons.upload_outlined,
+              Symbols.upload_rounded,
               size: 18,
             ),
           },

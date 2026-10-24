@@ -13,6 +13,7 @@ import 'package:fluffychat/utils/push_helper.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/settings_switch_list_tile.dart';
 import 'package:flutter/foundation.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 import 'package:unifiedpush/unifiedpush.dart';
@@ -140,7 +141,7 @@ class SettingsNotificationsView extends StatelessWidget {
                     ListTile(
                       title: Text(L10n.of(context).buildDoesNotSupportFirebase),
                       leading: Icon(
-                        Icons.close,
+                        Symbols.close_rounded,
                         color: theme.colorScheme.error,
                       ),
                     ),
@@ -159,7 +160,7 @@ class SettingsNotificationsView extends StatelessWidget {
                                 ).unableToRegisterDeviceForFirebase,
                               ),
                               leading: Icon(
-                                Icons.close,
+                                Symbols.close_rounded,
                                 color: theme.colorScheme.error,
                               ),
                             );
@@ -168,7 +169,7 @@ class SettingsNotificationsView extends StatelessWidget {
                         }
                         return ListTile(
                           title: Text(L10n.of(context).unifiedPushDistributors),
-                          leading: Icon(Icons.info_outlined),
+                          leading: Icon(Symbols.info_rounded),
                           subtitle: SelectableText(distributors.join(', ')),
                           trailing: distributors.length >= 2
                               ? IconButton(
@@ -180,7 +181,7 @@ class SettingsNotificationsView extends StatelessWidget {
                                     onNoDistribDialogDismissed:
                                         () {}, // TODO: Implement me
                                   ).registerAppWithDialog(),
-                                  icon: Icon(Icons.edit_outlined),
+                                  icon: Icon(Symbols.edit_rounded),
                                   style: IconButton.styleFrom(
                                     backgroundColor:
                                         theme.colorScheme.primaryContainer,

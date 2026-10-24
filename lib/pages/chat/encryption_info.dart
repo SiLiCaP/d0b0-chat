@@ -8,6 +8,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -70,7 +71,7 @@ class EncryptionInfo extends StatelessWidget {
                       TextSpan(
                         children: [
                           WidgetSpan(
-                            child: Icon(Icons.lock_person_outlined, size: 13),
+                            child: Icon(Symbols.lock_person_rounded, size: 13),
                           ),
                           TextSpan(text: ' '),
                           TextSpan(

@@ -13,6 +13,7 @@ import 'package:fluffychat/utils/stream_extension.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -64,11 +65,11 @@ class SpacesNavigationRail extends StatelessWidget {
                             onTap: onGoToChats,
                             icon: const Padding(
                               padding: EdgeInsets.all(12.0),
-                              child: Icon(Icons.forum_outlined),
+                              child: Icon(Symbols.forum_rounded),
                             ),
                             selectedIcon: const Padding(
                               padding: EdgeInsets.all(12.0),
-                              child: Icon(Icons.forum),
+                              child: Icon(Symbols.forum_rounded),
                             ),
                             toolTip: L10n.of(context).chats,
                             unreadBadgeFilter: (room) => true,
@@ -81,7 +82,7 @@ class SpacesNavigationRail extends StatelessWidget {
                             onTap: () => context.go('/rooms/newspace'),
                             icon: const Padding(
                               padding: EdgeInsets.all(12.0),
-                              child: Icon(Icons.add),
+                              child: Icon(Symbols.add_rounded),
                             ),
                             toolTip: L10n.of(context).createNewSpace,
                           );
