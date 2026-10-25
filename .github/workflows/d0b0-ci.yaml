@@ -61,6 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/free_up_space
@@ -81,6 +82,15 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
+      - name: Enable FCM push (only when the Firebase secret is configured)
+        # google-services.json for lv.d0b0.chat comes from the GOOGLE_SERVICES_JSON
+        # secret (base64); add-firebase-messaging.sh adds fcm_shared_isolate and
+        # switches the //<GOOGLE_SERVICES> code on. Without the secret the APK keeps
+        # UnifiedPush only. The gateway is our Sygnal at push.d0b0.lv.
+        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+          ./scripts/add-firebase-messaging.sh
       - run: flutter pub get
       - name: Restore release keystore (only when secrets are configured)
         if: ${{ env.KEYSTORE_BASE64 != '' }}
