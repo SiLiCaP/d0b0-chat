@@ -7,7 +7,7 @@ name: fluffychat
 description: Chat with your friends.
 publish_to: none
 # On version bump please also increase the build number (for F-Droid)
-version: 0.2.0+3571
+version: 0.3.0+3572
 
 environment:
   sdk: ">=3.11.1 <4.0.0"
