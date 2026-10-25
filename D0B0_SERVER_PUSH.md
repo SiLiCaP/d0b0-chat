@@ -30,7 +30,8 @@ add later must stay metadata — never message content.
   service-account key live in `/srv/projects/secrets/d0b0.lv/push` on the
   host, never in git. `bash setup.sh` writes `sygnal.yaml` from the key's
   project id and starts it.
-- Sygnal's app id is `lv.d0b0.chat` (= `AppConfig.pushNotificationsAppId`).
+- Sygnal's app key is the glob **`lv.d0b0.chat*`**: the app registers each pusher as `lv.d0b0.chat.<matrix device id>` (`background_push.dart`). With an exact `lv.d0b0.chat` key every push came back "unknown app ID" → rejected → Synapse deleted the pusher.
+- **End-to-end test passed 2026-10-25** (Android, locked phone, app closed).
 - Synapse needs no change: it reaches `push.d0b0.lv` through Cloudflare
   (public addresses), and no outbound IP filter applies.
 
