@@ -1,103 +1,68 @@
 <!--
 SPDX-FileCopyrightText: 2019-Present Christian Kußowski
 SPDX-FileCopyrightText: 2019-Present Contributors to FluffyChat
+SPDX-FileCopyrightText: 2026-Present Contributors to d0b0 chat
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<img src="https://raw.githubusercontent.com/krille-chan/fluffychat/refs/heads/main/assets/logo/img/banner.png">
+<img src="assets/logo/img/banner.png" alt="d0b0 chat">
 
-[FluffyChat](https://fluffychat.im) is an open source, nonprofit and cute [[matrix](https://matrix.org)] client written in [Flutter](https://flutter.dev). The goal of the app is to create an easy to use instant messenger which is open source and accessible for everyone.
+**d0b0 chat** is the [Matrix](https://matrix.org) client for the
+[d0b0.lv](https://d0b0.lv) server — chat, voice and video calls, end-to-end
+encrypted, on Android, iOS, desktop and the web.
 
-### Links:
+## Download
 
-- 🌐 [[Weblate] Translate FluffyChat into your language](https://hosted.weblate.org/projects/fluffychat/)
-- 🌍 [[m] Join the community](https://matrix.to/#/#fluffy-space:matrix.org)
-- 📰 [[Mastodon] Get updates on social media](https://troet.cafe/@krille)
-- 💝 [[Liberapay] Support FluffyChat development](https://de.liberapay.com/KrilleChritzelius)
+[![Android APK](https://img.shields.io/badge/Android-download%20APK-3fd82f?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SiLiCaP/d0b0-chat/releases/latest/download/d0b0-chat-android.apk)
+[![Linux](https://img.shields.io/badge/Linux-x64%20.tar.gz-3fd82f?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/SiLiCaP/d0b0-chat/releases/latest/download/d0b0-chat-linux-x64.tar.gz)
+[![Web](https://img.shields.io/badge/Web-open%20chat.d0b0.lv-3fd82f?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chat.d0b0.lv)
 
-<a href='https://ko-fi.com/krille' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+[![Latest release](https://img.shields.io/github/v/release/SiLiCaP/d0b0-chat?style=flat-square&color=3fd82f)](https://github.com/SiLiCaP/d0b0-chat/releases/latest)
+· every build: [Releases](https://github.com/SiLiCaP/d0b0-chat/releases)
+· iOS and Windows/macOS builds are coming.
 
-### Screenshots:
+The buttons always point at the newest release. On Android, allow installs from
+your browser once, then open the APK.
 
-<img src="https://github.com/krille-chan/fluffychat-website/blob/main/public/img/screenshot_mobile.png?raw=true" height="300">
-<img src="https://github.com/krille-chan/fluffychat-website/blob/main/public/img/screenshot_desktop.png?raw=true" height="300">
+## Features
 
-# Features
+- 📩 Messages, images, files and voice messages
+- 🤙 Voice and video calls (Matrix RTC)
+- 🔔 Push notifications through d0b0's own push gateway
+- 🔐 End-to-end encryption, encrypted chat backup, emoji verification
+- 🌌 Spaces, group chats and moderation
+- 🎨 The d0b0 look — green themes, light and dark
 
-- 📩 Send all kinds of messages, images and files
-- 🤙 Video calls with Matrix RTC
-- 🎙️ Voice messages
-- 📍 Location sharing
-- 🔔 Push notifications
-- 💬 Unlimited private and public group chats
-- 📣 Public channels with thousands of participants
-- 🛠️ Feature rich group moderation including all matrix features
-- 🔍 Discover and join public groups
-- 🎨 Material You design
-- 😄 Custom emotes and stickers
-- 🌌 Spaces
-- 🔐 End to end encryption
-- 🔒 Encrypted chat backup
-- 😀 Emoji verification & cross signing
-... and much more.
+## Build it yourself
 
+You need [Flutter](https://flutter.dev) and [Rust](https://www.rust-lang.org/tools/install).
 
-# Installation
-
-Please visit the website for installation instructions:
-
-- https://fluffychat.im
-
-# Configuration and Mobile Device Management (MDM)
-
-FluffyChat supports configuration via MDM on Android&iOS (since v2.10.0) and via a config.json file on web. You can see the populated configuration for MDM on Android in this file under `/android/app/src/main/res/xml/app_restrictions.xml`.
-An example configuration can be found in the `config.sample.json` file.
-
-# How to build
-
-1. To build FluffyChat you need [Flutter](https://flutter.dev) and [Rust](https://www.rust-lang.org/tools/install)
-
-2. Clone the repo:
-```
-git clone https://github.com/krille-chan/fluffychat.git
-cd fluffychat
-```
-3. Debug on your platform with: `flutter run`
-
-### Web
-
-* Execute once before run or build:
-```bash
-./scripts/prepare-web.sh # To install Vodozemac
+```sh
+git clone https://github.com/SiLiCaP/d0b0-chat.git
+cd d0b0-chat
+flutter run
 ```
 
-* Optionally configure by serving a `config.json` at the same path as fluffychat.
-  An example can be found at `config.sample.json`. All values there are optional.
-  **Please only the values, you really need**. If you e.g. only want
-  to change the default homeserver, then only modify the `defaultHomeserver` key.
+- Web: run `./scripts/prepare-web.sh` once before building.
+- Android push via FCM: see [`D0B0_SERVER_PUSH.md`](D0B0_SERVER_PUSH.md)
+  (needs a `google-services.json`; without it the app builds Google-free and
+  uses UnifiedPush).
+- Releases: GitHub → Actions → **Release** → Run workflow; CI builds and
+  attaches the files.
 
-## How to run integration tests
-
-You need to have docker installed locally! Run the preparation script before every test run:
+Integration tests (Docker needed):
 
 ```sh
 ./scripts/prepare_integration_test.sh
-```
-
-Then run all tests with:
-
-```sh
 flutter test integration_test/mobile_test.dart
 ```
 
+## Based on FluffyChat
 
-# Special thanks
-
-* <a href="https://github.com/fabiyamada">Fabiyamada</a> is a graphics designer and has made the fluffychat logo and the banner. Big thanks for her great designs.
-
-* Also thanks to all translators and testers! With your help, fluffychat is now available in more than 12 languages.
-
-* The Matrix Foundation for making and maintaining the [emoji translations](https://github.com/matrix-org/matrix-spec/blob/main/data-definitions/sas-emoji.json) used for emoji verification, licensed Apache 2.0
-
-* Special thanks to MTRNord, Sorunome and Advocatux.
+d0b0 chat is a fork of [FluffyChat](https://github.com/krille-chan/fluffychat)
+by Christian Kußowski and contributors, licensed AGPL-3.0-or-later — so is
+this fork. Thanks to them, to everyone who translated FluffyChat, and to the
+Matrix Foundation for the
+[emoji translations](https://github.com/matrix-org/matrix-spec/blob/main/data-definitions/sas-emoji.json)
+used for verification (Apache 2.0).

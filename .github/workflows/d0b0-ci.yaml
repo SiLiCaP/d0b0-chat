@@ -195,6 +195,11 @@ jobs:
           for f in d0b0-chat-android-apk/*.apk; do
             cp "$f" "d0b0-chat-${{ github.ref_name }}-$(basename "$f")"
           done
+          # version-less copies: the README's download buttons link to
+          # releases/latest/download/<these names>, which never change
+          cp d0b0-chat-*-app-*.apk d0b0-chat-android.apk
+          cp "d0b0-chat-linux-x64-${{ github.ref_name }}.tar.gz" d0b0-chat-linux-x64.tar.gz
+          cp "d0b0-chat-web-${{ github.ref_name }}.zip" d0b0-chat-web.zip
           ls -la
       - uses: softprops/action-gh-release@v2
         with:
