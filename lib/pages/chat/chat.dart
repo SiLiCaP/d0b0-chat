@@ -24,6 +24,7 @@ import 'package:fluffychat/pages/chat/video_message/video_message_recorder.dart'
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/file_selector.dart';
+import 'package:fluffychat/utils/focus_with_keyboard.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
@@ -1388,7 +1389,7 @@ class ChatController extends State<ChatPageWithRoom>
       replyEvent = replyTo ?? selectedEvents.first;
       selectedEvents.clear();
     });
-    inputFocus.requestFocus();
+    inputFocus.requestFocusWithKeyboard();
   }
 
   Future<void> scrollToEventId(
@@ -1533,7 +1534,7 @@ class ChatController extends State<ChatPageWithRoom>
           );
       if (clearSelection) selectedEvents.clear();
     });
-    inputFocus.requestFocus();
+    inputFocus.requestFocusWithKeyboard();
   }
 
   void editSelectedEventAction() {
