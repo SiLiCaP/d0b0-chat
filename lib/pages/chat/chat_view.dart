@@ -20,6 +20,7 @@ import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart
 import 'package:fluffychat/widgets/chat_settings_popup_menu.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -136,9 +137,15 @@ class ChatView extends StatelessWidget {
                       )
                     : FluffyThemes.isColumnMode(context)
                     ? null
-                    : const Padding(
-                        padding: EdgeInsets.only(left: 4),
-                        child: BackButton(),
+                    : Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        // The chat is the first page of the room's own
+                        // navigator, so a plain BackButton has nothing to
+                        // pop there. Go back like the system back does.
+                        child: BackButton(
+                          onPressed: () =>
+                              GoRouter.of(context).routerDelegate.popRoute(),
+                        ),
                       ),
                 titleSpacing: FluffyThemes.isColumnMode(context) ? 24 : 4,
                 title: ChatAppBarTitle(controller),

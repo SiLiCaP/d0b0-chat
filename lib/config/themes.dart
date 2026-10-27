@@ -119,6 +119,18 @@ abstract class FluffyThemes {
       dividerColor: colorScheme.outlineVariant,
       shadowColor: Colors.transparent,
       splashFactory: NoSplash.splashFactory,
+      // Android's default predictive back transition lets the topmost page of
+      // each navigator take the back swipe for itself. A chat sits in two
+      // nested navigators, so the room page took it and closed the chat past
+      // dialogs and PopScopes above it. This is the same transition without
+      // that, so every back goes through the router, which finds the
+      // topmost route.
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          ...const PageTransitionsTheme().builders,
+          TargetPlatform.android: const FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
       iconTheme: IconThemeData(
         size: 24,
         weight: 500,
