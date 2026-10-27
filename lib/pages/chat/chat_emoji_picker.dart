@@ -12,6 +12,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import 'chat.dart';
+import 'keyboard_tracker.dart';
 
 class ChatEmojiPicker extends StatelessWidget {
   final ChatController controller;
@@ -20,88 +21,104 @@ class ChatEmojiPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AnimatedContainer(
-      duration: FluffyThemes.animationDuration,
-      curve: FluffyThemes.animationCurve,
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(),
-      height: controller.showEmojiPicker
-          ? MediaQuery.sizeOf(context).height / 2
-          : 0,
-      child: controller.showEmojiPicker
-          ? DefaultTabController(
-              length: 2,
-              child: Column(
+    final open =
+        controller.showEmojiPicker || controller.emojiPickerHandingOver;
+    final windowHeight = MediaQuery.sizeOf(context).height;
+    // Rebuilds every frame while the keyboard slides, so the picker content
+    // is built once and passed through.
+    return ValueListenableBuilder(
+      valueListenable: controller.keyboard,
+      builder: (context, insets, child) {
+        // While a keyboard is moving the picker follows it frame by frame;
+        // an animation of its own would lag behind and the composer jumps.
+        final followsKeyboard =
+            insets.keyboard > 0 || controller.emojiPickerHandingOver;
+        return AnimatedContainer(
+          duration: followsKeyboard
+              ? Duration.zero
+              : FluffyThemes.animationDuration,
+          curve: FluffyThemes.animationCurve,
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(),
+          height: open
+              ? emojiPickerHeight(
+                  keyboardHeight: controller.keyboard.keyboardHeight,
+                  insets: insets,
+                  windowHeight: windowHeight,
+                )
+              : 0,
+          child: open ? child : null,
+        );
+      },
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              tabs: [
+                Tab(text: L10n.of(context).emojis),
+                Tab(text: L10n.of(context).stickers),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
                 children: [
-                  TabBar(
-                    tabs: [
-                      Tab(text: L10n.of(context).emojis),
-                      Tab(text: L10n.of(context).stickers),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        EmojiPicker(
-                          onEmojiSelected: controller.onEmojiSelected,
-                          onBackspacePressed: controller.emojiPickerBackspace,
-                          config: Config(
-                            locale: Localizations.localeOf(context),
-                            emojiViewConfig: EmojiViewConfig(
-                              noRecents: const NoRecent(),
-                              backgroundColor:
-                                  theme.colorScheme.onInverseSurface,
-                            ),
-                            bottomActionBarConfig: const BottomActionBarConfig(
-                              enabled: false,
-                            ),
-                            categoryViewConfig: CategoryViewConfig(
-                              backspaceColor: theme.colorScheme.primary,
-                              iconColor: theme.colorScheme.primary.withAlpha(
-                                128,
-                              ),
-                              iconColorSelected: theme.colorScheme.primary,
-                              indicatorColor: theme.colorScheme.primary,
-                              backgroundColor: theme.colorScheme.surface,
-                            ),
-                            skinToneConfig: SkinToneConfig(
-                              dialogBackgroundColor: Color.lerp(
-                                theme.colorScheme.surface,
-                                theme.colorScheme.primaryContainer,
-                                0.75,
-                              )!,
-                              indicatorColor: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        StickerPickerDialog(
-                          room: controller.room,
-                          onSelected: (sticker) async {
-                            final proceed = await showTrustUserInRoomDialog(
-                              context,
-                              controller.room,
-                            );
-                            if (!proceed) return;
-                            controller.room.sendEvent(
-                              {
-                                'body': sticker.body,
-                                'info': sticker.info ?? {},
-                                'url': sticker.url.toString(),
-                              },
-                              type: EventTypes.Sticker,
-                              threadRootEventId: controller.activeThreadId,
-                              threadLastEventId: controller.threadLastEventId,
-                            );
-                            controller.hideEmojiPicker();
-                          },
-                        ),
-                      ],
+                  EmojiPicker(
+                    onEmojiSelected: controller.onEmojiSelected,
+                    onBackspacePressed: controller.emojiPickerBackspace,
+                    config: Config(
+                      locale: Localizations.localeOf(context),
+                      emojiViewConfig: EmojiViewConfig(
+                        noRecents: const NoRecent(),
+                        backgroundColor: theme.colorScheme.onInverseSurface,
+                      ),
+                      bottomActionBarConfig: const BottomActionBarConfig(
+                        enabled: false,
+                      ),
+                      categoryViewConfig: CategoryViewConfig(
+                        backspaceColor: theme.colorScheme.primary,
+                        iconColor: theme.colorScheme.primary.withAlpha(128),
+                        iconColorSelected: theme.colorScheme.primary,
+                        indicatorColor: theme.colorScheme.primary,
+                        backgroundColor: theme.colorScheme.surface,
+                      ),
+                      skinToneConfig: SkinToneConfig(
+                        dialogBackgroundColor: Color.lerp(
+                          theme.colorScheme.surface,
+                          theme.colorScheme.primaryContainer,
+                          0.75,
+                        )!,
+                        indicatorColor: theme.colorScheme.onSurface,
+                      ),
                     ),
+                  ),
+                  StickerPickerDialog(
+                    room: controller.room,
+                    onSelected: (sticker) async {
+                      final proceed = await showTrustUserInRoomDialog(
+                        context,
+                        controller.room,
+                      );
+                      if (!proceed) return;
+                      controller.room.sendEvent(
+                        {
+                          'body': sticker.body,
+                          'info': sticker.info ?? {},
+                          'url': sticker.url.toString(),
+                        },
+                        type: EventTypes.Sticker,
+                        threadRootEventId: controller.activeThreadId,
+                        threadLastEventId: controller.threadLastEventId,
+                      );
+                      controller.hideEmojiPicker();
+                    },
                   ),
                 ],
               ),
-            )
-          : null,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

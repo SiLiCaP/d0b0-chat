@@ -16,6 +16,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/delete_message_dialog.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
+import 'package:fluffychat/pages/chat/keyboard_tracker.dart';
 import 'package:fluffychat/pages/chat/message_actions_sheet.dart';
 import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
@@ -160,8 +161,6 @@ class ChatController extends State<ChatPageWithRoom>
   bool currentlyTyping = false;
   bool dragging = false;
 
-  final GlobalKey inputBarKey = GlobalKey();
-
   void onDragEntered(_) => setState(() => dragging = true);
 
   void onDragExited(_) => setState(() => dragging = false);
@@ -218,6 +217,15 @@ class ChatController extends State<ChatPageWithRoom>
   String pendingText = '';
 
   bool showEmojiPicker = false;
+
+  /// The keyboard inset, followed so the emoji picker can swap places with
+  /// the keyboard at the same height.
+  final KeyboardTracker keyboard = KeyboardTracker();
+
+  /// The picker stays while the keyboard slides in to replace it, shrinking
+  /// as the keyboard grows.
+  bool emojiPickerHandingOver = false;
+  Timer? _handOverTimer;
 
   String? get threadLastEventId {
     final threadId = activeThreadId;
@@ -462,6 +470,7 @@ class ChatController extends State<ChatPageWithRoom>
 
     _loadDraft();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) keyboard.readFrom(View.of(context));
       _shareItems();
       _checkMatrixRtcCallSupport();
       if (widget.action == 'call') {
@@ -489,7 +498,14 @@ class ChatController extends State<ChatPageWithRoom>
         ? lastEventThreadId ?? room.fullyRead
         : '';
     WidgetsBinding.instance.addObserver(this);
+    keyboard.onSettled = _onKeyboardSettled;
     _tryLoadTimeline();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted) return;
+    keyboard.readFrom(View.of(context));
   }
 
   Future<void> _checkMatrixRtcCallSupport() async {
@@ -737,6 +753,9 @@ class ChatController extends State<ChatPageWithRoom>
     scrollController.dispose();
     inputFocus.removeListener(_inputFocusListener);
     inputFocus.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    keyboard.dispose();
+    _handOverTimer?.cancel();
     web.window.removeEventListener('paste', _handleClipboardFilePasteWeb);
     if (currentlyTyping) room.setTyping(false);
     MxcImage.clearCache(widget.room.id);
@@ -1175,17 +1194,45 @@ class ChatController extends State<ChatPageWithRoom>
 
   void emojiPickerAction() {
     if (showEmojiPicker) {
-      inputFocus.requestFocus();
+      inputFocus.requestFocusWithKeyboard();
+      _handOverToKeyboard();
     } else {
       inputFocus.unfocus();
+      _handOverTimer?.cancel();
+      setState(() {
+        showEmojiPicker = true;
+        emojiPickerHandingOver = false;
+      });
     }
-    setState(() => showEmojiPicker = !showEmojiPicker);
   }
 
   void _inputFocusListener() {
-    if (showEmojiPicker && inputFocus.hasFocus) {
-      setState(() => showEmojiPicker = false);
+    if (showEmojiPicker && inputFocus.hasFocus) _handOverToKeyboard();
+  }
+
+  /// Closes the picker for the keyboard. With a soft keyboard the picker
+  /// keeps its space until the keyboard has settled, or gives up after a
+  /// moment if no keyboard comes (hardware keyboard).
+  void _handOverToKeyboard() {
+    final softKeyboard = PlatformInfos.isMobile;
+    setState(() {
+      showEmojiPicker = false;
+      emojiPickerHandingOver = softKeyboard;
+    });
+    _handOverTimer?.cancel();
+    if (softKeyboard) {
+      _handOverTimer = Timer(const Duration(seconds: 1), _endHandOver);
     }
+  }
+
+  void _onKeyboardSettled() {
+    if (keyboard.value.keyboard > 0) _endHandOver();
+  }
+
+  void _endHandOver() {
+    _handOverTimer?.cancel();
+    if (!mounted || !emojiPickerHandingOver) return;
+    setState(() => emojiPickerHandingOver = false);
   }
 
   Future<void> sendLocationAction() async {
@@ -1801,22 +1848,6 @@ class ChatController extends State<ChatPageWithRoom>
 
   Timer? _storeInputTimeoutTimer;
   static const Duration _storeInputTimeout = Duration(milliseconds: 500);
-
-  double? inputBarHeight;
-
-  void updateInputBarHeight() {
-    RenderBox? renderBox;
-    if (inputBarKey.currentContext?.findRenderObject() != null) {
-      renderBox = inputBarKey.currentContext!.findRenderObject() as RenderBox;
-    }
-
-    final height = renderBox?.size.height ?? 72.0;
-    if (height != inputBarHeight) {
-      setState(() {
-        inputBarHeight = height;
-      });
-    }
-  }
 
   void onInputBarChanged(String text) {
     if (_inputTextIsEmpty != text.isEmpty) {
