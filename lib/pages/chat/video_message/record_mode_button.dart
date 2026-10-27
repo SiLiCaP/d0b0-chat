@@ -46,6 +46,9 @@ class _RecordModeButtonState extends State<RecordModeButton>
   );
   bool _switchedThisDrag = false;
   bool _dragging = false;
+
+  /// The knob is snapping back after a drag.
+  bool _settling = false;
   Timer? _labelTimer;
   bool _showLabel = false;
 
@@ -61,8 +64,10 @@ class _RecordModeButtonState extends State<RecordModeButton>
     _labelTimer?.cancel();
     setState(() {
       _dragging = true;
+      _settling = false;
       _showLabel = false;
     });
+    // Also stops a snap-back still running; its future then never completes.
     _knob.value = 0;
     _portal.show();
   }
@@ -76,16 +81,23 @@ class _RecordModeButtonState extends State<RecordModeButton>
     }
   }
 
-  void _onDragEnd(DragEndDetails _) {
-    setState(() => _dragging = false);
-    // The knob snaps back with the overshoot curve; the label stays a
-    // moment to confirm the mode.
+  void _onDragEnd([DragEndDetails? _]) {
+    // A cancel also comes for taps, which never started a drag.
+    if (!_dragging) return;
+    setState(() {
+      _dragging = false;
+      _settling = true;
+    });
+    // The knob snaps back with the overshoot curve, then the track fades
+    // into the resting button; the label stays a moment to confirm the
+    // mode.
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final snap = disableAnimations
         ? Future<void>.sync(() => _knob.value = 0)
         : _knob.animateTo(0, curve: D0b0Motion.overshoot);
     snap.whenComplete(() {
       if (!mounted) return;
+      setState(() => _settling = false);
       _labelTimer = Timer(Duration(milliseconds: _showLabel ? 1200 : 0), () {
         if (!mounted) return;
         setState(() => _showLabel = false);
@@ -145,49 +157,55 @@ class _RecordModeButtonState extends State<RecordModeButton>
                 ),
               ),
             ),
-            AnimatedContainer(
+            // The track and its lit knob show only while it moves; at
+            // rest the tonal button is back, as before the drag.
+            AnimatedOpacity(
               duration: D0b0Motion.state,
-              curve: D0b0Motion.standard,
-              width: widget.size,
-              height: _dragging ? _trackHeight : widget.size,
-              decoration: ShapeDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                shape: const StadiumBorder(),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.bottomCenter,
-                children: [
-                  Positioned(
-                    top: 12,
-                    child: Icon(
-                      otherIcon,
-                      color: theme.colorScheme.onSurfaceVariant,
+              opacity: _trackVisible ? 1 : 0,
+              child: AnimatedContainer(
+                duration: D0b0Motion.state,
+                curve: D0b0Motion.standard,
+                width: widget.size,
+                height: _dragging ? _trackHeight : widget.size,
+                decoration: ShapeDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  shape: const StadiumBorder(),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    Positioned(
+                      top: 12,
+                      child: Icon(
+                        otherIcon,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  AnimatedBuilder(
-                    animation: _knob,
-                    builder: (context, _) => Positioned(
-                      bottom: _knob.value,
-                      child: Container(
-                        width: widget.size,
-                        height: widget.size,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: D0b0Motion.state,
-                          child: Icon(
-                            currentIcon,
-                            key: ValueKey(currentIcon),
-                            color: theme.colorScheme.onPrimary,
+                    AnimatedBuilder(
+                      animation: _knob,
+                      builder: (context, _) => Positioned(
+                        bottom: _knob.value,
+                        child: Container(
+                          width: widget.size,
+                          height: widget.size,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: D0b0Motion.state,
+                            child: Icon(
+                              currentIcon,
+                              key: ValueKey(currentIcon),
+                              color: theme.colorScheme.onPrimary,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -195,6 +213,8 @@ class _RecordModeButtonState extends State<RecordModeButton>
       ),
     );
   }
+
+  bool get _trackVisible => _dragging || _settling;
 
   late RecordMode _mode =
       widget.onVideoMessage != null &&
@@ -274,21 +294,50 @@ class _RecordModeButtonState extends State<RecordModeButton>
       link: _link,
       child: OverlayPortal(
         controller: _portal,
-        overlayChildBuilder: _buildTrack,
+        // The overlay only shows; the drag stays with the button below, so
+        // a new swipe works while the label is still up.
+        overlayChildBuilder: (context) =>
+            IgnorePointer(child: _buildTrack(context)),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onVerticalDragStart: _onDragStart,
           onVerticalDragUpdate: _onDragUpdate,
           onVerticalDragEnd: _onDragEnd,
+          onVerticalDragCancel: _onDragEnd,
           child: SizedBox(
             width: widget.size,
             height: widget.size,
             child: AnimatedOpacity(
               duration: D0b0Motion.state,
-              opacity: _dragging ? 0 : 1,
-              child: AnimatedSwitcher(
-                duration: D0b0Motion.state,
-                child: button,
+              opacity: _trackVisible ? 0 : 1,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedSwitcher(duration: D0b0Motion.state, child: button),
+                  // Two dots on the edge say there is a second mode and
+                  // which one is on.
+                  Positioned(
+                    right: 3,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final mode in RecordMode.values)
+                          AnimatedContainer(
+                            duration: D0b0Motion.state,
+                            margin: const EdgeInsets.symmetric(vertical: 1.5),
+                            width: 4,
+                            height: mode == _mode ? 8 : 4,
+                            decoration: BoxDecoration(
+                              color: mode == _mode
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
