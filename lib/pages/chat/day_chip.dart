@@ -7,7 +7,8 @@ import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// A day: a Moss pill, label at 12 in text-2. Inline it opens a run of
-/// messages; [floating] is the copy that stays at the top while scrolling.
+/// messages and spans the width; [floating] is the compact copy that stays at
+/// the top while scrolling.
 class DayChip extends StatelessWidget {
   final DateTime date;
   final bool floating;
@@ -36,10 +37,10 @@ class DayChip extends StatelessWidget {
                   : BorderSide.none,
             ),
           ),
-          // widthFactor keeps the pill as wide as its text; an alignment on
-          // the Container would stretch it to the full width.
+          // The inline chip spans the width so it marks a new day clearly; the
+          // floating one is only as wide as its text.
           child: Center(
-            widthFactor: 1,
+            widthFactor: floating ? 1 : null,
             child: Text(
               date.localizedDate(context),
               style: D0b0Type.label.copyWith(
