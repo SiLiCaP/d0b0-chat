@@ -123,7 +123,7 @@ class ChatAppBarTitle extends StatelessWidget {
                           }
                           return Text(
                             l10n.presenceLastSeen(
-                              lastActive.localizedTimeShort(context),
+                              lastActive.localizedTimeWithDay(context),
                             ),
                             style: statusStyle,
                           );
