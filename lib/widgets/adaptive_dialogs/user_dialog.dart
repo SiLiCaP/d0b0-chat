@@ -65,9 +65,9 @@ class UserDialog extends StatelessWidget {
           final presenceText = presence.currentlyActive == true
               ? L10n.of(context).currentlyActive
               : lastActiveTimestamp != null
-              ? L10n.of(
-                  context,
-                ).lastActiveAgo(lastActiveTimestamp.localizedTimeShort(context))
+              ? L10n.of(context).lastActiveAgo(
+                  lastActiveTimestamp.localizedTimeWithDay(context),
+                )
               : null;
           return Column(
             spacing: 8,

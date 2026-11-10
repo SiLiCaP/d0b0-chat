@@ -138,17 +138,13 @@ class ImageViewerView extends StatelessWidget {
                                     child: Center(
                                       child: Hero(
                                         tag: event.eventId,
-                                        child: GestureDetector(
-                                          // Ignore taps to not go back here:
-                                          onTap: () {},
-                                          child: MxcImage(
-                                            key: ValueKey(event.eventId),
-                                            event: event,
-                                            fit: BoxFit.contain,
-                                            isThumbnail: false,
-                                            animated: true,
-                                            crossFade: false,
-                                          ),
+                                        child: MxcImage(
+                                          key: ValueKey(event.eventId),
+                                          event: event,
+                                          fit: BoxFit.contain,
+                                          isThumbnail: false,
+                                          animated: true,
+                                          crossFade: false,
                                         ),
                                       ),
                                     ),

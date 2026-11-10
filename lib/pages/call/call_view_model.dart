@@ -31,6 +31,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 class CallViewModelState {
   lk.Room? room;
   lk.LocalVideoTrack? localVideoTrack;
+  String? previewCameraDeviceId;
+  lk.CameraPosition previewCameraPosition = lk.CameraPosition.front;
   bool startWithAudio = true;
   bool isLoading = false;
   Object? error;
@@ -255,7 +257,7 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
     if (room.isDirectChat && room.hasActiveMatrixRtcCall) {
       await connect();
     } else {
-      value.localVideoTrack = await lk.LocalVideoTrack.createCameraTrack();
+      value.localVideoTrack = await _createCameraTrack();
       if (room.getActiveMatrixRtcMembers().firstOrNull?.callIntent == .voice) {
         value.localVideoTrack?.mute();
       }
@@ -263,6 +265,14 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
       notifyListeners();
     }
   }
+
+  Future<lk.LocalVideoTrack> _createCameraTrack() =>
+      lk.LocalVideoTrack.createCameraTrack(
+        lk.CameraCaptureOptions(
+          deviceId: value.previewCameraDeviceId,
+          cameraPosition: value.previewCameraPosition,
+        ),
+      );
 
   Future<void> togglePreviewCamera() async {
     final track = value.localVideoTrack;
@@ -273,7 +283,7 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
     }
     track.removeListener(notifyListeners);
     await track.stop();
-    value.localVideoTrack = await lk.LocalVideoTrack.createCameraTrack();
+    value.localVideoTrack = await _createCameraTrack();
     value.localVideoTrack?.addListener(notifyListeners);
 
     notifyListeners();
@@ -368,9 +378,7 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
             track: startWithAudio ? await lk.LocalAudioTrack.create() : null,
           ),
           camera: lk.TrackOption(
-            track: startWithVideo
-                ? await lk.LocalVideoTrack.createCameraTrack()
-                : null,
+            track: startWithVideo ? await _createCameraTrack() : null,
           ),
         ),
       );
@@ -556,16 +564,78 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
     );
   }
 
+  /// The device that faces [position]. Android labels cameras like
+  /// "Camera 1, Facing front, Orientation 270"; other platforms may not.
+  lk.MediaDevice? _deviceFacing(
+    List<lk.MediaDevice> devices,
+    lk.CameraPosition position,
+  ) {
+    final facing = position == lk.CameraPosition.front ? 'front' : 'back';
+    return devices.firstWhereOrNull(
+      (device) => device.label.toLowerCase().contains('facing $facing'),
+    );
+  }
+
+  /// Preview only: flips between the front and back camera.
+  Future<void> flipPreviewCamera() async {
+    final previewTrack = value.localVideoTrack;
+    if (previewTrack == null) return;
+    final wasMuted = previewTrack.muted;
+    previewTrack.removeListener(notifyListeners);
+    await previewTrack.stop();
+    value.previewCameraDeviceId = null;
+    value.previewCameraPosition = value.previewCameraPosition.switched();
+    final newTrack = value.localVideoTrack = await _createCameraTrack();
+    newTrack.addListener(notifyListeners);
+    if (wasMuted) await newTrack.mute();
+    notifyListeners();
+  }
+
   Future<void> selectCamera(BuildContext context) async {
     final devices = await lk.Hardware.instance.videoInputs();
     if (!context.mounted) return;
+    final previewTrack = value.localVideoTrack;
     final source = await _selectMediaDevice(
       context,
       devices,
-      value.room?.selectedVideoInputDeviceId,
+      // In the preview LiveKit's own selection is a global default that does
+      // not follow the preview track, so it is only used once in a call.
+      previewTrack == null
+          ? value.room?.selectedVideoInputDeviceId
+          : value.previewCameraDeviceId ??
+                _deviceFacing(devices, value.previewCameraPosition)?.deviceId,
     );
     if (source == null) return;
-    await value.room?.setVideoInputDevice(source);
+    if (previewTrack == null) {
+      await value.room?.setVideoInputDevice(source);
+      return;
+    }
+    // Not joined yet: the preview track has no sender, so LiveKit cannot
+    // restart it on another device. Recreate it on the chosen camera instead.
+    final previousDeviceId = value.previewCameraDeviceId;
+    final previousPosition = value.previewCameraPosition;
+    final wasMuted = previewTrack.muted;
+    previewTrack.removeListener(notifyListeners);
+    await previewTrack.stop();
+    value.previewCameraDeviceId = source.deviceId;
+    final label = source.label.toLowerCase();
+    if (label.contains('facing back')) {
+      value.previewCameraPosition = lk.CameraPosition.back;
+    } else if (label.contains('facing front')) {
+      value.previewCameraPosition = lk.CameraPosition.front;
+    }
+    try {
+      value.localVideoTrack = await _createCameraTrack();
+    } catch (e, s) {
+      Logs().w('Unable to switch preview camera', e, s);
+      value.previewCameraDeviceId = previousDeviceId;
+      value.previewCameraPosition = previousPosition;
+      value.localVideoTrack = await _createCameraTrack();
+    }
+    final newTrack = value.localVideoTrack!;
+    newTrack.addListener(notifyListeners);
+    if (wasMuted) await newTrack.mute();
+    notifyListeners();
   }
 
   Future<void> selectMicrophone(BuildContext context) async {

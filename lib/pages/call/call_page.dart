@@ -183,43 +183,48 @@ class CallPage extends StatelessWidget {
               ),
               actions: [
                 if (!inCall)
-                  PopupMenuButton(
-                    icon: const Icon(Symbols.more_vert_rounded),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        onTap: () => viewModel.selectCamera(context),
-                        child: Row(
-                          mainAxisSize: .min,
-                          spacing: 12,
-                          children: [
-                            const Icon(Symbols.camera_rounded),
-                            Text(l10n.selectCamera),
-                          ],
+                  // Builder: the device pickers anchor to the menu button,
+                  // whose context outlives the closing menu.
+                  Builder(
+                    builder: (buttonContext) => PopupMenuButton(
+                      icon: const Icon(Symbols.more_vert_rounded),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          onTap: () => viewModel.selectCamera(buttonContext),
+                          child: Row(
+                            mainAxisSize: .min,
+                            spacing: 12,
+                            children: [
+                              const Icon(Symbols.camera_rounded),
+                              Text(l10n.selectCamera),
+                            ],
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        onTap: () => viewModel.selectMicrophone(context),
-                        child: Row(
-                          mainAxisSize: .min,
-                          spacing: 12,
-                          children: [
-                            const Icon(Symbols.mic_rounded),
-                            Text(l10n.selectMicrophone),
-                          ],
+                        PopupMenuItem(
+                          onTap: () =>
+                              viewModel.selectMicrophone(buttonContext),
+                          child: Row(
+                            mainAxisSize: .min,
+                            spacing: 12,
+                            children: [
+                              const Icon(Symbols.mic_rounded),
+                              Text(l10n.selectMicrophone),
+                            ],
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        onTap: () => viewModel.selectSpeaker(context),
-                        child: Row(
-                          mainAxisSize: .min,
-                          spacing: 12,
-                          children: [
-                            const Icon(Symbols.speaker_phone_rounded),
-                            Text(l10n.selectSpeaker),
-                          ],
+                        PopupMenuItem(
+                          onTap: () => viewModel.selectSpeaker(buttonContext),
+                          child: Row(
+                            mainAxisSize: .min,
+                            spacing: 12,
+                            children: [
+                              const Icon(Symbols.speaker_phone_rounded),
+                              Text(l10n.selectSpeaker),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 const SizedBox(width: 4),
               ],
@@ -441,7 +446,7 @@ class _Lobby extends StatelessWidget {
                               glass: true,
                               onPressed: isLoading
                                   ? null
-                                  : () => viewModel.selectCamera(context),
+                                  : viewModel.flipPreviewCamera,
                             ),
                           ],
                         ),

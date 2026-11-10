@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:math';
+
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/utils/file_description.dart';
@@ -63,8 +65,30 @@ class ImageBubble extends StatelessWidget {
       );
     }
 
+    // Very narrow images would squeeze the caption to a letter or two per
+    // line, so with a caption the image box gets a minimum width and the
+    // image is scaled up to fill it, growing taller. Height is capped; past
+    // the cap the image is letterboxed (BoxFit.contain), never cropped.
+    const minCaptionWidth = 160.0;
+    const maxCaptionedHeight = 640.0;
+    var boxWidth = width;
+    var boxHeight = height;
+    var boxFit = fit;
+    if (fileDescription != null && width < minCaptionWidth) {
+      final info = event.content.tryGetMap<String, Object?>('info');
+      final w = info?.tryGet<int>('w');
+      final h = info?.tryGet<int>('h');
+      final aspect = w != null && h != null && w > 0 && h > 0
+          ? w / h
+          : width / height;
+      boxWidth = minCaptionWidth;
+      boxHeight = min(minCaptionWidth / aspect, maxCaptionedHeight);
+      boxFit = BoxFit.contain;
+    }
+
     return Column(
       mainAxisSize: .min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 8,
       children: [
         Material(
@@ -91,25 +115,25 @@ class ImageBubble extends StatelessWidget {
                           cacheKey: event.transactionId ?? event.eventId,
                           cacheName: event.room.id,
                           event: event,
-                          width: width,
-                          height: height,
-                          fit: fit,
+                          width: boxWidth,
+                          height: boxHeight,
+                          fit: boxFit,
                           animated: animated,
                           isThumbnail: thumbnailOnly,
                           placeholder: event.messageType == MessageTypes.Sticker
                               ? null
                               : (_) => _ImageBubblePlaceholder(
                                   event: event,
-                                  width: width,
-                                  height: height,
-                                  fit: fit,
+                                  width: boxWidth,
+                                  height: boxHeight,
+                                  fit: boxFit,
                                 ),
                         )
                       : _ImageBubblePlaceholder(
                           event: event,
-                          width: width,
-                          height: height,
-                          fit: fit,
+                          width: boxWidth,
+                          height: boxHeight,
+                          fit: boxFit,
                         ),
                 ),
               ],
@@ -118,7 +142,7 @@ class ImageBubble extends StatelessWidget {
         ),
         if (fileDescription != null && textColor != null)
           SizedBox(
-            width: width,
+            width: boxWidth,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Linkify(

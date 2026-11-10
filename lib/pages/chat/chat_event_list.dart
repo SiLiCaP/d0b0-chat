@@ -114,6 +114,14 @@ class ChatEventList extends StatelessWidget {
     final readUpToIndex = events.indexWhere(
       (event) => event.receipts.any((receipt) => receipt.user.id != ownUserId),
     );
+    // Only the newest such own message carries the label; older ones are
+    // implied (events are newest first).
+    final readLabelIndex = readUpToIndex == -1
+        ? -1
+        : events.indexWhere(
+            (event) => event.senderId == ownUserId && event.status.isSent,
+            readUpToIndex,
+          );
 
     final hasWallpaper =
         controller.room.client.applicationAccountConfig.wallpaperUrl != null;
@@ -239,7 +247,7 @@ class ChatEventList extends StatelessWidget {
                           controller.scrollToEventIdMarker == event.eventId,
                       onSelect: controller.onSelectMessage,
                       onLongPress: controller.showMessageActions,
-                      read: readUpToIndex != -1 && i >= readUpToIndex,
+                      read: i == readLabelIndex,
                       scrollToEventId: controller.scrollToEventId,
                       longPressSelect: controller.selectedEvents.isNotEmpty,
                       selected: controller.selectedEvents.any(

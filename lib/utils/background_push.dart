@@ -317,6 +317,30 @@ class BackgroundPush {
     });
   }
 
+  /// Dismisses the notification of [room], e.g. when its messages were read
+  /// inside the app, and refreshes the Android summary notification.
+  Future<void> clearRoomNotification(Room room) async {
+    if (!PlatformInfos.isMobile) return;
+    final clientName = room.client.clientName;
+    final id = '${clientName}_${room.id}'.hashCode;
+    try {
+      final active = await _flutterLocalNotificationsPlugin
+          .getActiveNotifications();
+      if (!active.any((notification) => notification.id == id)) return;
+      await _flutterLocalNotificationsPlugin.cancel(id: id);
+      final l10n = this.l10n;
+      if (PlatformInfos.isAndroid && l10n != null) {
+        await updateSummaryNotification(
+          clientName: clientName,
+          l10n: l10n,
+          flutterLocalNotificationsPlugin: _flutterLocalNotificationsPlugin,
+        );
+      }
+    } catch (e, s) {
+      Logs().w('Unable to clear notification of room', e, s);
+    }
+  }
+
   Future<void> _noFcmWarning() async {
     if (matrix == null) {
       return;

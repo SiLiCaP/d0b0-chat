@@ -77,6 +77,21 @@ extension DateTimeExtension on DateTime {
     ).format(this);
   }
 
+  /// Time of day if today, otherwise with the day: "Yesterday, 13:27" or
+  /// "Nov 23, 23:22" (with the year when it is not this year).
+  String localizedTimeWithDay(BuildContext context) {
+    final now = DateTime.now();
+    final locale = Localizations.localeOf(context).languageCode;
+    if (sameDay(now)) return localizedTimeOfDay(context);
+    final day = dateOnly == DateTime(now.year, now.month, now.day - 1)
+        ? L10n.of(context).yesterday
+        : (year == now.year
+                  ? DateFormat.MMMd(locale)
+                  : DateFormat.yMMMd(locale))
+              .format(this);
+    return L10n.of(context).dateAndTimeOfDay(day, localizedTimeOfDay(context));
+  }
+
   DateTime get dateOnly => DateTime(year, month, day);
 
   String localizedDate(BuildContext context) {
