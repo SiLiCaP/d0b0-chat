@@ -731,6 +731,7 @@ class ChatController extends State<ChatPageWithRoom>
 
     Logs().d('Set read marker...', eventId);
     _setReadMarkerEventId = eventId;
+    final backgroundPush = Matrix.of(context).backgroundPush;
     // ignore: unawaited_futures
     timeline
         .setReadMarker(
@@ -739,6 +740,7 @@ class ChatController extends State<ChatPageWithRoom>
         )
         .whenComplete(() {
           if (_setReadMarkerEventId == eventId) _setReadMarkerEventId = null;
+          backgroundPush?.clearRoomNotification(room);
         });
   }
 
