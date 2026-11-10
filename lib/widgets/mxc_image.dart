@@ -27,6 +27,9 @@ class MxcImage extends StatefulWidget {
   final BoxFit? fit;
   final bool isThumbnail;
   final bool animated;
+
+  /// Fade (and resize) from the placeholder to the image once it has loaded.
+  final bool crossFade;
   final Duration retryDuration;
   final Duration animationDuration;
   final Curve animationCurve;
@@ -49,6 +52,7 @@ class MxcImage extends StatefulWidget {
     this.placeholder,
     this.isThumbnail = true,
     this.animated = false,
+    this.crossFade = true,
     this.animationDuration = FluffyThemes.animationDuration,
     this.retryDuration = const Duration(seconds: 2),
     this.animationCurve = FluffyThemes.animationCurve,
@@ -208,6 +212,16 @@ class _MxcImageState extends State<MxcImage> {
                       : FilterQuality.medium,
                   errorBuilder: errorFallback,
                 ));
+
+    if (!widget.crossFade) {
+      return hasData
+          ? ClipRRect(borderRadius: widget.borderRadius, child: imageChild)
+          : _MxcImagePlaceholder(
+              width: widget.width,
+              height: widget.height,
+              placeholder: widget.placeholder,
+            );
+    }
 
     return AnimatedCrossFade(
       duration: FluffyThemes.animationDuration,
