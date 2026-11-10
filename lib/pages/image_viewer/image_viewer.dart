@@ -57,7 +57,15 @@ class ImageViewerController extends State<ImageViewer> {
     pageController = PageController(initialPage: index);
   }
 
-  void onPageChanged(int index) => setState(() => _index = index);
+  void onPageChanged(int index) {
+    // The zoomed page is gone, so its zoom state must not keep paging locked.
+    isZoomed.value = false;
+    setState(() => _index = index);
+  }
+
+  /// True while the current image is zoomed in. Paging is locked then, so
+  /// panning the image does not swipe to the next media.
+  final ValueNotifier<bool> isZoomed = ValueNotifier(false);
 
   late final PageController pageController;
 
@@ -129,6 +137,7 @@ class ImageViewerController extends State<ImageViewer> {
   void dispose() {
     focusNode.dispose();
     pageController.dispose();
+    isZoomed.dispose();
     super.dispose();
   }
 
