@@ -213,7 +213,7 @@ abstract class AppRoutes {
               redirect: loggedOutRedirect,
             ),
             ShellRoute(
-              pageBuilder: (context, state, child) => defaultPageBuilder(
+              pageBuilder: (context, state, child) => shellPageBuilder(
                 context,
                 state,
                 FluffyThemes.isColumnMode(context)
@@ -384,7 +384,7 @@ abstract class AppRoutes {
             // it (details, members, search, …) opens in the pane on its right,
             // each with its own URL. Elsewhere they stack as pages.
             ShellRoute(
-              pageBuilder: (context, state, child) => defaultPageBuilder(
+              pageBuilder: (context, state, child) => shellPageBuilder(
                 context,
                 state,
                 _roomHasPane(context, state)
@@ -578,10 +578,9 @@ abstract class AppRoutes {
     child: child,
   );
 
-  static Page defaultPageBuilder(
+  static void _selectClientFromQuery(
     BuildContext context,
     GoRouterState state,
-    Widget child,
   ) {
     final clientName = state.uri.queryParameters['client'];
     if (clientName != null) {
@@ -589,6 +588,47 @@ abstract class AppRoutes {
       final client = matrix.getClientByName(clientName);
       if (client != null) matrix.setActiveClient(client);
     }
+  }
+
+  /// The page of a [ShellRoute] that lays its nested navigator out differently
+  /// by window width. The page type must not change when the window does:
+  /// swapping [NoTransitionPage] and [MaterialPage] on rotation renders the
+  /// shell's navigator twice for a frame under the same GlobalKey, and the
+  /// page goes blank (#59). So this is always one page type, which slides in
+  /// like a [MaterialPage] on narrow windows and does not animate on wide ones.
+  static Page shellPageBuilder(
+    BuildContext context,
+    GoRouterState state,
+    Widget child,
+  ) {
+    _selectClientFromQuery(context, state);
+    const duration = Duration(milliseconds: 300);
+    final columnMode = FluffyThemes.isColumnMode(context);
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      restorationId: state.pageKey.value,
+      transitionDuration: columnMode ? Duration.zero : duration,
+      reverseTransitionDuration: columnMode ? Duration.zero : duration,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          FluffyThemes.isColumnMode(context)
+          ? child
+          : Theme.of(context).pageTransitionsTheme.buildTransitions<dynamic>(
+              ModalRoute.of(context)! as PageRoute<dynamic>,
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ),
+      child: child,
+    );
+  }
+
+  static Page defaultPageBuilder(
+    BuildContext context,
+    GoRouterState state,
+    Widget child,
+  ) {
+    _selectClientFromQuery(context, state);
     return FluffyThemes.isColumnMode(context)
         ? noTransitionPageBuilder(context, state, child)
         : MaterialPage(
