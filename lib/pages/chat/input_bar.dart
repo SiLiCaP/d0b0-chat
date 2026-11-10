@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:ui' as ui;
+
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
@@ -405,6 +407,9 @@ class InputBar extends StatelessWidget {
           controller: controller,
           focusNode: focusNode,
           readOnly: readOnly,
+          // The default, max, stretches the highlight of a word before a soft
+          // wrap across the rest of its row (#82).
+          selectionWidthStyle: ui.BoxWidthStyle.tight,
           onEditingComplete: () {
             // To not lose focus on iOS:
             // https://github.com/krille-chan/fluffychat/issues/2784
@@ -452,15 +457,11 @@ class InputBar extends StatelessWidget {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           autofocus: autofocus!,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
-          ],
           onSubmitted: (text) {
             // fix for library for now
             // it sets the types for the callback incorrectly
             onSubmitted!(text);
           },
-          maxLength: AppSettings.textMessageMaxLength.value,
           decoration: decoration,
           onChanged: (text) {
             // fix for the library for now

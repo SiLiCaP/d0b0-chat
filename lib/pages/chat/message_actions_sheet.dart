@@ -236,7 +236,7 @@ class _QuickReaction extends StatelessWidget {
           child: SizedBox.square(
             dimension: 44,
             child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(emoji, style: D0b0Type.emoji(fontSize: 24)),
             ),
           ),
         ),

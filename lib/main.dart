@@ -16,6 +16,7 @@ import 'package:fluffychat/utils/notification_background_handler.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/start_push_foreground_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_vodozemac/flutter_vodozemac.dart' as vod;
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -72,6 +73,13 @@ void main(List<String> args) => runZonedGuarded(() async {
   final backgroundFetch =
       PlatformInfos.isAndroid &&
       AppLifecycleState.detached == WidgetsBinding.instance.lifecycleState;
+
+  // Draw behind the system bars ourselves, so the bottom bar shows the app's
+  // surface instead of a colour the device picks (#79). Android 15 and later
+  // already do this.
+  if (PlatformInfos.isAndroid && !backgroundFetch) {
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+  }
 
   // The splash marquee runs while settings, encryption and clients load.
   if (!backgroundFetch) SplashGate.start();

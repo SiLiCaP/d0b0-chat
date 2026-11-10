@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:collection/collection.dart';
-import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
+import 'package:fluffychat/pages/chat/day_chip.dart';
 import 'package:fluffychat/pages/chat/encryption_info.dart';
 import 'package:fluffychat/pages/chat/events/message.dart';
 import 'package:fluffychat/pages/chat/typing_indicators.dart';
@@ -234,7 +234,7 @@ class ChatEventList extends StatelessWidget {
                   mainAxisSize: .min,
                   children: [
                     if (!isCollapsed && displayDate)
-                      _DayChip(date: event.originServerTs),
+                      DayChip(date: event.originServerTs),
                     Message(
                       event,
                       bigEmojis: controller.bigEmojis,
@@ -284,40 +284,6 @@ class ChatEventList extends StatelessWidget {
             childCount: events.length + 2,
             findChildIndexCallback: (key) =>
                 controller.findChildIndexCallback(key, thisEventsKeyMap),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The day a run of messages starts: a Moss pill, label at 12 in text-2.
-class _DayChip extends StatelessWidget {
-  final DateTime date;
-
-  const _DayChip({required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 12),
-      child: Center(
-        child: Container(
-          height: 28,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
-          decoration: ShapeDecoration(
-            color: scheme.surfaceContainer,
-            shape: const StadiumBorder(),
-          ),
-          child: Text(
-            date.localizedDate(context),
-            style: D0b0Type.label.copyWith(
-              fontSize: 12,
-              letterSpacing: 0,
-              color: scheme.onSurfaceVariant,
-            ),
           ),
         ),
       ),

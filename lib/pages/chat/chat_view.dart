@@ -15,6 +15,7 @@ import 'package:fluffychat/pages/chat/chat_app_bar_title.dart';
 import 'package:fluffychat/pages/chat/chat_event_list.dart';
 import 'package:fluffychat/pages/chat/pinned_events.dart';
 import 'package:fluffychat/pages/chat/reply_display.dart';
+import 'package:fluffychat/pages/chat/scroll_date_chip.dart';
 import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/widgets/chat_settings_popup_menu.dart';
@@ -579,6 +580,15 @@ class ChatView extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                      // The day of the messages at the top while scrolling (#56).
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: ScrollDateChip(controller: controller),
+                        ),
                       ),
                       if (controller.dragging)
                         Container(

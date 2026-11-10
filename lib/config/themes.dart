@@ -264,6 +264,9 @@ abstract class FluffyThemes {
           statusBarBrightness: brightness,
           systemNavigationBarIconBrightness: brightness.reversed,
           systemNavigationBarColor: colorScheme.surface,
+          // No system scrim or divider behind the 3-button bar (#79).
+          systemNavigationBarContrastEnforced: false,
+          systemNavigationBarDividerColor: Colors.transparent,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
