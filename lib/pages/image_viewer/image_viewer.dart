@@ -54,6 +54,7 @@ class ImageViewerController extends State<ImageViewer> {
     );
     if (index < 0) index = 0;
     _index = index;
+    _settledIndex = index;
     pageController = PageController(initialPage: index);
   }
 
@@ -66,6 +67,23 @@ class ImageViewerController extends State<ImageViewer> {
   /// True while the current image is zoomed in. Paging is locked then, so
   /// panning the image does not swipe to the next media.
   final ValueNotifier<bool> isZoomed = ValueNotifier(false);
+
+  late int _settledIndex;
+
+  /// The page that is shown once scrolling has stopped. Unlike [_index] this
+  /// does not change halfway through a swipe.
+  int get settledIndex => _settledIndex;
+
+  bool onScrollNotification(ScrollNotification notification) {
+    if (notification is! ScrollEndNotification || notification.depth != 0) {
+      return false;
+    }
+    final page = pageController.page?.round();
+    if (page != null && page != _settledIndex) {
+      setState(() => _settledIndex = page);
+    }
+    return false;
+  }
 
   late final PageController pageController;
 

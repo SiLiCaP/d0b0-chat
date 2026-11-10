@@ -99,56 +99,62 @@ class ImageViewerView extends StatelessWidget {
                 onKeyEvent: controller.onKeyEvent,
                 child: PointersListener(
                   builder: (context, moreThanOnePointer) =>
-                      ValueListenableBuilder<bool>(
-                        valueListenable: controller.isZoomed,
-                        builder: (context, zoomed, _) => PageView.builder(
-                          physics: !moreThanOnePointer && !zoomed
-                              ? BouncingScrollPhysics()
-                              : NeverScrollableScrollPhysics(),
-                          scrollDirection: Axis.horizontal,
-                          controller: controller.pageController,
-                          onPageChanged: controller.onPageChanged,
-                          itemCount: controller.allEvents.length,
-                          itemBuilder: (context, i) {
-                            final event = controller.allEvents[i];
-                            switch (event.messageType) {
-                              case MessageTypes.Video:
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 52.0),
-                                  child: Center(
-                                    child: GestureDetector(
-                                      // Ignore taps to not go back here:
-                                      onTap: () {},
-                                      child: EventVideoPlayer(event),
-                                    ),
-                                  ),
-                                );
-                              case MessageTypes.Image:
-                              case MessageTypes.Sticker:
-                              default:
-                                return ZoomableImage(
-                                  zoomed: controller.isZoomed,
-                                  onInteractionEnd:
-                                      controller.onInteractionEnds,
-                                  child: Center(
-                                    child: Hero(
-                                      tag: event.eventId,
+                      NotificationListener<ScrollNotification>(
+                        onNotification: controller.onScrollNotification,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: controller.isZoomed,
+                          builder: (context, zoomed, _) => PageView.builder(
+                            physics: !moreThanOnePointer && !zoomed
+                                ? BouncingScrollPhysics()
+                                : NeverScrollableScrollPhysics(),
+                            scrollDirection: Axis.horizontal,
+                            controller: controller.pageController,
+                            onPageChanged: controller.onPageChanged,
+                            itemCount: controller.allEvents.length,
+                            itemBuilder: (context, i) {
+                              final event = controller.allEvents[i];
+                              switch (event.messageType) {
+                                case MessageTypes.Video:
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 52.0),
+                                    child: Center(
                                       child: GestureDetector(
                                         // Ignore taps to not go back here:
                                         onTap: () {},
-                                        child: MxcImage(
-                                          key: ValueKey(event.eventId),
-                                          event: event,
-                                          fit: BoxFit.contain,
-                                          isThumbnail: false,
-                                          animated: true,
+                                        child: EventVideoPlayer(
+                                          event,
+                                          active: i == controller.settledIndex,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                            }
-                          },
+                                  );
+                                case MessageTypes.Image:
+                                case MessageTypes.Sticker:
+                                default:
+                                  return ZoomableImage(
+                                    zoomed: controller.isZoomed,
+                                    onInteractionEnd:
+                                        controller.onInteractionEnds,
+                                    child: Center(
+                                      child: Hero(
+                                        tag: event.eventId,
+                                        child: GestureDetector(
+                                          // Ignore taps to not go back here:
+                                          onTap: () {},
+                                          child: MxcImage(
+                                            key: ValueKey(event.eventId),
+                                            event: event,
+                                            fit: BoxFit.contain,
+                                            isThumbnail: false,
+                                            animated: true,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                              }
+                            },
+                          ),
                         ),
                       ),
                 ),
