@@ -452,15 +452,11 @@ class InputBar extends StatelessWidget {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           autofocus: autofocus!,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
-          ],
           onSubmitted: (text) {
             // fix for library for now
             // it sets the types for the callback incorrectly
             onSubmitted!(text);
           },
-          maxLength: AppSettings.textMessageMaxLength.value,
           decoration: decoration,
           onChanged: (text) {
             // fix for the library for now

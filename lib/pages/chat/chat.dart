@@ -752,6 +752,7 @@ class ChatController extends State<ChatPageWithRoom>
     typingCoolDown?.cancel();
     typingTimeout?.cancel();
     sendController.dispose();
+    sendBlocked.dispose();
     scrollController.dispose();
     inputFocus.removeListener(_inputFocusListener);
     inputFocus.dispose();
@@ -765,6 +766,9 @@ class ChatController extends State<ChatPageWithRoom>
   }
 
   TextEditingController sendController = TextEditingController();
+
+  /// Bumped when sending is refused, so the composer can shake.
+  final ValueNotifier<int> sendBlocked = ValueNotifier(0);
 
   void setSendingClient(Client c) {
     // first cancel typing with the old sending client
@@ -793,6 +797,13 @@ class ChatController extends State<ChatPageWithRoom>
   });
 
   Future<void> send() async {
+    // The composer shows the "too long" error; nothing is sent until the text
+    // fits.
+    if (sendController.text.length > AppSettings.textMessageMaxLength.value) {
+      HapticFeedback.mediumImpact();
+      sendBlocked.value++;
+      return;
+    }
     final proceed = await showTrustUserInRoomDialog(context, room);
     if (!mounted || !proceed) return;
     if (sendController.text.trim().isEmpty) return;

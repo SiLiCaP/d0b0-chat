@@ -16,6 +16,7 @@ import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
+import 'package:fluffychat/widgets/d0b0/shake.dart';
 import 'package:fluffychat/widgets/d0b0/sheet_row.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -67,153 +68,198 @@ class ChatInputRow extends StatelessWidget {
             PlatformInfos.platformCanRecord &&
             controller.sendController.text.isEmpty &&
             !isEditing;
-        return Row(
-          crossAxisAlignment: .end,
-          children: <Widget>[
-            Builder(
-              builder: (buttonContext) => IconButton(
-                tooltip: l10n.attach,
-                style: IconButton.styleFrom(
-                  minimumSize: const Size.square(height),
-                  side: BorderSide(color: theme.colorScheme.outline, width: 2),
-                ),
-                icon: const Icon(Symbols.add_rounded),
-                onPressed: () =>
-                    _showAttachSheet(context, d0b0AnchorOf(buttonContext)),
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (Matrix.of(context).isMultiAccount &&
-                Matrix.of(context).hasComplexBundles &&
-                Matrix.of(context).currentBundle!.length > 1)
-              SizedBox(
-                height: height,
-                width: 40,
-                child: _ChatAccountPicker(controller),
-              ),
-            Expanded(
-              // The focused composer shows the Mint focus ring.
-              child: ListenableBuilder(
-                listenable: controller.inputFocus,
-                builder: (context, child) => AnimatedContainer(
-                  duration: D0b0Motion.state,
-                  constraints: const BoxConstraints(minHeight: height),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: controller.inputFocus.hasFocus
-                          ? theme.colorScheme.primary
-                          : Colors.transparent,
+        final row = Shake(
+          trigger: controller.sendBlocked,
+          child: Row(
+            crossAxisAlignment: .end,
+            children: <Widget>[
+              Builder(
+                builder: (buttonContext) => IconButton(
+                  tooltip: l10n.attach,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size.square(height),
+                    side: BorderSide(
+                      color: theme.colorScheme.outline,
                       width: 2,
                     ),
                   ),
-                  child: child,
-                ),
-                child: Row(
-                  crossAxisAlignment: .end,
-                  children: [
-                    Expanded(
-                      child: InputBar(
-                        room: controller.room,
-                        minLines: 1,
-                        maxLines: 6,
-                        autofocus: !PlatformInfos.isMobile,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction:
-                            AppSettings.sendOnEnter.value == true &&
-                                PlatformInfos.isMobile
-                            ? TextInputAction.send
-                            : null,
-                        onSubmitted: controller.onInputBarSubmitted,
-                        onSubmitImage: controller.sendImageFromClipBoard,
-                        focusNode: controller.inputFocus,
-                        controller: controller.sendController,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.only(
-                            left: 18,
-                            right: 4,
-                            top: 13,
-                            bottom: 13,
-                          ),
-                          isDense: true,
-                          counter: const SizedBox.shrink(),
-                          hintText:
-                              (PlatformInfos.isMobile
-                              ? l10n.messageRoom
-                              : l10n.composerDesktopHint)(
-                                controller.room.getLocalizedDisplayname(
-                                  MatrixLocals(l10n),
-                                ),
-                              ),
-                          hintMaxLines: 1,
-                          hintStyle: D0b0Type.body.copyWith(
-                            color: theme.d0b0.text3,
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                        ),
-                        onChanged: controller.onInputBarChanged,
-                        suggestionEmojis:
-                            getDefaultEmojiLocale(
-                              AppSettings.emojiSuggestionLocale.value.isNotEmpty
-                                  ? Locale(
-                                      AppSettings.emojiSuggestionLocale.value,
-                                    )
-                                  : Localizations.localeOf(context),
-                            ).fold(
-                              [],
-                              (emojis, category) =>
-                                  emojis..addAll(category.emoji),
-                            ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: l10n.emojis,
-                      color: theme.colorScheme.onSurfaceVariant,
-                      icon: Icon(
-                        controller.showEmojiPicker
-                            ? Symbols.keyboard_rounded
-                            : Symbols.sentiment_satisfied_rounded,
-                        size: 22,
-                        key: ValueKey(controller.showEmojiPicker),
-                      ),
-                      onPressed: controller.emojiPickerAction,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
+                  icon: const Icon(Symbols.add_rounded),
+                  onPressed: () =>
+                      _showAttachSheet(context, d0b0AnchorOf(buttonContext)),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox.square(
-              dimension: height,
-              child: showRecord
-                  ? RecordModeButton(
-                      size: height,
-                      onVoiceMessage: () =>
-                          recordingViewModel.startRecording(controller.room),
-                      onVideoMessage: PlatformInfos.isMobile
-                          ? controller.openVideoMessageRecorder
-                          : null,
-                    )
-                  : IconButton(
-                      key: const Key('send_button'),
-                      tooltip: isEditing ? l10n.edit : l10n.send,
-                      onPressed: controller.send,
-                      style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        minimumSize: const Size.square(height),
-                      ),
-                      icon: Icon(
-                        isEditing
-                            ? Symbols.check_rounded
-                            : Symbols.arrow_upward_rounded,
+              const SizedBox(width: 8),
+              if (Matrix.of(context).isMultiAccount &&
+                  Matrix.of(context).hasComplexBundles &&
+                  Matrix.of(context).currentBundle!.length > 1)
+                SizedBox(
+                  height: height,
+                  width: 40,
+                  child: _ChatAccountPicker(controller),
+                ),
+              Expanded(
+                // The focused composer shows the Mint focus ring.
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    controller.inputFocus,
+                    controller.sendController,
+                  ]),
+                  builder: (context, child) => AnimatedContainer(
+                    duration: D0b0Motion.state,
+                    constraints: const BoxConstraints(minHeight: height),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        // Red while the text is over the message limit.
+                        color:
+                            controller.sendController.text.length >
+                                AppSettings.textMessageMaxLength.value
+                            ? theme.colorScheme.error
+                            : controller.inputFocus.hasFocus
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
+                        width: 2,
                       ),
                     ),
+                    child: child,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: .end,
+                    children: [
+                      Expanded(
+                        child: InputBar(
+                          room: controller.room,
+                          minLines: 1,
+                          maxLines: 6,
+                          autofocus: !PlatformInfos.isMobile,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction:
+                              AppSettings.sendOnEnter.value == true &&
+                                  PlatformInfos.isMobile
+                              ? TextInputAction.send
+                              : null,
+                          onSubmitted: controller.onInputBarSubmitted,
+                          onSubmitImage: controller.sendImageFromClipBoard,
+                          focusNode: controller.inputFocus,
+                          controller: controller.sendController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.only(
+                              left: 18,
+                              right: 4,
+                              top: 13,
+                              bottom: 13,
+                            ),
+                            isDense: true,
+                            counter: const SizedBox.shrink(),
+                            hintText:
+                                (PlatformInfos.isMobile
+                                ? l10n.messageRoom
+                                : l10n.composerDesktopHint)(
+                                  controller.room.getLocalizedDisplayname(
+                                    MatrixLocals(l10n),
+                                  ),
+                                ),
+                            hintMaxLines: 1,
+                            hintStyle: D0b0Type.body.copyWith(
+                              color: theme.d0b0.text3,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                          ),
+                          onChanged: controller.onInputBarChanged,
+                          suggestionEmojis:
+                              getDefaultEmojiLocale(
+                                AppSettings
+                                        .emojiSuggestionLocale
+                                        .value
+                                        .isNotEmpty
+                                    ? Locale(
+                                        AppSettings.emojiSuggestionLocale.value,
+                                      )
+                                    : Localizations.localeOf(context),
+                              ).fold(
+                                [],
+                                (emojis, category) =>
+                                    emojis..addAll(category.emoji),
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.emojis,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        icon: Icon(
+                          controller.showEmojiPicker
+                              ? Symbols.keyboard_rounded
+                              : Symbols.sentiment_satisfied_rounded,
+                          size: 22,
+                          key: ValueKey(controller.showEmojiPicker),
+                        ),
+                        onPressed: controller.emojiPickerAction,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox.square(
+                dimension: height,
+                child: showRecord
+                    ? RecordModeButton(
+                        size: height,
+                        onVoiceMessage: () =>
+                            recordingViewModel.startRecording(controller.room),
+                        onVideoMessage: PlatformInfos.isMobile
+                            ? controller.openVideoMessageRecorder
+                            : null,
+                      )
+                    : IconButton(
+                        key: const Key('send_button'),
+                        tooltip: isEditing ? l10n.edit : l10n.send,
+                        onPressed: controller.send,
+                        style: IconButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          minimumSize: const Size.square(height),
+                        ),
+                        icon: Icon(
+                          isEditing
+                              ? Symbols.check_rounded
+                              : Symbols.arrow_upward_rounded,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        );
+        return Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            row,
+            // Live count under the box, red once over the limit.
+            ListenableBuilder(
+              listenable: controller.sendController,
+              builder: (context, _) {
+                final count = controller.sendController.text.length;
+                if (count == 0) return const SizedBox.shrink();
+                final limit = AppSettings.textMessageMaxLength.value;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4, right: 64),
+                  child: Text(
+                    '$count / $limit',
+                    textAlign: TextAlign.end,
+                    style: D0b0Type.label.copyWith(
+                      color: count > limit
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         );
