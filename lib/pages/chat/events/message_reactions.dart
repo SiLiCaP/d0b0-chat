@@ -120,10 +120,7 @@ class _Reaction extends StatelessWidget {
       if (renderKey.length > 10) {
         renderKey = renderKey.getRange(0, 9) + Characters('…');
       }
-      content = Text(
-        renderKey.toString(),
-        style: const TextStyle(fontSize: 14),
-      );
+      content = Text(renderKey.toString(), style: D0b0Type.emoji(fontSize: 14));
     }
     // A pill on the background with an outline; your own reaction is drawn
     // in Mint.

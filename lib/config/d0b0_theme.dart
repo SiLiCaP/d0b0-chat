@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The d0b0 design system v1 (Penpot file "dobo DS", page "01 · Foundations").
@@ -287,6 +288,18 @@ class D0b0Colors extends ThemeExtension<D0b0Colors> {
 abstract class D0b0Type {
   static const String sans = 'Inter';
   static const String mono = 'JetBrains Mono';
+
+  /// Inter ships a monochrome U+2764, so a heart set in Inter is tinted with
+  /// the text colour instead of using the colour emoji font. Name the system
+  /// emoji font first for places that show a single emoji.
+  static TextStyle emoji({double? fontSize}) => TextStyle(
+    fontSize: fontSize,
+    fontFamily: switch (defaultTargetPlatform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => 'Apple Color Emoji',
+      TargetPlatform.windows => 'Segoe UI Emoji',
+      _ => 'Noto Color Emoji',
+    },
+  );
 
   static const display = TextStyle(
     fontFamily: sans,
