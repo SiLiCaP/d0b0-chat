@@ -427,18 +427,24 @@ class MediaDownload extends ChangeNotifier {
 
   /// Unencrypted videos play straight from the cache. Encrypted ones are
   /// decrypted into a file that [releasePlayback] deletes again.
-  Future<VideoPlayerController> createController() async {
+  Future<VideoPlayerController> createController({
+    VideoPlayerOptions? videoPlayerOptions,
+  }) async {
     await download();
     final webFile = _webFile;
     if (webFile != null) {
       return VideoPlayerController.networkUrl(
         Uri.dataFromBytes(webFile.bytes, mimeType: webFile.mimeType),
+        videoPlayerOptions: videoPlayerOptions,
       );
     }
     final file = _file;
     if (!event.isAttachmentEncrypted && file != null && await file.exists()) {
       _touch(file);
-      return VideoPlayerController.file(file);
+      return VideoPlayerController.file(
+        file,
+        videoPlayerOptions: videoPlayerOptions,
+      );
     }
     final matrixFile = await getFile();
     final playbackFile = _playbackFile ??= File(
@@ -448,7 +454,10 @@ class MediaDownload extends ChangeNotifier {
     if (!await playbackFile.exists()) {
       await playbackFile.writeAsBytes(matrixFile.bytes);
     }
-    return VideoPlayerController.file(playbackFile);
+    return VideoPlayerController.file(
+      playbackFile,
+      videoPlayerOptions: videoPlayerOptions,
+    );
   }
 
   /// Deletes the decrypted file [createController] wrote for the player.

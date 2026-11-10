@@ -15,6 +15,7 @@ environment:
 dependencies:
   archive: ^4.3.0
   async: ^2.13.1
+  audio_session: ^0.2.4
   badges: ^4.0.1
   blurhash_dart: ^1.2.1
   camera: ^0.12.1

@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:chewie/chewie.dart';
+import 'package:fluffychat/pages/image_viewer/video_audio_focus.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/media_download.dart';
@@ -53,7 +54,13 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     }
 
     try {
-      final videoPlayerController = await _download.createController();
+      final videoPlayerController = await _download.createController(
+        // The player must not take its own (permanent) audio focus, see
+        // [VideoAudioFocus].
+        videoPlayerOptions: _audioFocus == null
+            ? null
+            : VideoPlayerOptions(mixWithOthers: true),
+      );
       if (!mounted) {
         videoPlayerController.dispose();
         return;
@@ -65,6 +72,7 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
       await videoPlayerController.initialize();
       if (!mounted) return;
+      videoPlayerController.addListener(_syncAudioFocus);
 
       // Create a ChewieController on top.
       setState(() {
@@ -88,7 +96,19 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     }
   }
 
+  // Only Android needs this, other platforms handle it well themselves.
+  late final VideoAudioFocus? _audioFocus = PlatformInfos.isAndroid
+      ? VideoAudioFocus(onInterrupted: () => _videoPlayerController?.pause())
+      : null;
+
+  /// Holds the audio focus exactly while the video is playing, so other apps'
+  /// music resumes as soon as it is paused, closed or swiped away.
+  void _syncAudioFocus() =>
+      _audioFocus?.setHeld(_videoPlayerController?.value.isPlaying ?? false);
+
   void _disposeControllers() {
+    _videoPlayerController?.removeListener(_syncAudioFocus);
+    _audioFocus?.setHeld(false);
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
     _chewieController = null;
