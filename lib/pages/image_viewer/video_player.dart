@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:chewie/chewie.dart';
+import 'package:fluffychat/pages/image_viewer/video_audio_focus.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/media_download.dart';
@@ -22,7 +23,12 @@ import '../../widgets/mxc_image.dart';
 class EventVideoPlayer extends StatefulWidget {
   final Event event;
 
-  const EventVideoPlayer(this.event, {super.key});
+  /// Only an active player downloads and plays the video. Inactive ones wait
+  /// (e.g. while they are only partly swiped into view) and pause if they were
+  /// playing.
+  final bool active;
+
+  const EventVideoPlayer(this.event, {this.active = true, super.key});
 
   @override
   EventVideoPlayerState createState() => EventVideoPlayerState();
@@ -38,14 +44,23 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
   final _supportsVideoPlayer =
       !PlatformInfos.isWindows && !PlatformInfos.isLinux;
 
+  bool _started = false;
+
   Future<void> _downloadAction() async {
+    _started = true;
     if (!_supportsVideoPlayer) {
       widget.event.saveFile(context);
       return;
     }
 
     try {
-      final videoPlayerController = await _download.createController();
+      final videoPlayerController = await _download.createController(
+        // The player must not take its own (permanent) audio focus, see
+        // [VideoAudioFocus].
+        videoPlayerOptions: _audioFocus == null
+            ? null
+            : VideoPlayerOptions(mixWithOthers: true),
+      );
       if (!mounted) {
         videoPlayerController.dispose();
         return;
@@ -57,13 +72,14 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
       await videoPlayerController.initialize();
       if (!mounted) return;
+      videoPlayerController.addListener(_syncAudioFocus);
 
       // Create a ChewieController on top.
       setState(() {
         _chewieController = ChewieController(
           videoPlayerController: videoPlayerController,
           showControlsOnInitialize: false,
-          autoPlay: true,
+          autoPlay: widget.active,
           autoInitialize: true,
           looping: true,
           aspectRatio: _videoPlayerController?.value.aspectRatio,
@@ -80,7 +96,19 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     }
   }
 
+  // Only Android needs this, other platforms handle it well themselves.
+  late final VideoAudioFocus? _audioFocus = PlatformInfos.isAndroid
+      ? VideoAudioFocus(onInterrupted: () => _videoPlayerController?.pause())
+      : null;
+
+  /// Holds the audio focus exactly while the video is playing, so other apps'
+  /// music resumes as soon as it is paused, closed or swiped away.
+  void _syncAudioFocus() =>
+      _audioFocus?.setHeld(_videoPlayerController?.value.isPlaying ?? false);
+
   void _disposeControllers() {
+    _videoPlayerController?.removeListener(_syncAudioFocus);
+    _audioFocus?.setHeld(false);
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
     _chewieController = null;
@@ -94,12 +122,28 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     super.dispose();
   }
 
+  void _startIfActive() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.active || _started) return;
+      _downloadAction();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _downloadAction();
-    });
+    _startIfActive();
+  }
+
+  @override
+  void didUpdateWidget(EventVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active == oldWidget.active) return;
+    if (widget.active) {
+      _started ? _videoPlayerController?.play() : _startIfActive();
+    } else {
+      _videoPlayerController?.pause();
+    }
   }
 
   static const String fallbackBlurHash = 'L5H2EC=PM+yV0g-mq.wG9c010J}I';
