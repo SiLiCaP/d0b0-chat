@@ -61,48 +61,58 @@ class MessageContent extends StatelessWidget {
           case MessageTypes.Image:
           case MessageTypes.Sticker:
             if (event.redacted) continue textmessage;
-            final maxSize = event.messageType == MessageTypes.Sticker
-                ? 128.0
-                : 256.0;
+            final isSticker = event.messageType == MessageTypes.Sticker;
             final w = event.content
                 .tryGetMap<String, Object?>('info')
                 ?.tryGet<int>('w');
             final h = event.content
                 .tryGetMap<String, Object?>('info')
                 ?.tryGet<int>('h');
-            var width = maxSize;
-            var height = maxSize;
-            var fit = event.messageType == MessageTypes.Sticker
-                ? BoxFit.contain
-                : BoxFit.cover;
-            if (w != null && h != null) {
-              fit = BoxFit.contain;
-              if (w > h) {
-                width = maxSize;
-                height = max(32, maxSize * (h / w));
-              } else {
-                height = maxSize;
-                width = max(32, maxSize * (w / h));
-              }
-            }
             return MediaAutoDownload(
               event: event,
-              child: ImageBubble(
-                event,
-                width: width,
-                height: height,
-                fit: fit,
-                borderRadius: borderRadius,
-                timeline: timeline,
-                textColor: textColor,
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (_) => ImageViewer(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Images fill the width of the bubble and keep their
+                  // aspect ratio, up to a height that leaves the screen
+                  // usable. Stickers stay small.
+                  final maxWidth = isSticker
+                      ? 128.0
+                      : constraints.maxWidth.isFinite
+                      ? constraints.maxWidth
+                      : 256.0;
+                  final maxHeight = isSticker
+                      ? 128.0
+                      : min(
+                          maxWidth * 1.25,
+                          MediaQuery.sizeOf(context).height * 0.5,
+                        );
+                  var width = maxWidth;
+                  var height = min(maxWidth, maxHeight);
+                  var fit = isSticker ? BoxFit.contain : BoxFit.cover;
+                  if (w != null && h != null && w > 0 && h > 0) {
+                    fit = BoxFit.contain;
+                    final scale = min(maxWidth / w, maxHeight / h);
+                    width = max(32, w * scale);
+                    height = max(32, h * scale);
+                  }
+                  return ImageBubble(
                     event,
+                    width: width,
+                    height: height,
+                    fit: fit,
+                    borderRadius: borderRadius,
                     timeline: timeline,
-                    outerContext: context,
-                  ),
-                ),
+                    textColor: textColor,
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (_) => ImageViewer(
+                        event,
+                        timeline: timeline,
+                        outerContext: context,
+                      ),
+                    ),
+                  );
+                },
               ),
             );
           case CuteEventContent.eventType:

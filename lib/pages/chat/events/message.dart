@@ -27,6 +27,7 @@ import 'package:matrix/matrix.dart';
 import 'package:swipe_to_action/swipe_to_action.dart';
 
 import 'bubble.dart';
+import 'bubble_meta_layout.dart';
 import 'message_content.dart';
 import 'message_reactions.dart';
 import 'reply_content.dart';
@@ -135,8 +136,8 @@ class Message extends StatelessWidget {
         previousEvent!.senderId == event.senderId &&
         previousEvent!.originServerTs.sameEnvironment(event.originServerTs);
 
-    // Grouping does the work ticks and timestamps used to do: the stem on
-    // the first bubble, one meta line after the last.
+    // Grouping does the work ticks and timestamps used to do: the sender
+    // name and avatar on the first bubble, one meta line after the last.
     final firstInGroup = !nextEventSameSender;
     final lastInGroup = !previousEventSameSender;
 
@@ -208,6 +209,14 @@ class Message extends StatelessWidget {
       if (ownMessage && read && event.status.isSent) l10n.readLabel,
     ];
 
+    // Time and read status sit inside the last bubble of a group. Bare
+    // media has no fill to hold them and a failed send says so below.
+    final metaInside =
+        lastInGroup &&
+        !event.status.isError &&
+        bubbleState != BubbleState.bare &&
+        meta.isNotEmpty;
+
     Future<void> doubleTapReact() async {
       HapticFeedback.lightImpact();
       final emoji = AppSettings.doubleTapReaction.value;
@@ -228,61 +237,81 @@ class Message extends StatelessWidget {
       }
     }
 
-    final bubble = D0b0Bubble(
-      mine: ownMessage,
-      firstInGroup: firstInGroup,
-      state: bubbleState,
-      child: Column(
-        mainAxisSize: .min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          if (event.inReplyToEventId(includingFallback: false) != null &&
-              !event.redacted)
-            FutureBuilder<Event?>(
-              future: event.getReplyEvent(timeline),
-              builder: (BuildContext context, snapshot) {
-                final replyEvent = snapshot.hasData
-                    ? snapshot.data!
-                    : Event(
-                        eventId: event.inReplyToEventId() ?? '\$fake_event_id',
-                        content: {'msgtype': 'm.text', 'body': '...'},
-                        senderId: event.senderId,
-                        type: 'm.room.message',
-                        room: event.room,
-                        status: EventStatus.sent,
-                        originServerTs: DateTime.now(),
-                      );
-                return Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 11),
-                  child: InkWell(
-                    borderRadius: ReplyContent.borderRadius,
-                    onTap: () => scrollToEventId(replyEvent.eventId),
-                    child: AbsorbPointer(
-                      child: ReplyContent(
-                        replyEvent,
-                        ownMessage: ownMessage,
-                        timeline: timeline,
-                      ),
+    // An image with no caption has no fill: its stem takes the outline colour.
+    final stemColor = event.messageType == MessageTypes.Image
+        ? theme.dividerColor
+        : null;
+    final hasStem =
+        bubbleState == BubbleState.sent ||
+        (bubbleState == BubbleState.bare && stemColor != null);
+
+    final contentColumn = Column(
+      mainAxisSize: .min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        if (event.inReplyToEventId(includingFallback: false) != null &&
+            !event.redacted)
+          FutureBuilder<Event?>(
+            future: event.getReplyEvent(timeline),
+            builder: (BuildContext context, snapshot) {
+              final replyEvent = snapshot.hasData
+                  ? snapshot.data!
+                  : Event(
+                      eventId: event.inReplyToEventId() ?? '\$fake_event_id',
+                      content: {'msgtype': 'm.text', 'body': '...'},
+                      senderId: event.senderId,
+                      type: 'm.room.message',
+                      room: event.room,
+                      status: EventStatus.sent,
+                      originServerTs: DateTime.now(),
+                    );
+              return Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 11),
+                child: InkWell(
+                  borderRadius: ReplyContent.borderRadius,
+                  onTap: () => scrollToEventId(replyEvent.eventId),
+                  child: AbsorbPointer(
+                    child: ReplyContent(
+                      replyEvent,
+                      ownMessage: ownMessage,
+                      timeline: timeline,
                     ),
                   ),
-                );
-              },
-            ),
-          MessageContent(
-            displayEvent,
-            textColor: textColor,
-            linkColor: linkColor,
-            onInfoTab: onInfoTab,
-            borderRadius: D0b0Bubble.borderRadius(
-              mine: ownMessage,
-              firstInGroup: firstInGroup,
-            ),
-            timeline: timeline,
-            selected: selected,
-            bigEmojis: bigEmojis,
+                ),
+              );
+            },
           ),
-        ],
+        MessageContent(
+          displayEvent,
+          textColor: textColor,
+          linkColor: linkColor,
+          onInfoTab: onInfoTab,
+          // Only a bubble with a stem has a square corner.
+          borderRadius: hasStem
+              ? D0b0Bubble.borderRadius(mine: ownMessage)
+              : BorderRadius.circular(D0b0Bubble.radius),
+          timeline: timeline,
+          selected: selected,
+          bigEmojis: bigEmojis,
+        ),
+      ],
+    );
+
+    final metaText = Padding(
+      padding: const EdgeInsets.only(left: 8, right: 16, bottom: 7),
+      child: Text(
+        meta.join(' · '),
+        style: metaStyle.copyWith(color: textColor.withValues(alpha: 0.7)),
       ),
+    );
+
+    final bubble = D0b0Bubble(
+      mine: ownMessage,
+      state: bubbleState,
+      stemColor: stemColor,
+      child: metaInside
+          ? BubbleMetaLayout(children: [contentColumn, metaText])
+          : contentColumn,
     );
 
     return Center(
@@ -333,8 +362,9 @@ class Message extends StatelessWidget {
               padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
-                top: 2,
-                bottom: lastInGroup ? 14 : 2,
+                // Inside a group the tail's own space is the whole gap.
+                top: firstInGroup ? 2 : 0,
+                bottom: lastInGroup ? 14 : 0,
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -348,9 +378,7 @@ class Message extends StatelessWidget {
                   );
                   final hoverPill = Padding(
                     padding: EdgeInsets.only(
-                      top: firstInGroup && bubbleState == BubbleState.sent
-                          ? D0b0Bubble.stemSpace
-                          : 0,
+                      top: D0b0Bubble.stemSpace,
                       left: ownMessage ? 0 : 8,
                       right: ownMessage ? 8 : 0,
                     ),
@@ -494,7 +522,7 @@ class Message extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if (lastInGroup || event.status.isError)
+                      if ((lastInGroup && !metaInside) || event.status.isError)
                         Padding(
                           padding: EdgeInsets.only(
                             top: 4,

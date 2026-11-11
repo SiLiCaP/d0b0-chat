@@ -27,40 +27,41 @@ enum BubbleState {
 }
 
 /// One bubble shape for every message: a pill on one line, radius 22 when
-/// wrapped. The first bubble of a group squares its outer top corner and
-/// carries the stem, the curved cut from the mark.
+/// wrapped. Every sent bubble squares its outer top corner and carries the
+/// stem, the curved cut from the mark, so a run of messages from one sender
+/// stacks like the mark with all stems on the same side.
 class D0b0Bubble extends StatefulWidget {
   final bool mine;
-  final bool firstInGroup;
   final BubbleState state;
   final Widget child;
 
+  /// The stem's colour on a [BubbleState.bare] bubble, which has no fill of
+  /// its own: the outline of the media. Without it a bare bubble has no stem.
+  final Color? stemColor;
+
   const D0b0Bubble({
     required this.mine,
-    required this.firstInGroup,
     required this.child,
     this.state = BubbleState.sent,
+    this.stemColor,
     super.key,
   });
 
   static const double radius = D0b0Radius.bubble;
-  static const double stemWidth = 10;
-  static const double stemHeight = 12.5;
+  static const double stemWidth = 16;
+  static const double stemHeight = 14.5;
 
-  /// Space above a group's first bubble that the stem rises into.
-  static const double stemSpace = 12;
+  /// Space above every bubble. A sent bubble's stem rises into it.
+  static const double stemSpace = 14;
 
   @override
   State<D0b0Bubble> createState() => _D0b0BubbleState();
 
-  static BorderRadius borderRadius({
-    required bool mine,
-    required bool firstInGroup,
-  }) {
+  static BorderRadius borderRadius({required bool mine}) {
     const round = Radius.circular(radius);
     return BorderRadius.only(
-      topLeft: !mine && firstInGroup ? Radius.zero : round,
-      topRight: mine && firstInGroup ? Radius.zero : round,
+      topLeft: mine ? round : Radius.zero,
+      topRight: mine ? Radius.zero : round,
       bottomLeft: round,
       bottomRight: round,
     );
@@ -96,7 +97,6 @@ class _D0b0BubbleState extends State<D0b0Bubble>
   @override
   Widget build(BuildContext context) {
     final mine = widget.mine;
-    final firstInGroup = widget.firstInGroup;
     final state = widget.state;
     final child = widget.child;
     const radius = D0b0Bubble.radius;
@@ -105,8 +105,10 @@ class _D0b0BubbleState extends State<D0b0Bubble>
     final colors = theme.d0b0;
     // Only a filled bubble has a stem; while sending the stem grows in once
     // the server echoes the message.
-    final stem = firstInGroup && state == BubbleState.sent;
-    final radii = D0b0Bubble.borderRadius(mine: mine, firstInGroup: stem);
+    final stem =
+        state == BubbleState.sent ||
+        (state == BubbleState.bare && widget.stemColor != null);
+    final radii = D0b0Bubble.borderRadius(mine: mine);
     final fill = mine ? colors.bubbleMine : colors.bubbleTheirs;
 
     final Widget bubble;
@@ -118,7 +120,7 @@ class _D0b0BubbleState extends State<D0b0Bubble>
         );
       case BubbleState.bare:
         bubble = ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: stem ? radii : BorderRadius.circular(radius),
           child: child,
         );
       case BubbleState.error:
@@ -151,7 +153,14 @@ class _D0b0BubbleState extends State<D0b0Bubble>
           Stack(alignment: Alignment.center, children: [...previous, ?current]),
       child: KeyedSubtree(key: ValueKey(state), child: bubble),
     );
-    if (!stem) return switched;
+    // Every bubble keeps the space above it, so a chain of bubbles is spaced
+    // evenly whether or not each one has a stem.
+    if (!stem) {
+      return Padding(
+        padding: const EdgeInsets.only(top: stemSpace),
+        child: switched,
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(top: stemSpace),
       child: Stack(
@@ -168,7 +177,10 @@ class _D0b0BubbleState extends State<D0b0Bubble>
               alignment: mine ? Alignment.bottomRight : Alignment.bottomLeft,
               child: CustomPaint(
                 size: const Size(D0b0Bubble.stemWidth, D0b0Bubble.stemHeight),
-                painter: _StemPainter(color: fill, mine: mine),
+                painter: _StemPainter(
+                  color: state == BubbleState.bare ? widget.stemColor! : fill,
+                  mine: mine,
+                ),
               ),
             ),
           ),
@@ -178,7 +190,8 @@ class _D0b0BubbleState extends State<D0b0Bubble>
   }
 }
 
-/// The stem: rises from the bubble's outer top corner in one curved cut.
+/// The stem: rises from the bubble's outer top corner in one curved cut, an
+/// arc with the bubble's own corner radius.
 class _StemPainter extends CustomPainter {
   final Color color;
   final bool mine;
@@ -192,10 +205,13 @@ class _StemPainter extends CustomPainter {
       canvas.scale(-1, 1);
     }
     final path = Path()
-      ..moveTo(10, 4)
-      ..cubicTo(6.15, 3.12, 2.73, 1.76, 0, 0)
-      ..lineTo(0, 12.5)
-      ..lineTo(10, 12.5)
+      ..moveTo(size.width, 8.5)
+      ..arcToPoint(
+        Offset.zero,
+        radius: const Radius.circular(D0b0Bubble.radius),
+      )
+      ..lineTo(0, size.height)
+      ..lineTo(size.width, size.height)
       ..close();
     canvas.drawPath(path, Paint()..color = color);
   }
