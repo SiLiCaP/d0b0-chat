@@ -89,7 +89,6 @@ class ImageBubble extends StatelessWidget {
     return Column(
       mainAxisSize: .min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 8,
       children: [
         Material(
           color: Colors.transparent,
@@ -144,7 +143,8 @@ class ImageBubble extends StatelessWidget {
           SizedBox(
             width: boxWidth,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              // The same padding as the text of any other bubble.
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               child: Linkify(
                 text: fileDescription,
                 textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
