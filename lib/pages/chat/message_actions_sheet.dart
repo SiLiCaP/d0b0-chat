@@ -6,6 +6,8 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/d0b0_theme.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/pages/chat/chat_emoji_picker.dart' show NoRecent;
+import 'package:fluffychat/pages/chat/emoji_search_view.dart';
 import 'package:fluffychat/pages/chat/sticker_picker_dialog.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/widgets/d0b0/adaptive_sheet.dart';
@@ -58,8 +60,21 @@ class MessageActionOptions {
   });
 }
 
-/// The quick reactions in the sheet, in order.
-const quickReactions = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+/// The quick reactions a new user starts with, in order.
+const defaultQuickReactions = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+/// The quick reactions: the most recently used emoji first, filled up with
+/// the defaults that are not among them.
+List<String> mergeQuickReactions(Iterable<String> recent) => {
+  ...recent,
+  ...defaultQuickReactions,
+}.take(defaultQuickReactions.length).toList();
+
+/// [mergeQuickReactions] of the emoji used in the pickers.
+Future<List<String>> loadQuickReactions() async {
+  final recent = await EmojiPickerUtils().getRecentEmojis();
+  return mergeQuickReactions(recent.map((e) => e.emoji.emoji));
+}
 
 /// Long-press on a message: quick reactions first, then actions. Returns the
 /// chosen action, or the emoji (or sticker mxc URL) to react with.
@@ -70,13 +85,18 @@ Future<Object?> showMessageActionsSheet({
   required Set<String> sentReactions,
   LiftedBubble? lifted,
   Rect? anchor,
-}) {
+}) async {
+  final quickReactions = await loadQuickReactions();
+  if (!context.mounted) {
+    lifted?.dispose();
+    return null;
+  }
   // The lift is for the sheet rising from the bottom on touch screens.
   if (lifted != null && FluffyThemes.isColumnMode(context)) {
     lifted.dispose();
     lifted = null;
   }
-  return showD0b0Sheet<Object>(
+  final result = await showD0b0Sheet<Object>(
     context: context,
     anchor: anchor,
     isScrollControlled: true,
@@ -210,6 +230,15 @@ Future<Object?> showMessageActionsSheet({
       return LiftedBubbleHost(lifted: lifted, child: sheet);
     },
   );
+  // A reaction counts as use, so the next sheet offers it. A sticker is an
+  // mxc URL and has no place among emoji.
+  if (result is String && !result.startsWith('mxc://')) {
+    await EmojiPickerUtils().addEmojiToRecentlyUsed(
+      key: GlobalKey<EmojiPickerState>(),
+      emoji: Emoji(result, ''),
+    );
+  }
+  return result;
 }
 
 class _QuickReaction extends StatelessWidget {
@@ -249,8 +278,11 @@ Future<String?> _pickCustomReaction(BuildContext context, Room room) {
   final theme = Theme.of(context);
   return showAdaptiveBottomSheet<String>(
     context: context,
+    // Everything takes the colour of the sheet it sits in.
     builder: (context) => Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(L10n.of(context).customReaction),
         leading: CloseButton(onPressed: () => Navigator.of(context).pop(null)),
       ),
@@ -269,24 +301,26 @@ Future<String?> _pickCustomReaction(BuildContext context, Room room) {
               Expanded(
                 child: TabBarView(
                   children: [
-                    EmojiPicker(
-                      onEmojiSelected: (_, emoji) =>
-                          Navigator.of(context).pop(emoji.emoji),
+                    SearchableEmojiPicker(
+                      onSelected: (emoji) => Navigator.of(context).pop(emoji),
                       config: Config(
                         locale: Localizations.localeOf(context),
                         emojiViewConfig: const EmojiViewConfig(
                           backgroundColor: Colors.transparent,
+                          noRecents: NoRecent(),
                         ),
                         bottomActionBarConfig: const BottomActionBarConfig(
                           enabled: false,
                         ),
                         categoryViewConfig: CategoryViewConfig(
-                          initCategory: Category.SMILEYS,
+                          // People react with a few favourites; the whole
+                          // set is one tap or a search away.
+                          initCategory: Category.RECENT,
                           backspaceColor: theme.colorScheme.primary,
                           iconColor: theme.colorScheme.onSurfaceVariant,
                           iconColorSelected: theme.colorScheme.primary,
                           indicatorColor: theme.colorScheme.primary,
-                          backgroundColor: theme.colorScheme.surface,
+                          backgroundColor: Colors.transparent,
                         ),
                         skinToneConfig: SkinToneConfig(
                           dialogBackgroundColor:
@@ -298,6 +332,7 @@ Future<String?> _pickCustomReaction(BuildContext context, Room room) {
                     StickerPickerDialog(
                       room: room,
                       usage: ImagePackUsage.emoticon,
+                      backgroundColor: Colors.transparent,
                       onSelected: (sticker) =>
                           Navigator.of(context).pop(sticker.url.toString()),
                     ),

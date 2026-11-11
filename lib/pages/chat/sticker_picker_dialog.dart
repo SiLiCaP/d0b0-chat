@@ -18,10 +18,15 @@ class StickerPickerDialog extends StatefulWidget {
   final ImagePackUsage usage;
   final void Function(ImagePackImageContent) onSelected;
 
+  /// Defaults to the inverse surface, which sets the picker off from the
+  /// composer it opens beside.
+  final Color? backgroundColor;
+
   const StickerPickerDialog({
     required this.onSelected,
     required this.room,
     this.usage = ImagePackUsage.sticker,
+    this.backgroundColor,
     super.key,
   });
 
@@ -40,7 +45,7 @@ class StickerPickerDialogState extends State<StickerPickerDialog> {
     final packSlugs = stickerPacks.keys.toList();
 
     return Material(
-      color: theme.colorScheme.onInverseSurface,
+      color: widget.backgroundColor ?? theme.colorScheme.onInverseSurface,
       child: SafeArea(
         top: false,
         child: CustomScrollView(
@@ -56,7 +61,10 @@ class StickerPickerDialogState extends State<StickerPickerDialog> {
                 autofocus: false,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: theme.colorScheme.secondaryContainer,
+                  // In a sheet it must stand out from the sheet's own colour.
+                  fillColor: widget.backgroundColor == null
+                      ? theme.colorScheme.secondaryContainer
+                      : theme.colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(99),
