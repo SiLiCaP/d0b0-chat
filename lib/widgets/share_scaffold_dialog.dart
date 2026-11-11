@@ -70,10 +70,16 @@ class _ShareScaffoldDialogState extends State<ShareScaffoldDialog> {
       if (consent != OkCancelResult.ok) return;
     }
     if (!mounted) return;
-    while (context.canPop()) {
-      context.pop();
-    }
-    context.go('/rooms/$roomId', extra: widget.items);
+    // Close the dialog and whatever dialog it was opened from (the image
+    // viewer is one), but no pages: `go` rebuilds the page stack itself.
+    // Popping pages would remove the chat this was forwarded from and re-add
+    // it in the same frame, leaving a black screen.
+    final router = GoRouter.of(context);
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).popUntil((route) => route.settings is Page);
+    router.go('/rooms/$roomId', extra: widget.items);
   }
 
   @override
